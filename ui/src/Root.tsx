@@ -1,9 +1,6 @@
 import './global.css';
 import 'react-grid-layout/css/styles.css';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+import '@fontsource-variable/inter';
 import {ThemeProvider} from './provider/ThemeProvider';
 import {ApolloProvider} from './provider/ApolloProvider';
 import {SnackbarProvider} from './provider/SnackbarProvider';

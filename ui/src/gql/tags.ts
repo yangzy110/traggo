@@ -15,6 +15,8 @@ export const Tags = gql`
             color
             key
             usages
+            shared
+            editable
         }
     }
 `;
@@ -25,8 +27,8 @@ export const SuggestTagValue = gql`
 `;
 
 export const AddTag = gql`
-    mutation AddTag($name: String!, $color: String!) {
-        createTag(key: $name, color: $color) {
+    mutation AddTag($name: String!, $color: String!, $shared: Boolean) {
+        createTag(key: $name, color: $color, shared: $shared) {
             color
             key
         }
@@ -34,8 +36,8 @@ export const AddTag = gql`
 `;
 
 export const UpdateTag = gql`
-    mutation UpdateTag($key: String!, $newKey: String, $color: String!) {
-        updateTag(key: $key, newKey: $newKey, color: $color) {
+    mutation UpdateTag($key: String!, $newKey: String, $color: String!, $shared: Boolean) {
+        updateTag(key: $key, newKey: $newKey, color: $color, shared: $shared) {
             color
             key
         }

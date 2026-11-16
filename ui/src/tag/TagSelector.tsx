@@ -206,7 +206,10 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                 </Tooltip>
 
                 {open ? (
-                    <Paper sx={styles.paper} style={{width: (container.current && container.current.clientWidth) || 300}} square>
+                    <Paper
+                        sx={styles.paper}
+                        style={{width: (container.current && container.current.clientWidth) || 300}}
+                        elevation={4}>
                         {suggestions.map((entry, index) => (
                             <Item
                                 key={label(entry)}

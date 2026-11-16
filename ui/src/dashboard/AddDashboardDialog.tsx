@@ -39,7 +39,6 @@ export const AddDashboardDialog: React.FC<AddTagDialogProps> = ({close, open}) =
                 <DialogTitle id="form-dialog-title">Create Dashboard</DialogTitle>
                 <DialogContent>
                     <TextField
-                        variant="standard"
                         autoFocus
                         margin="dense"
                         id="name"

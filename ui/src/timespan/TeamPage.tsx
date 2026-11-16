@@ -14,7 +14,7 @@ import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {inUserTz} from './timeutils';
-import {TeamEntry, useTagColors} from './TeamEntry';
+import {TeamEntry} from './TeamEntry';
 import {MemberAvatar} from './MemberAvatar';
 import {DAY_FORMAT, exportLog, formatDuration, LogEntry, spanSeconds} from './teamutils';
 import Box from '@mui/material/Box';
@@ -76,7 +76,6 @@ export const memberLogPath = (id: number) => `/team/${id}`;
 export const TeamPage: React.FC = () => {
     const navigate = useNavigate();
     const [date, setDate] = React.useState(moment().format(DAY_FORMAT));
-    const colors = useTagColors();
 
     const day = moment(date, DAY_FORMAT, true);
     const validDay = day.isValid();
@@ -105,7 +104,6 @@ export const TeamPage: React.FC = () => {
                     <PrevIcon />
                 </IconButton>
                 <TextField
-                    variant="standard"
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
@@ -140,8 +138,8 @@ export const TeamPage: React.FC = () => {
                         </Typography>
                         <Typography color="textSecondary">共 {formatDuration(member.seconds)}</Typography>
                     </Box>
-                    {member.entries.map(({timeSpan}) => (
-                        <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
+                    {member.entries.map(({timeSpan, tagColors}) => (
+                        <TeamEntry key={timeSpan.id} timeSpan={timeSpan} tagColors={tagColors} />
                     ))}
                 </Paper>
             ))}

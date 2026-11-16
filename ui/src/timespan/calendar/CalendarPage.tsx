@@ -271,7 +271,8 @@ export const CalendarPage: React.FC = () => {
             }}>
             <FullCalendarStyling>
                 <FullCalendar
-                    initialView="timeGridWeek"
+                    // a week does not fit on a phone
+                    initialView={window.matchMedia('(max-width: 600px)').matches ? 'timeGridDay' : 'timeGridWeek'}
                     rerenderDelay={30}
                     datesSet={(x) => {
                         const range = {
@@ -337,7 +338,7 @@ export const CalendarPage: React.FC = () => {
                 />
             </FullCalendarStyling>
             {!!selected.selected && (
-                <Popper open={true} anchorEl={selected.selected} style={{zIndex: 1200, maxWidth: 700}}>
+                <Popper open={true} anchorEl={selected.selected} placement="bottom-start" style={{zIndex: 1200, maxWidth: 700}}>
                     <ClickAwayListener
                         onClickAway={() => {
                             if (ignore) {

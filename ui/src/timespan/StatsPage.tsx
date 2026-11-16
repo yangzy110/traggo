@@ -110,7 +110,6 @@ export const StatsPage: React.FC = () => {
                     </Button>
                 ))}
                 <TextField
-                    variant="standard"
                     type="date"
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
@@ -120,7 +119,6 @@ export const StatsPage: React.FC = () => {
                     —
                 </Box>
                 <TextField
-                    variant="standard"
                     type="date"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
@@ -144,15 +142,31 @@ export const StatsPage: React.FC = () => {
                         <Box sx={styles.chart}>
                             <ResponsiveContainer>
                                 <LineChart data={stats.days.map(({day, seconds}) => ({day, hours: hours(seconds)}))}>
-                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
                                     <XAxis
                                         dataKey="day"
                                         tickFormatter={(day: string) => day.slice(5)}
                                         interval="preserveStartEnd"
                                     />
-                                    <YAxis type="number" unit="h" allowDecimals={true} />
+                                    <YAxis
+                                        type="number"
+                                        unit="h"
+                                        allowDecimals={true}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        width={44}
+                                        tick={{fill: theme.palette.text.secondary, fontSize: 12}}
+                                    />
                                     <Tooltip formatter={(value): [string, string] => [`${value} h`, '工作时间']} />
-                                    <Line dataKey="hours" name="工作时间" stroke={theme.palette.primary.main} strokeWidth={3} />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="hours"
+                                        name="工作时间"
+                                        stroke={theme.palette.primary.main}
+                                        strokeWidth={2.5}
+                                        dot={false}
+                                        activeDot={{r: 5}}
+                                    />
                                 </LineChart>
                             </ResponsiveContainer>
                         </Box>

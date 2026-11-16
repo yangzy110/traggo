@@ -1,22 +1,35 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import {alpha} from '@mui/material/styles';
 
 // Note: all numbers have to be strings with a unit, numbers are interpreted via the theme by `sx` (f.ex. padding: 5 == 40px).
 export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children}) => (
     <Box
         sx={(theme) => {
             const dark = theme.palette.mode === 'dark';
+            const primary = theme.palette.primary;
+            const hourLine = dark ? 'rgba(255,255,255,.14)' : 'rgba(15,23,42,.14)';
             return {
                 height: '100%',
                 width: '100%',
 
                 // FullCalendar is themed via css variables
-                '--fc-border-color': dark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.1)',
+                '--fc-border-color': theme.palette.divider,
                 '--fc-page-bg-color': theme.palette.background.paper,
-                '--fc-today-bg-color': dark ? 'rgba(199,199,199,.1)' : 'rgba(0,0,0,.1)',
+                '--fc-today-bg-color': alpha(primary.main, dark ? 0.1 : 0.05),
+                '--fc-now-indicator-color': theme.palette.error.main,
 
-                '& .fc-col-header': {
-                    fontFamily: 'monospace',
+                '& .fc': {fontFamily: 'inherit'},
+                '& .fc-col-header-cell-cushion': {
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    color: theme.palette.text.secondary,
+                    padding: '10px 4px',
+                },
+                '& .fc-day-today .fc-col-header-cell-cushion': {color: primary.main},
+                '& .fc-timegrid-slot-label-cushion': {
+                    fontSize: '0.75rem',
+                    color: theme.palette.text.secondary,
                 },
                 '& .fc-toolbar': {
                     display: 'flex',
@@ -24,52 +37,61 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     alignItems: 'center',
                 },
                 '& .fc-toolbar-chunk': {
-                    display: 'inline-block',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
                     verticalAlign: 'middle',
                     textAlign: 'center',
                     boxSizing: 'border-box',
                 },
                 '& .fc-toolbar-title': {
                     margin: 0,
-                    fontSize: '1.5rem',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    letterSpacing: '-0.01em',
                 },
+                // on small screens the parts of the toolbar are stacked
                 '@media (max-width: 600px)': {
-                    '& .fc-toolbar': {
-                        display: 'inherit',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
+                    '& .fc-header-toolbar': {
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        gap: '8px',
                     },
                     '& .fc-toolbar-chunk': {
-                        display: 'block',
-                        width: '100%',
-                        textAlign: 'center',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap',
                     },
+                    '& .fc-toolbar-title': {fontSize: '1.05rem'},
+                    '& .fc-col-header-cell-cushion': {padding: '8px 0'},
                 },
 
                 // every hour has a stronger line, the lines inside of the hour are lighter
                 '& .fc-timegrid-slot-lane:not(.fc-timegrid-slot-minor)': {
-                    borderTopColor: dark ? 'rgba(255,255,255,.2)' : 'rgba(0,0,0,.2)',
+                    borderTopColor: hourLine,
                 },
+                '& .fc-scrollgrid': {borderColor: theme.palette.divider, borderRadius: '10px', overflow: 'hidden'},
 
+                // events
                 '& .fc-timegrid-event.fc-v-event.fc-event': {
-                    borderRadius: '1px',
+                    borderRadius: '8px',
                     border: 'none',
-                    padding: '5px',
-                    opacity: 0.65,
-                    margin: '0 5%',
+                    padding: '4px 6px',
+                    margin: '0 2px',
+                    boxShadow: '0 1px 2px rgba(15,23,42,.18)',
                 },
                 '& .fc .fc-timegrid-event': {
                     minHeight: '1px',
                 },
                 '& .fc-event': {
                     fontSize: 'inherit !important',
-                    borderRadius: '1px',
+                    borderRadius: '8px',
                 },
                 '& .fc-timegrid-event .fc-event-time': {
                     fontWeight: 'normal !important',
                 },
                 '& .fc .fc-timegrid-event-harness-inset .fc-timegrid-event': {
-                    boxShadow: theme.shadows[5],
+                    boxShadow: theme.shadows[6],
                 },
                 '& .fc .fc-event-mirror': {
                     opacity: 0.5,
@@ -83,13 +105,17 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                 },
                 '& .fc .fc-event-main': {
                     height: '100%',
+                    fontSize: '0.8rem',
+                    lineHeight: 1.35,
                 },
                 '& .fc .fc-event-main .stop': {
-                    background: dark ? 'rgba(255,255,255,.2) !important' : 'rgba(0,0,0,.1) !important',
-                    borderRadius: '6px 0 0 0',
+                    background: 'rgba(0,0,0,.28) !important',
+                    color: '#fff',
+                    borderRadius: '8px 0 6px 0',
                     fontSize: '10px',
+                    fontWeight: 600,
                     width: '50%',
-                    padding: '2px 0 1px 0',
+                    padding: '2px 0 2px 0',
                     textAlign: 'center',
                     right: 0,
                     bottom: 0,
@@ -97,7 +123,7 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     display: 'inline-block',
                 },
                 '& .fc .fc-event-main .stop:hover': {
-                    background: dark ? 'rgba(255,255,255,.3) !important' : 'rgba(0,0,0,.2) !important',
+                    background: 'rgba(0,0,0,.42) !important',
                 },
                 '& .fc .fc-event-main .stop a': {
                     width: '100%',
@@ -120,54 +146,75 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     overflow: 'hidden',
                 },
                 '& .fc .__start': {
-                    background: theme.palette.primary.main,
-                    color: theme.palette.primary.contrastText,
+                    background: primary.main,
+                    color: primary.contrastText,
                     border: 0,
-                    borderRadius: '0 0 10px 10px',
+                    borderRadius: '8px',
                     textAlign: 'center',
-                    boxShadow: theme.shadows[1],
+                    fontWeight: 600,
+                    boxShadow: theme.shadows[2],
                     cursor: 'pointer',
                 },
                 '& .fc .__start:hover': {
-                    background: theme.palette.primary.light,
+                    background: primary.dark,
                 },
 
+                // buttons: flat, rounded and connected inside of a group
                 '& .fc .fc-button': {
-                    display: 'inline-block',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     position: 'relative',
                     cursor: 'pointer',
                     minHeight: '36px',
-                    minWidth: '88px',
-                    lineHeight: '36px',
+                    minWidth: '36px',
                     verticalAlign: 'middle',
-                    alignItems: 'center',
                     textAlign: 'center',
-                    borderRadius: '2px',
+                    borderRadius: '8px',
                     boxSizing: 'border-box',
                     userSelect: 'none',
                     outline: 'none',
-                    padding: '0 6px',
-                    margin: '6px 8px',
-                    letterSpacing: '.01em',
-                    background: 'transparent',
-                    color: 'currentColor',
+                    padding: '0 14px',
+                    margin: 0,
+                    background: theme.palette.background.paper,
+                    color: theme.palette.text.primary,
                     whiteSpace: 'nowrap',
-                    textTransform: 'uppercase',
-                    fontWeight: '500',
-                    fontSize: '14px',
+                    textTransform: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
                     fontStyle: 'inherit',
                     fontVariant: 'inherit',
                     fontFamily: 'inherit',
                     textDecoration: 'none',
-                    overflow: 'hidden',
-                    borderColor: theme.palette.primary.main,
+                    borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.23)' : 'rgba(0,0,0,0.18)',
                     borderWidth: '1px',
                     borderStyle: 'solid',
-                    transition: 'box-shadow .4s cubic-bezier(.25,.8,.25,1),background-color .4s cubic-bezier(.25,.8,.25,1)',
+                    transition: 'background-color .15s, border-color .15s, box-shadow .15s',
+                },
+                '& .fc .fc-button:hover': {
+                    background: theme.palette.action.hover,
+                    borderColor: theme.palette.text.secondary,
+                },
+                '& .fc .fc-button:focus-visible': {
+                    boxShadow: `0 0 0 3px ${alpha(primary.main, 0.3)}`,
+                },
+                '& .fc .fc-button:disabled': {opacity: 0.45, cursor: 'default'},
+                '& .fc .fc-button-group': {display: 'inline-flex'},
+                '& .fc .fc-button-group > .fc-button': {borderRadius: 0, marginLeft: '-1px'},
+                '& .fc .fc-button-group > .fc-button:first-of-type': {
+                    borderTopLeftRadius: '8px',
+                    borderBottomLeftRadius: '8px',
+                    marginLeft: 0,
+                },
+                '& .fc .fc-button-group > .fc-button:last-of-type': {
+                    borderTopRightRadius: '8px',
+                    borderBottomRightRadius: '8px',
                 },
                 '& .fc .fc-button-primary:not(:disabled).fc-button-active, & .fc .fc-button-primary:not(:disabled):active': {
-                    backgroundColor: theme.palette.primary.main + ' !important',
-                    color: theme.palette.primary.contrastText,
+                    background: primary.main + ' !important',
+                    borderColor: primary.main + ' !important',
+                    color: primary.contrastText + ' !important',
+                    zIndex: 1,
                 },
             };
         }}>

@@ -43,11 +43,16 @@ export const DashboardLineChart: React.FC<DashboardPieChartProps> = ({entries, i
     return (
         <ResponsiveContainer>
             <LineChart data={indexedEntries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <YAxis type="number" unit={unit.short} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.4} />
+                <YAxis type="number" unit={unit.short} axisLine={false} tickLine={false} />
                 <Tooltip content={<TagTooltip dateFormat={dateFormat} total={total} />} />
                 <Legend />
-                <XAxis dataKey={(entry) => dateFormat(moment(entry.start))} interval={'preserveStartEnd'} />
+                <XAxis
+                    dataKey={(entry) => dateFormat(moment(entry.start))}
+                    interval={'preserveStartEnd'}
+                    axisLine={false}
+                    tickLine={false}
+                />
 
                 {indexedEntries[0] &&
                     Object.keys(indexedEntries[0].data).map((key, index) => {
@@ -55,8 +60,10 @@ export const DashboardLineChart: React.FC<DashboardPieChartProps> = ({entries, i
                             <Line
                                 key={key}
                                 dataKey={(entry) => unit.toUnit(entry.data[key])}
-                                strokeWidth={3}
+                                strokeWidth={2.5}
                                 stroke={Colors[index % Colors.length]}
+                                type="monotone"
+                                dot={false}
                                 name={key}
                             />
                         );

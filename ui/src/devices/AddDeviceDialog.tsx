@@ -12,9 +12,6 @@ import {CreateDevice, CreateDeviceVariables, DeviceType} from '../gql/types';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import {deviceTypeToString} from './typeutils';
-import Select from '@mui/material/NativeSelect';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 
 interface AddTagDialogProps {
     initialName: string;
@@ -59,7 +56,6 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                     <DialogContent>
                         <DialogContentText />
                         <TextField
-                            variant="standard"
                             autoFocus
                             margin="dense"
                             id="name"
@@ -69,18 +65,18 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
-                        <FormControl variant="standard" margin={'normal'} fullWidth>
-                            <InputLabel>Expires after</InputLabel>
-                            <Select
-                                variant="standard"
-                                value={deviceType}
-                                onChange={(e) => setDeviceType(e.target.value as DeviceType)}
-                                fullWidth>
-                                <option value={DeviceType.NoExpiry}>{deviceTypeToString(DeviceType.NoExpiry)}</option>
-                                <option value={DeviceType.ShortExpiry}>{deviceTypeToString(DeviceType.ShortExpiry)}</option>
-                                <option value={DeviceType.LongExpiry}>{deviceTypeToString(DeviceType.LongExpiry)}</option>
-                            </Select>
-                        </FormControl>
+                        <TextField
+                            select
+                            label="Expires after"
+                            margin="normal"
+                            fullWidth
+                            slotProps={{select: {native: true}}}
+                            value={deviceType}
+                            onChange={(e) => setDeviceType(e.target.value as DeviceType)}>
+                            <option value={DeviceType.NoExpiry}>{deviceTypeToString(DeviceType.NoExpiry)}</option>
+                            <option value={DeviceType.ShortExpiry}>{deviceTypeToString(DeviceType.ShortExpiry)}</option>
+                            <option value={DeviceType.LongExpiry}>{deviceTypeToString(DeviceType.LongExpiry)}</option>
+                        </TextField>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={close} color="primary">

@@ -7,12 +7,14 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import {SliderPicker} from 'react-color';
-import {InputLabel} from '@mui/material';
+import {Checkbox, InputLabel} from '@mui/material';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import {AddTag, AddTagVariables} from '../gql/types';
+import {AddTag, AddTagVariables, CurrentUser} from '../gql/types';
 import * as gqlTags from '../gql/tags';
+import * as gqlUser from '../gql/user';
 import {TagSelectorEntry} from './tagSelectorEntry';
-import {useMutation} from '@apollo/client/react';
+import {useMutation, useQuery} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 
@@ -26,12 +28,15 @@ interface AddTagDialogProps {
 export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialName, onAdded = () => {}}) => {
     const [name, setName] = React.useState(initialName);
     const [color, setColor] = React.useState('#e6b3b3');
+    const [shared, setShared] = React.useState(false);
     const {enqueueSnackbar} = useSnackbar();
+    const {data: currentUser} = useQuery<CurrentUser>(gqlUser.CurrentUser);
+    const admin = !!(currentUser && currentUser.user && currentUser.user.admin);
 
     const [addTag] = useMutation<AddTag, AddTagVariables>(gqlTags.AddTag, {refetchQueries: [{query: gqlTags.Tags}]});
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        addTag({variables: {name, color}})
+        addTag({variables: {name, color, shared: admin && shared}})
             .then((result) => {
                 close();
                 if (result && result.data && result.data.createTag) {
@@ -48,7 +53,6 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                 <DialogContent>
                     <DialogContentText />
                     <TextField
-                        variant="standard"
                         autoFocus
                         margin="dense"
                         id="name"
@@ -66,6 +70,12 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                             <SliderPicker onChange={(c) => setColor(c.hex)} color={color} />
                         </div>
                     </FormControl>
+                    {admin ? (
+                        <FormControlLabel
+                            control={<Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} />}
+                            label="Shared tag: usable by all users, only admins can change it"
+                        />
+                    ) : null}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={close} color="primary">

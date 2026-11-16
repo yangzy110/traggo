@@ -17,7 +17,7 @@ export const LoginPage = () => {
         <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '95%'}}>
             <Box>
                 <DefaultPaper>
-                    <Typography variant="h1" component="h1" gutterBottom={true}>
+                    <Typography variant="h3" component="h1" gutterBottom={true} sx={{fontWeight: 800}}>
                         traggo
                     </Typography>
                     <LoginForm />

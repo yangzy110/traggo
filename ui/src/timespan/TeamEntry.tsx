@@ -1,21 +1,10 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/client/react';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import * as gqlTag from '../gql/tags';
-import {Tags} from '../gql/types';
 import {TagChip} from '../common/TagChip';
 import {clock, formatDuration, spanSeconds} from './teamutils';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';
-
-// Maps a tag key to its color.
-export const useTagColors = (): Record<string, string> => {
-    const result = useQuery<Tags>(gqlTag.Tags);
-    const colors: Record<string, string> = {};
-    ((result.data && result.data.tags) || []).forEach((tag) => (colors[tag.key] = tag.color));
-    return colors;
-};
 
 interface TeamEntryProps {
     timeSpan: {
@@ -24,10 +13,13 @@ interface TeamEntryProps {
         tags: Array<{key: string; value: string}> | null;
         note: string;
     };
-    colors: Record<string, string>;
+    // the colors of the tags, they depend on the owner of the time span
+    tagColors: Array<{key: string; color: string}>;
 }
 
-export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, colors}) => {
+export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
+    const colors: Record<string, string> = {};
+    tagColors.forEach((tag) => (colors[tag.key] = tag.color));
     return (
         <Box
             sx={(theme) => ({

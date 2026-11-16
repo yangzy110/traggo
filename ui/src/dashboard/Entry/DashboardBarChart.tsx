@@ -44,11 +44,16 @@ export const DashboardBarChart: React.FC<DashboardPieChartProps> = ({entries, in
     return (
         <ResponsiveContainer>
             <BarChart data={indexedEntries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <YAxis type="number" unit={unit.short} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.4} />
+                <YAxis type="number" unit={unit.short} axisLine={false} tickLine={false} />
                 <Tooltip content={<TagTooltip dateFormat={dateFormat} total={total} />} />
                 <Legend />
-                <XAxis dataKey={(entry) => dateFormat(moment(entry.start))} interval={'preserveStartEnd'} />
+                <XAxis
+                    dataKey={(entry) => dateFormat(moment(entry.start))}
+                    interval={'preserveStartEnd'}
+                    axisLine={false}
+                    tickLine={false}
+                />
 
                 {indexedEntries[0] &&
                     Object.keys(indexedEntries[0].data).map((key, index) => {

@@ -43,7 +43,6 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                 <DialogTitle id="form-dialog-title">Create User</DialogTitle>
                 <DialogContent>
                     <TextField
-                        variant="standard"
                         autoFocus
                         margin="dense"
                         id="name"
@@ -54,7 +53,6 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                         onChange={(e) => setName(e.target.value)}
                     />
                     <TextField
-                        variant="standard"
                         margin="dense"
                         label="Password"
                         type="password"

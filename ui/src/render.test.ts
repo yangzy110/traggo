@@ -21,34 +21,44 @@ const schemaPath = resolve(process.cwd(), '../schema.graphql');
 
 let counter = 10;
 let entryType = 'LineChart';
+let tagsShared = false;
+let tagsEditable = true;
 let dashboardCount = 0;
-const schema = addMocksToSchema({
-    schema: makeExecutableSchema({
-        typeDefs: readFileSync(schemaPath, 'utf8'),
-    }),
-    mocks: {
-        Time: () => '2026-11-16T10:00:00+00:00',
-        Int: () => ++counter,
-        Float: () => 3600,
-        String: () => 'str' + ++counter,
-        Boolean: () => true,
-        // the dashboards of every response have the ids 100 and 101
-        Dashboard: () => ({id: [100, 101][dashboardCount++ % 2]}),
-        TagDefinition: () => ({color: '#336699', key: 'key' + ++counter}),
-        StatsSelection: () => ({rangeId: null}),
-        // enums are chosen randomly otherwise
-        EntryType: () => entryType,
-        StatsInterval: () => 'Daily',
-        Theme: () => 'MaterialLight',
-        DateLocale: () => 'British',
-        WeekDay: () => 'Monday',
-        DateTimeInputStyle: () => 'Fancy',
-        DeviceType: () => 'LongExpiry',
-        OverrideMode: () => 'Override',
-        Role: () => 'USER',
-        RelativeOrStaticRange: () => ({from: 'now-7d', to: 'now'}),
-    },
-});
+
+// The mocks remember the generated values, a new schema is created for every test.
+const createSchema = () => {
+    dashboardCount = 0;
+    return addMocksToSchema({
+        schema: makeExecutableSchema({
+            typeDefs: readFileSync(schemaPath, 'utf8'),
+        }),
+        mocks: {
+            // every time is different, f.ex. the periods of the statistics have to be unique
+            Time: () => new Date(Date.UTC(2026, 10, 16, 10, ++counter)).toISOString(),
+            Int: () => ++counter,
+            Float: () => 3600,
+            String: () => 'str' + ++counter,
+            Boolean: () => true,
+            // the dashboards of every response have the ids 100 and 101
+            Dashboard: () => ({id: [100, 101][dashboardCount++ % 2]}),
+            TagDefinition: () => ({color: '#336699', key: 'key' + ++counter, shared: tagsShared, editable: tagsEditable}),
+            StatsSelection: () => ({rangeId: null}),
+            // enums are chosen randomly otherwise
+            EntryType: () => entryType,
+            StatsInterval: () => 'Daily',
+            Theme: () => 'MaterialLight',
+            DateLocale: () => 'British',
+            WeekDay: () => 'Monday',
+            DateTimeInputStyle: () => 'Fancy',
+            DeviceType: () => 'LongExpiry',
+            OverrideMode: () => 'Override',
+            Role: () => 'USER',
+            RelativeOrStaticRange: () => ({from: 'now-7d', to: 'now'}),
+        },
+    });
+};
+
+let schema = createSchema();
 
 globalThis.fetch = (async (_url: RequestInfo | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init && init.body));
@@ -129,7 +139,9 @@ const button = (text: string) => [...document.querySelectorAll('button')].find((
 const errors: string[] = [];
 let root: ReactRoot | undefined;
 
-beforeEach(() => {
+beforeEach(async () => {
+    schema = createSchema();
+    await clearCache();
     errors.length = 0;
     vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
         errors.push(args.map((a) => (a instanceof Error ? a.stack : String(a))).join(' '));
@@ -151,6 +163,12 @@ afterEach(async () => {
     vi.restoreAllMocks();
     expect(errors).toEqual([]);
 });
+
+// The apollo client is shared by all tests, the cached results of the other tests are dropped.
+const clearCache = async () => {
+    const {client} = await import('./provider/ApolloProvider');
+    await client.clearStore();
+};
 
 const render = async (route: string) => {
     window.location.hash = '#' + route;
@@ -181,6 +199,32 @@ describe('pages', () => {
     it.each(pages)('renders %s', async (route, expected) => {
         await render(route);
         await waitFor(() => text().includes(expected), expected);
+        await settle();
+    });
+});
+
+describe('shared tags', () => {
+    afterEach(() => {
+        tagsShared = false;
+        tagsEditable = true;
+    });
+
+    it('can be changed by who is allowed to', async () => {
+        await render('/user/tags');
+        await waitFor(() => text().includes('Create Tag'), 'the tags');
+        await waitFor(() => !!document.querySelector('button[title="Edit"]'), 'the edit button');
+        expect(document.querySelector('button[title="Delete"]')).not.toBeNull();
+        await settle();
+    });
+
+    it('are locked for users who are not allowed to change them', async () => {
+        tagsShared = true;
+        tagsEditable = false;
+        await render('/user/tags');
+        await waitFor(() => text().includes('shared'), 'the shared label');
+        expect(document.querySelector('button[title="Edit"]')).toBeNull();
+        expect(document.querySelector('button[title="Delete"]')).toBeNull();
+        expect(document.querySelectorAll('[data-testid="LockIcon"]').length).toBeGreaterThan(0);
         await settle();
     });
 });

@@ -356,7 +356,6 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                 {showNotes ? (
                     <div>
                         <TextField
-                            variant="standard"
                             label="Note"
                             fullWidth
                             multiline

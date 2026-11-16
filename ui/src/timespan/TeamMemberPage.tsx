@@ -13,7 +13,7 @@ import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamMembers, TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {inUserTz} from './timeutils';
-import {TeamEntry, useTagColors} from './TeamEntry';
+import {TeamEntry} from './TeamEntry';
 import {MemberAvatar} from './MemberAvatar';
 import Box from '@mui/material/Box';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
@@ -117,14 +117,14 @@ const Messages: React.FC<{
     </>
 );
 
-const DayCard: React.FC<{group: DayGroup; colors: Record<string, string>}> = ({group: {day, entries, seconds}, colors}) => (
+const DayCard: React.FC<{group: DayGroup}> = ({group: {day, entries, seconds}}) => (
     <Paper sx={styles.day}>
         <Box sx={styles.dayHeader}>
             <Typography variant="h6">{moment(day, DAY_FORMAT).format('YYYY-MM-DD ddd')}</Typography>
             <Typography color="textSecondary">共 {formatDuration(seconds)}</Typography>
         </Box>
-        {entries.map(({timeSpan}) => (
-            <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
+        {entries.map(({timeSpan, tagColors}) => (
+            <TeamEntry key={timeSpan.id} timeSpan={timeSpan} tagColors={tagColors} />
         ))}
     </Paper>
 );
@@ -136,7 +136,6 @@ export const TeamMemberPage: React.FC = () => {
     const member = ((membersResult.data && membersResult.data.teamMembers) || []).find((m) => m.id === userId);
     const name = member ? member.name : '';
     const unknownMember = !!membersResult.data && !member;
-    const colors = useTagColors();
 
     const [from, setFrom] = React.useState(moment().subtract(6, 'day').format(DAY_FORMAT));
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
@@ -167,7 +166,6 @@ export const TeamMemberPage: React.FC = () => {
 
             <Box sx={styles.controls}>
                 <TextField
-                    variant="standard"
                     type="date"
                     value={from}
                     onChange={(e) => setFrom(e.target.value)}
@@ -177,7 +175,6 @@ export const TeamMemberPage: React.FC = () => {
                     —
                 </Box>
                 <TextField
-                    variant="standard"
                     type="date"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
@@ -198,7 +195,7 @@ export const TeamMemberPage: React.FC = () => {
             />
 
             {days.map((group) => (
-                <DayCard key={group.day} group={group} colors={colors} />
+                <DayCard key={group.day} group={group} />
             ))}
         </div>
     );

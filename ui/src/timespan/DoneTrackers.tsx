@@ -140,7 +140,7 @@ const DatedTimeSpans: React.FC<
 > = ({name, timeSpans, addTagsToTracker}) => {
     return (
         <div>
-            <Typography align="center" variant={'h5'}>
+            <Typography variant="subtitle1" color="text.secondary" sx={{mt: 3, mb: 1, ml: 0.5, fontWeight: 600}}>
                 {name}
             </Typography>
             {timeSpans.map((timeSpanProps) => (

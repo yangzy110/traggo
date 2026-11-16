@@ -150,6 +150,10 @@ export const TeamTimeSpans = gql`
                 }
                 note
             }
+            tagColors {
+                key
+                color
+            }
         }
     }
 `;

@@ -137,7 +137,7 @@ export const UsersPage = () => {
     });
 
     return (
-        <Paper elevation={1} square={true} sx={rootSx}>
+        <Paper elevation={1} sx={rootSx}>
             <Button
                 color={'primary'}
                 variant={'outlined'}

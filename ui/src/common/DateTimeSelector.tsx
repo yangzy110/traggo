@@ -81,6 +81,8 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
                         sx: {width: (showDate ? 185 : 105) + (ampm ? 20 : 0)},
                         slotProps: {input: {disableUnderline: true}},
                     },
+                    openPickerButton: {size: 'small', sx: {color: 'text.secondary'}},
+                    openPickerIcon: {fontSize: 'small'},
                 }}
             />
         );

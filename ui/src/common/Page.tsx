@@ -57,16 +57,18 @@ const styles = {
         textDecoration: 'none',
     }),
     navButton: (theme) => ({
-        textTransform: 'none',
-        marginRight: theme.spacing(1),
-        fontSize: '1rem',
-        borderRadius: 0,
-        borderBottom: '2px solid transparent',
-        height: 64,
+        marginRight: theme.spacing(0.5),
+        padding: theme.spacing(0.75, 1.75),
+        fontSize: '0.95rem',
+        fontWeight: 500,
+        borderRadius: '8px',
+        opacity: 0.8,
+        '&:hover': {opacity: 1, backgroundColor: 'action.hover'},
     }),
     navButtonActive: {
-        borderBottomColor: 'currentColor',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        opacity: 1,
+        fontWeight: 600,
+        backgroundColor: 'action.selected',
     },
     menuButton: (theme) => ({
         marginRight: '20px',
@@ -282,7 +284,9 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                     <Box sx={styles.sectionDesktop}>
                         <Button color="inherit" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
                             <AccountCircle />
-                            &nbsp;{username}
+                            <Box component="span" sx={{display: {xs: 'none', sm: 'inline'}, ml: 1}}>
+                                {username}
+                            </Box>
                         </Button>
                         <Menu
                             anchorEl={userMenuOpen}

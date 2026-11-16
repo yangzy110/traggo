@@ -9,11 +9,11 @@ const rootSx: SxProps<MuiTheme> = (theme) => ({
     paddingBottom: theme.spacing(3),
     textAlign: 'center',
     maxWidth: 400,
-    borderTop: `5px solid ${theme.palette.primary.main}`,
+    borderRadius: '16px',
 });
 export const DefaultPaper: React.FC<React.PropsWithChildren> = ({children}) => {
     return (
-        <Paper elevation={10} square={true} sx={rootSx}>
+        <Paper elevation={4} sx={rootSx}>
             {children}
         </Paper>
     );

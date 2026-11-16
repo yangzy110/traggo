@@ -1,8 +1,5 @@
 import * as React from 'react';
 import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/NativeSelect';
 import {useQuery} from '@apollo/client/react';
 import {
     Tags,
@@ -62,7 +59,6 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
     return (
         <>
             <TextField
-                variant="standard"
                 label={'Title'}
                 value={entry.title}
                 disabled={disabled}
@@ -72,42 +68,42 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 }}
                 fullWidth
             />
-            <FormControl variant="standard" margin={'normal'} fullWidth>
-                <InputLabel>Type</InputLabel>
-                <Select
-                    variant="standard"
-                    fullWidth
-                    value={entry.entryType}
-                    disabled={disabled}
-                    onChange={(e) => {
-                        entry.entryType = e.target.value as EntryType;
-                        setEntry(entry);
-                    }}>
-                    {Object.values(EntryType).map((type) => (
-                        <option key={type} value={type}>
-                            {type}
-                        </option>
-                    ))}
-                </Select>
-            </FormControl>
-            <FormControl variant="standard" margin={'normal'} fullWidth>
-                <InputLabel>Interval</InputLabel>
-                <Select
-                    variant="standard"
-                    fullWidth
-                    disabled={disabled}
-                    value={entry.statsSelection.interval}
-                    onChange={(e) => {
-                        entry.statsSelection.interval = e.target.value as StatsInterval;
-                        setEntry(entry);
-                    }}>
-                    {Object.values(StatsInterval).map((type) => (
-                        <option key={type} value={type}>
-                            {type}
-                        </option>
-                    ))}
-                </Select>
-            </FormControl>
+            <TextField
+                select
+                label="Type"
+                margin="normal"
+                fullWidth
+                slotProps={{select: {native: true}}}
+                value={entry.entryType}
+                disabled={disabled}
+                onChange={(e) => {
+                    entry.entryType = e.target.value as EntryType;
+                    setEntry(entry);
+                }}>
+                {Object.values(EntryType).map((type) => (
+                    <option key={type} value={type}>
+                        {type}
+                    </option>
+                ))}
+            </TextField>
+            <TextField
+                select
+                label="Interval"
+                margin="normal"
+                fullWidth
+                slotProps={{select: {native: true}}}
+                disabled={disabled}
+                value={entry.statsSelection.interval}
+                onChange={(e) => {
+                    entry.statsSelection.interval = e.target.value as StatsInterval;
+                    setEntry(entry);
+                }}>
+                {Object.values(StatsInterval).map((type) => (
+                    <option key={type} value={type}>
+                        {type}
+                    </option>
+                ))}
+            </TextField>
             <Typography component="div">
                 <Box component="label" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                     <Box>Range: </Box>
@@ -160,10 +156,11 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                     />
                 </>
             ) : (
-                <Select
-                    variant="standard"
+                <TextField
+                    select
                     fullWidth
                     disabled={disabled}
+                    slotProps={{select: {native: true}}}
                     value={entry.statsSelection.rangeId || ''}
                     onChange={(e) => {
                         if (e.target.value === '') {
@@ -183,7 +180,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                             {ranges[key]}
                         </option>
                     ))}
-                </Select>
+                </TextField>
             )}
             {entry.entryType !== EntryType.PieChart ? (
                 <Typography component="div">

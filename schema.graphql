@@ -57,6 +57,7 @@ type RootQuery {
     devices: [Device!] @hasRole(role: USER)
     timeSpans(fromInclusive: Time, toInclusive: Time, cursor: InputCursor): PagedTimeSpans! @hasRole(role: USER)
     timers: [TimeSpan!] @hasRole(role: USER)
+    teamTimeSpans(fromInclusive: Time!, toInclusive: Time!): [TeamMemberTimeSpan!]! @hasRole(role: USER)
     stats(ranges: [Range!], tags: [String!], excludeTags: [InputTimeSpanTag!], requireTags: [InputTimeSpanTag!]): [RangedStatisticsEntries!] @hasRole(role: USER)
     stats2(now: Time!, stats: InputStatsSelection!): [RangedStatisticsEntries!] @hasRole(role: USER)
     version: Version!
@@ -162,6 +163,11 @@ type TimeSpan {
     tags: [TimeSpanTag!]
     # TODO not nullable ^
     note: String!
+}
+
+type TeamMemberTimeSpan {
+    user: User!
+    timeSpan: TimeSpan!
 }
 
 type PagedTimeSpans {

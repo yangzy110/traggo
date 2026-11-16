@@ -18,6 +18,7 @@ import {DashboardPage} from './dashboard/DashboardPage';
 import {DashboardsPage} from './dashboard/DashboardsPage';
 import {TagPage} from './tag/TagPage';
 import {SettingsPage} from './setting/SettingsPage';
+import {TeamPage} from './timespan/TeamPage';
 import {CalendarPage} from './timespan/calendar/CalendarPage';
 
 export const Router = () => {
@@ -41,11 +42,12 @@ export const Router = () => {
                 <Route path="/dashboard/:id" component={DashboardPage} />
                 <Route exact path="/timesheet/list" component={DailyPage} />
                 <Route exact path="/timesheet/calendar" component={CalendarPage} />
+                <Route exact path="/team" component={TeamPage} />
                 <Route exact path="/user/settings" component={SettingsPage} />
                 <Route exact path="/user/devices" component={DevicesPage} />
                 <Route exact path="/user/tags" component={TagPage} />
                 {admin ? <Route exact path="/admin/users" component={UsersPage} /> : null}
-                <Route exact path="/" render={() => <Redirect to="/timesheet/list" />} />
+                <Route exact path="/" render={() => <Redirect to="/timesheet/calendar" />} />
             </Page>
         </Switch>
     );

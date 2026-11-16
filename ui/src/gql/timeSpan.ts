@@ -132,3 +132,24 @@ export const RemoveTimeSpan = gql`
         }
     }
 `;
+
+export const TeamTimeSpans = gql`
+    query TeamTimeSpans($start: Time!, $end: Time!) {
+        teamTimeSpans(fromInclusive: $start, toInclusive: $end) {
+            user {
+                id
+                name
+            }
+            timeSpan {
+                id
+                start
+                end
+                tags {
+                    key
+                    value
+                }
+                note
+            }
+        }
+    }
+`;

@@ -3,7 +3,7 @@ import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
 import {Button} from '@mui/material';
-import {MoreVert} from '@mui/icons-material';
+import MoreVert from '@mui/icons-material/MoreVert';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Menu from '@mui/material/Menu';

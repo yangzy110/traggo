@@ -28,6 +28,7 @@ lint-go:
 lint-js:
 	(cd ui && yarn format:check)
 	(cd ui && yarn lint:check)
+	(cd ui && yarn typecheck)
 
 lint: lint-go lint-js
 

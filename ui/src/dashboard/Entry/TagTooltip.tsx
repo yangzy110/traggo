@@ -4,7 +4,6 @@ import Paper from '@mui/material/Paper';
 import {Typography} from '@mui/material';
 import moment from 'moment-timezone';
 import prettyMs from 'pretty-ms';
-import * as React from 'react';
 
 // recharts passes `active` and `payload` to the element which is given as `content`
 type ContentProps = Partial<Pick<TooltipContentProps, 'active' | 'payload'>>;

@@ -61,8 +61,75 @@ const styles = {
     }),
 } satisfies Record<string, SxProps<MuiTheme>>;
 
-export const TeamMemberPage: React.FC = () => {
+interface DayGroup {
+    day: string;
+    entries: TeamTimeSpans['teamTimeSpans'];
+    seconds: number;
+}
+
+// Newest day first, a time span is listed on the day it started.
+const groupByDay = (items: TeamTimeSpans['teamTimeSpans']): DayGroup[] => {
+    const days: DayGroup[] = [];
+    items.forEach((item) => {
+        const day = moment.parseZone(item.timeSpan.start).format(DAY_FORMAT);
+        let group = days.find((d) => d.day === day);
+        if (!group) {
+            group = {day, entries: [], seconds: 0};
+            days.push(group);
+        }
+        group.entries.push(item);
+        if (item.timeSpan.end) {
+            group.seconds += spanSeconds(item.timeSpan.start, item.timeSpan.end);
+        }
+    });
+    return days.sort((a, b) => b.day.localeCompare(a.day));
+};
+
+const MemberHeader: React.FC<{member?: {name: string}; userId: number; subtitle: string}> = ({member, userId, subtitle}) => {
     const navigate = useNavigate();
+    return (
+        <Box sx={styles.header}>
+            <IconButton aria-label="back" onClick={() => navigate('/team')}>
+                <BackIcon />
+            </IconButton>
+            {member ? <MemberAvatar id={userId} name={member.name} /> : null}
+            <Typography variant="h5" sx={styles.title}>
+                {member ? `${member.name} 的日志` : ''}
+            </Typography>
+            <Typography color="textSecondary">{subtitle}</Typography>
+        </Box>
+    );
+};
+
+const Messages: React.FC<{
+    unknownMember: boolean;
+    rangeError: string | null;
+    error: string | null;
+    loading: boolean;
+    empty: boolean;
+}> = ({unknownMember, rangeError, error, loading, empty}) => (
+    <>
+        {unknownMember ? <Typography color="error">成员不存在。</Typography> : null}
+        {rangeError ? <Typography color="error">{rangeError}</Typography> : null}
+        {error ? <Typography color="error">{error}</Typography> : null}
+        {loading ? <CenteredSpinner /> : null}
+        {empty ? <Typography color="textSecondary">这段时间没有记录。</Typography> : null}
+    </>
+);
+
+const DayCard: React.FC<{group: DayGroup; colors: Record<string, string>}> = ({group: {day, entries, seconds}, colors}) => (
+    <Paper sx={styles.day}>
+        <Box sx={styles.dayHeader}>
+            <Typography variant="h6">{moment(day, DAY_FORMAT).format('YYYY-MM-DD ddd')}</Typography>
+            <Typography color="textSecondary">共 {formatDuration(seconds)}</Typography>
+        </Box>
+        {entries.map(({timeSpan}) => (
+            <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
+        ))}
+    </Paper>
+);
+
+export const TeamMemberPage: React.FC = () => {
     const params = useParams<{userId: string}>();
     const userId = parseInt(params.userId || '', 10);
     const membersResult = useQuery<TeamMembers>(gqlTimeSpan.TeamMembers);
@@ -86,21 +153,7 @@ export const TeamMemberPage: React.FC = () => {
     });
 
     const items = (!rangeError && data && data.teamTimeSpans) || [];
-    // Newest day first, a time span is listed on the day it started.
-    const days: Array<{day: string; entries: typeof items; seconds: number}> = [];
-    items.forEach((item) => {
-        const day = moment.parseZone(item.timeSpan.start).format(DAY_FORMAT);
-        let group = days.find((d) => d.day === day);
-        if (!group) {
-            group = {day, entries: [], seconds: 0};
-            days.push(group);
-        }
-        group.entries.push(item);
-        if (item.timeSpan.end) {
-            group.seconds += spanSeconds(item.timeSpan.start, item.timeSpan.end);
-        }
-    });
-    days.sort((a, b) => b.day.localeCompare(a.day));
+    const days = groupByDay(items);
 
     const exportCsv = () => {
         const entries: LogEntry[] = items.map(({user, timeSpan}) => ({...timeSpan, member: user.name}));
@@ -110,16 +163,7 @@ export const TeamMemberPage: React.FC = () => {
 
     return (
         <div>
-            <Box sx={styles.header}>
-                <IconButton aria-label="back" onClick={() => navigate('/team')}>
-                    <BackIcon />
-                </IconButton>
-                {member ? <MemberAvatar id={userId} name={name} /> : null}
-                <Typography variant="h5" sx={styles.title}>
-                    {member ? `${name} 的日志` : ''}
-                </Typography>
-                <Typography color="textSecondary">{rangeError ? '' : `共 ${formatDuration(total)}`}</Typography>
-            </Box>
+            <MemberHeader member={member} userId={userId} subtitle={rangeError ? '' : `共 ${formatDuration(total)}`} />
 
             <Box sx={styles.controls}>
                 <TextField
@@ -145,24 +189,16 @@ export const TeamMemberPage: React.FC = () => {
                 </Button>
             </Box>
 
-            {unknownMember ? <Typography color="error">成员不存在。</Typography> : null}
-            {rangeError ? <Typography color="error">{rangeError}</Typography> : null}
-            {error ? <Typography color="error">{error.message}</Typography> : null}
-            {!rangeError && member && loading && !data ? <CenteredSpinner /> : null}
-            {!rangeError && member && data && days.length === 0 ? (
-                <Typography color="textSecondary">这段时间没有记录。</Typography>
-            ) : null}
+            <Messages
+                unknownMember={unknownMember}
+                rangeError={rangeError}
+                error={error ? error.message : null}
+                loading={!rangeError && !!member && loading && !data}
+                empty={!rangeError && !!member && !!data && days.length === 0}
+            />
 
-            {days.map(({day, entries, seconds}) => (
-                <Paper key={day} sx={styles.day}>
-                    <Box sx={styles.dayHeader}>
-                        <Typography variant="h6">{moment(day, DAY_FORMAT).format('YYYY-MM-DD ddd')}</Typography>
-                        <Typography color="textSecondary">共 {formatDuration(seconds)}</Typography>
-                    </Box>
-                    {entries.map(({timeSpan}) => (
-                        <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
-                    ))}
-                </Paper>
+            {days.map((group) => (
+                <DayCard key={group.day} group={group} colors={colors} />
             ))}
         </div>
     );

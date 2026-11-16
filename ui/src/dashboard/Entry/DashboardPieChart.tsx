@@ -1,6 +1,5 @@
 import {Stats_stats_entries} from '../../gql/types';
-import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
-import type {TooltipContentProps} from 'recharts';
+import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, type TooltipContentProps} from 'recharts';
 import * as React from 'react';
 import {Colors} from './colors';
 import {Typography} from '@mui/material';

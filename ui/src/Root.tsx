@@ -1,4 +1,3 @@
-import * as React from 'react';
 import './global.css';
 import 'react-grid-layout/css/styles.css';
 import '@fontsource/roboto/300.css';

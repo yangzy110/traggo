@@ -26,6 +26,7 @@ export default [
             'default-case': 'error',
             eqeqeq: ['error', 'always', {null: 'ignore'}],
             'no-debugger': 'error',
+            'no-empty': ['error', {allowEmptyCatch: true}],
             'no-duplicate-imports': 'error',
             'no-restricted-exports': ['error', {restrictDefaultExports: {direct: true}}],
             'no-var': 'error',
@@ -36,8 +37,8 @@ export default [
         },
     },
     {
-        // tools require default exports
-        files: ['*.config.{ts,mjs}', 'codegen.ts'],
+        // tools and type declarations of modules require default exports
+        files: ['*.config.{ts,mjs}', 'codegen.ts', '**/*.d.ts'],
         languageOptions: {globals: {...globals.node}},
         rules: {'no-restricted-exports': 'off'},
     },

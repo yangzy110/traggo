@@ -1,22 +1,19 @@
+// Returns a copy of the value without the `__typename` fields.
+// The results of Apollo Client are frozen, therefore the value must not be modified.
 export const stripTypename = <T>(value: T): T => {
-    if (value === null || value === undefined) {
+    if (value === null || value === undefined || typeof value !== 'object') {
         return value;
     }
 
     if (Array.isArray(value)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (value as any).map((x: any) => stripTypename(x));
+        return value.map((x) => stripTypename(x)) as T;
     }
 
-    if (typeof value !== 'object') {
-        return value;
-    }
-
-    Object.values(value).forEach(stripTypename);
-    if ('__typename' in value) {
-        // @ts-ignore
-        delete value.__typename;
-    }
-
-    return value;
+    const copy: Record<string, unknown> = {};
+    Object.entries(value).forEach(([key, child]) => {
+        if (key !== '__typename') {
+            copy[key] = stripTypename(child);
+        }
+    });
+    return copy as T;
 };

@@ -11,6 +11,7 @@ import {Fade} from '../../common/Fade';
 import {DashboardEntryForm, isValidDashboardEntry} from './DashboardEntryForm';
 import {handleError} from '../../utils/errors';
 import {useSnackbar} from 'notistack';
+import {stripTypename} from '../../utils/strip';
 
 interface EditPopupProps {
     entry: Dashboards_dashboards_items;
@@ -79,8 +80,8 @@ export const EditPopup: React.FC<EditPopupProps> = ({entry, anchorEl, onChange: 
                                                       }
                                                     : null,
                                                 rangeId: entry.statsSelection.rangeId,
-                                                excludeTags: entry.statsSelection.excludeTags,
-                                                includeTags: entry.statsSelection.includeTags,
+                                                excludeTags: stripTypename(entry.statsSelection.excludeTags),
+                                                includeTags: stripTypename(entry.statsSelection.includeTags),
                                             },
                                         },
                                     })

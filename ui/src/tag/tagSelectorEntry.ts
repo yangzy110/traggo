@@ -1,5 +1,5 @@
 import {Tags, Tags_tags} from '../gql/types';
-import type {useQuery} from '@apollo/client/react';
+import type {QueryResult} from '../gql/apollo';
 
 export interface TagInputError {
     error: string;
@@ -51,7 +51,7 @@ export const specialTag = (name: string, state: SpecialTagState): TagSelectorEnt
     };
 };
 
-const tryAdd = (tagsResult: useQuery.Result<Tags>, entry: string, onlyKeys: boolean): TagSelectorEntry | TagInputError => {
+const tryAdd = (tagsResult: QueryResult<Tags>, entry: string, onlyKeys: boolean): TagSelectorEntry | TagInputError => {
     const [keySomeCase, value, ...other] = entry.split(':');
     const key = keySomeCase.toLowerCase();
 
@@ -99,7 +99,7 @@ const groupAndCheckExistence = (onlyKeys: boolean, allowDuplicateKeys: boolean) 
 
 export const addValues = (
     newValue: string,
-    tagsResult: useQuery.Result<Tags>,
+    tagsResult: QueryResult<Tags>,
     selectedEntries: TagSelectorEntry[],
     onlyKeys: boolean,
     allowDuplicateKeys: boolean

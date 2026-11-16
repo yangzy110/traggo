@@ -84,6 +84,15 @@ const newEntry = (): Dashboards_dashboards_items => {
     };
 };
 
+// Shows the message and redirects, the message must not be enqueued while rendering.
+const RedirectToDashboards: React.FC<{message: string}> = ({message}) => {
+    const {enqueueSnackbar} = useSnackbar();
+    React.useEffect(() => {
+        enqueueSnackbar(message, {variant: 'warning'});
+    }, [enqueueSnackbar, message]);
+    return <Navigate to="/dashboards" replace />;
+};
+
 export const DashboardPage: React.FC = () => {
     const params = useParams<{id: string}>();
     const [addRef, setAddRef] = React.useState<null | HTMLElement>(null);
@@ -105,7 +114,6 @@ export const DashboardPage: React.FC = () => {
             refetchQueries: [{query: gqlDashboard.Dashboards}],
         }
     );
-    const {enqueueSnackbar} = useSnackbar();
     if (loading) {
         return <CenteredSpinner />;
     }
@@ -116,13 +124,11 @@ export const DashboardPage: React.FC = () => {
     const dashboards = data.dashboards || [];
 
     if (!params.id) {
-        enqueueSnackbar('id parameter is missing in url', {variant: 'warning'});
-        return <Navigate to="/dashboards" replace />;
+        return <RedirectToDashboards message="id parameter is missing in url" />;
     }
     const dashboard = dashboards.find((db) => '' + db.id === params.id);
     if (!dashboard) {
-        enqueueSnackbar('dashboard does not exist', {variant: 'warning'});
-        return <Navigate to="/dashboards" replace />;
+        return <RedirectToDashboards message="dashboard does not exist" />;
     }
 
     const dashboardEntries = dashboard.items;
@@ -150,10 +156,13 @@ export const DashboardPage: React.FC = () => {
 
     const indexedRanges = dashboard.ranges.reduce((a, range) => ({...a, [range.id]: diagramRanges[range.id] || range.range}), {});
 
-    const updatePosHandler = (_1: unknown, _2: unknown, newItem: LayoutItem) => {
+    const updatePosHandler = (_1: unknown, _2: unknown, newItem: LayoutItem | null) => {
+        if (!newItem) {
+            return;
+        }
         updatePos({
             variables: {
-                entryId: parseInt(newItem.i!, 10),
+                entryId: parseInt(newItem.i, 10),
                 pos: {[viewType]: {x: newItem.x, y: newItem.y, w: newItem.w, h: newItem.h}},
             },
         }).then(console.log);

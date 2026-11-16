@@ -104,21 +104,29 @@ export const CalendarPage: React.FC = () => {
     });
 
     // Exports all finished time spans of the range which is currently visible in the calendar.
+    const fetchExportPage = async (
+        start: string,
+        end: string,
+        cursor: InputCursor | null
+    ): Promise<TimeSpansForExport['timeSpans']> => {
+        const result = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
+            query: gqlTimeSpan.TimeSpansForExport,
+            variables: {start, end, cursor},
+            fetchPolicy: 'network-only',
+        });
+        if (!result.data) {
+            throw result.error || new Error('no data received');
+        }
+        return result.data.timeSpans;
+    };
+
     const exportCsv = async () => {
         const {start, end} = timeSpansResult.variables;
         const entries: LogEntry[] = [];
         try {
             let cursor: InputCursor | null = null;
             for (let page = 0; page < MAX_EXPORT_PAGES; page++) {
-                const result = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
-                    query: gqlTimeSpan.TimeSpansForExport,
-                    variables: {start, end, cursor},
-                    fetchPolicy: 'network-only',
-                });
-                if (!result.data) {
-                    throw result.error || new Error('no data received');
-                }
-                const paged = result.data.timeSpans;
+                const paged = await fetchExportPage(start, end, cursor);
                 paged.timeSpans.forEach((ts) =>
                     entries.push({member: '', start: ts.start, end: ts.end, tags: ts.tags, note: ts.note})
                 );
@@ -177,7 +185,7 @@ export const CalendarPage: React.FC = () => {
                     classNames: ts.end ? [] : ['__running'],
                     backgroundColor: color,
                     startEditable: true,
-                    id: ts.id,
+                    id: String(ts.id),
                     title: ts.tags!.map((t) => t.key + ':' + t.value).join(' '),
                     extendedProps: {ts},
                     textColor: theme.palette.getContrastText(color),

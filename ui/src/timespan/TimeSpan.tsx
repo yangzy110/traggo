@@ -21,7 +21,7 @@ import {
 } from '../gql/types';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import IconButton from '@mui/material/IconButton';
-import {MoreVert} from '@mui/icons-material';
+import MoreVert from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import {useStateAndDelegateWithDelayOnChange} from '../utils/hooks';

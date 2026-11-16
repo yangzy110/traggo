@@ -32,6 +32,7 @@ export const RelativeDateTimeSelector: React.FC<RelativeDateTimeSelectorProps> =
     const parsed = parseRelativeTime(value, type);
     return (
         <TextField
+            variant="standard"
             fullWidth
             style={style}
             value={value}

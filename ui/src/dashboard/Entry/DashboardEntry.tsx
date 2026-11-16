@@ -7,6 +7,7 @@ import {Paper} from '@mui/material';
 import Typography from '@mui/material/Typography';
 import moment from 'moment-timezone';
 import {expectNever} from '../../utils/never';
+import {stripTypename} from '../../utils/strip';
 import {DashboardBarChart} from './DashboardBarChart';
 import {DashboardLineChart} from './DashboardLineChart';
 import {CenteredSpinner} from '../../common/CenteredSpinner';
@@ -17,10 +18,10 @@ import {DashboardTable} from './DashboardTable';
 interface DashboardEntryProps {
     entry: Dashboards_dashboards_items;
     ranges: Record<number, Range>;
-    ref?: React.Ref<HTMLElement>;
+    ref?: React.Ref<HTMLDivElement>;
 }
 
-export const DashboardEntry: React.FC<DashboardEntryProps> = React.forwardRef<{}, DashboardEntryProps>(({entry, ranges}, ref) => {
+export const DashboardEntry: React.FC<DashboardEntryProps> = ({entry, ranges, ref}) => {
     const range = findRange(entry.statsSelection, ranges);
     return (
         <Paper style={{width: '100%', height: '100%'}} ref={ref}>
@@ -35,9 +36,8 @@ export const DashboardEntry: React.FC<DashboardEntryProps> = React.forwardRef<{}
             </div>
         </Paper>
     );
-});
+};
 
-// eslint-disable-next-line complexity
 const SpecificDashboardEntry: React.FC<{entry: Dashboards_dashboards_items; range: Range}> = ({entry, range}) => {
     const interval = entry.statsSelection.interval;
     const stats = useQuery<Stats2, Stats2Variables>(gqlStats.Stats2, {
@@ -47,8 +47,8 @@ const SpecificDashboardEntry: React.FC<{entry: Dashboards_dashboards_items; rang
                 range,
                 interval,
                 tags: entry.statsSelection.tags,
-                excludeTags: entry.statsSelection.excludeTags,
-                includeTags: entry.statsSelection.includeTags,
+                excludeTags: stripTypename(entry.statsSelection.excludeTags),
+                includeTags: stripTypename(entry.statsSelection.includeTags),
             },
         },
     });

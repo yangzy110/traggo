@@ -11,6 +11,7 @@ import {Fade} from '../../common/Fade';
 import {DashboardEntryForm, isValidDashboardEntry} from './DashboardEntryForm';
 import {handleError} from '../../utils/errors';
 import {useSnackbar} from 'notistack';
+import {stripTypename} from '../../utils/strip';
 
 interface EditPopupProps {
     dashboardId: number;
@@ -93,8 +94,8 @@ export const AddPopup: React.FC<EditPopupProps> = ({
                                                       }
                                                     : null,
                                                 rangeId: entry.statsSelection.rangeId,
-                                                excludeTags: entry.statsSelection.excludeTags,
-                                                includeTags: entry.statsSelection.includeTags,
+                                                excludeTags: stripTypename(entry.statsSelection.excludeTags),
+                                                includeTags: stripTypename(entry.statsSelection.includeTags),
                                             },
                                             pos: {
                                                 desktop: {

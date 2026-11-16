@@ -1,10 +1,11 @@
 import {Tags, SuggestTagValue, SuggestTagValueVariables} from '../gql/types';
 import * as gqlTags from '../gql/tags';
 import {useQuery} from '@apollo/client/react';
+import type {QueryResult} from '../gql/apollo';
 import {TagSelectorEntry, specialTag} from './tagSelectorEntry';
 
 export const useSuggest = (
-    tagResult: useQuery.Result<Tags>,
+    tagResult: QueryResult<Tags>,
     inputValue: string,
     usedTags: TagSelectorEntry[],
     skipValue = false,
@@ -34,7 +35,7 @@ export const useSuggest = (
 
 const suggestTag = (
     exactMatch: TagSelectorEntry['tag'] | undefined,
-    tagResult: useQuery.Result<Tags>,
+    tagResult: QueryResult<Tags>,
     tagKey: string,
     usedTags: string[],
     allowDuplicateKeys: boolean,
@@ -65,7 +66,7 @@ const suggestTag = (
 const suggestTagValue = (
     exactMatch: TagSelectorEntry['tag'],
     tagValue: string,
-    valueResult: useQuery.Result<SuggestTagValue, SuggestTagValueVariables>,
+    valueResult: QueryResult<SuggestTagValue, SuggestTagValueVariables>,
     usedValues: string[],
     includeInputValueOnNoMatch: boolean
 ): TagSelectorEntry[] => {

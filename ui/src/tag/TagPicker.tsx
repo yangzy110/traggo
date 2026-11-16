@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import CheckIcon from '@mui/icons-material/Check';
-import bestContrast from 'get-best-contrast-color';
+import {tagStyle} from '../common/tagStyle';
 import {useQuery} from '@apollo/client/react';
 import * as gqlTag from '../gql/tags';
 import {Tags, UsedTagValues} from '../gql/types';
@@ -66,12 +66,17 @@ export const TagPicker: React.FC<TagPickerProps> = ({label, selectedEntries, onS
                             icon={isSelected ? <CheckIcon style={{color: 'inherit'}} /> : undefined}
                             onClick={() => toggle(key, value)}
                             aria-pressed={isSelected}
-                            variant={isSelected ? 'filled' : 'outlined'}
-                            style={
-                                isSelected
-                                    ? {background: color, color: bestContrast(color, ['#fff', '#000']), borderColor: color}
-                                    : {borderColor: color}
-                            }
+                            variant="outlined"
+                            sx={(theme) => ({
+                                borderRadius: '999px',
+                                fontWeight: 600,
+                                ...tagStyle(theme, color),
+                                // unselected tags are quiet, selected tags are filled
+                                ...(isSelected
+                                    ? {borderWidth: 1.5}
+                                    : {backgroundColor: 'transparent', color: theme.palette.text.secondary}),
+                                '&:hover': {backgroundColor: tagStyle(theme, color).backgroundColor},
+                            })}
                         />
                     );
                 })}

@@ -26,6 +26,10 @@ func (r *ResolverForTimeSpan) UpdateTimeSpan(ctx context.Context, id int, start 
 		return nil, err
 	}
 
+	if err := checkNoOverlap(r.DB, timeSpan, id); err != nil {
+		return nil, err
+	}
+
 	timeSpan.ID = id
 
 	r.DB.Where("time_span_id = ?", timeSpan.ID).Delete(new(model.TimeSpanTag))

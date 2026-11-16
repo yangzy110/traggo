@@ -11,10 +11,12 @@ interface DateTimeSelectorProps {
     showDate: boolean;
     label: string;
     popoverOpen?: (open: boolean) => void;
+    // the minutes can be chosen in steps of this size
+    minutesStep?: number;
 }
 
 export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
-    ({selectedDate, onSelectDate, showDate, label, popoverOpen = () => {}}) => {
+    ({selectedDate, onSelectDate, showDate, label, popoverOpen = () => {}, minutesStep = 1}) => {
         const {done, dateTimeInputStyle} = useSettings();
         const [open, setOpen] = React.useState(false);
 
@@ -26,6 +28,7 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
             return (
                 <input
                     type="datetime-local"
+                    step={minutesStep * 60}
                     value={selectedDate.format('YYYY-MM-DDTHH:mm')}
                     onChange={(e) => {
                         onSelectDate(moment(e.target.value));
@@ -43,6 +46,7 @@ export const DateTimeSelector: React.FC<DateTimeSelectorProps> = React.memo(
             <DesktopDateTimePicker
                 format={format}
                 ampm={ampm}
+                minutesStep={minutesStep}
                 label={label}
                 openTo={showDate ? 'day' : 'hours'}
                 value={uglyConvertToLocalTime(selectedDate)}

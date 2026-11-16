@@ -28,7 +28,7 @@ import HrefLink from '@mui/material/Link';
 import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
 import Button from '@mui/material/Button';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+import Avatar from '@mui/material/Avatar';
 import {Link, matchPath, useLocation, useNavigate} from 'react-router-dom';
 import MenuItem from '@mui/material/MenuItem';
 import {useMutation, useQuery} from '@apollo/client/react';
@@ -66,13 +66,24 @@ const styles = {
         fontSize: '0.95rem',
         fontWeight: 500,
         borderRadius: '8px',
+        position: 'relative',
         opacity: 0.8,
         '&:hover': {opacity: 1, backgroundColor: 'action.hover'},
     }),
     navButtonActive: {
         opacity: 1,
         fontWeight: 600,
-        backgroundColor: 'action.selected',
+        // the page is marked by a line below of the button
+        '&::after': {
+            content: '""',
+            position: 'absolute',
+            left: 14,
+            right: 14,
+            bottom: -14,
+            height: 2,
+            borderRadius: 1,
+            backgroundColor: 'primary.main',
+        },
     },
     menuButton: (theme) => ({
         marginRight: '20px',
@@ -309,7 +320,17 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                     <Box sx={styles.grow} />
                     <Box sx={styles.sectionDesktop}>
                         <Button color="inherit" aria-label="账号菜单" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
-                            <AccountCircle />
+                            <Avatar
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    fontSize: '0.85rem',
+                                    fontWeight: 700,
+                                    bgcolor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                }}>
+                                {username.slice(0, 1).toUpperCase()}
+                            </Avatar>
                             <Box component="span" sx={{display: {xs: 'none', sm: 'inline'}, ml: 1}}>
                                 {username}
                             </Box>

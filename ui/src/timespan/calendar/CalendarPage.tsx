@@ -1,7 +1,10 @@
 import * as React from 'react';
-import {Paper, useTheme} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import {Box, Button, Fab, IconButton, Paper, ToggleButton, ToggleButtonGroup, Typography, useTheme} from '@mui/material';
+import PrevIcon from '@mui/icons-material/ChevronLeft';
+import NextIcon from '@mui/icons-material/ChevronRight';
 import {alpha} from '@mui/material/styles';
-import bestContrast from 'get-best-contrast-color';
+import {tagStyle} from '../../common/tagStyle';
 import {ExportCsvButton} from '../../common/ExportCsvButton';
 import moment from 'moment';
 import {useApolloClient, useQuery} from '@apollo/client/react';
@@ -16,7 +19,7 @@ import zhCnLocale from '@fullcalendar/core/locales/zh-cn';
 import type {CalendarOptions, EventApi, EventInput} from '@fullcalendar/core';
 import type {PopperProps} from '@mui/material/Popper';
 import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
-import {EDITOR_CLASS, TimeSpanEditor} from '../TimeSpanEditor';
+import {EDITOR_CLASS, nowInSteps, TimeSpanEditor} from '../TimeSpanEditor';
 import {TimesheetLayout} from '../TimesheetLayout';
 import {useTimeSpanMutations} from '../useTimeSpanMutations';
 import {FullCalendarStyling} from './FullCalendarStyling';
@@ -31,7 +34,7 @@ const toMoment = (date: Date): moment.Moment => {
 
 // The editor is shown below the end of a selection (to create a time span) or below an event (to change a time span).
 type Editor =
-    | {mode: 'create'; anchor: PopperProps['anchorEl']; start: Date; end: Date; unselect: () => void}
+    | {mode: 'create'; anchor: PopperProps['anchorEl']; start: Date; end: Date; editableTime?: boolean; unselect: () => void}
     | {mode: 'edit'; anchor: PopperProps['anchorEl']; ts: TimeSpanItem};
 
 export const CalendarPage: React.FC = () => {
@@ -47,6 +50,9 @@ export const CalendarPage: React.FC = () => {
     const [loading, setLoading] = React.useState(true);
     const [reload, setReload] = React.useState(0);
     const [view, setView] = React.useState('timeGridWeek');
+    const [title, setTitle] = React.useState('');
+    const calendarRef = React.useRef<FullCalendar>(null);
+    const api = () => (calendarRef.current ? calendarRef.current.getApi() : undefined);
     const [editor, setEditor] = React.useState<Editor | null>(null);
     const mutations = useTimeSpanMutations(() => setReload((n) => n + 1));
 
@@ -90,12 +96,14 @@ export const CalendarPage: React.FC = () => {
             ? timeSpans.map((ts) => {
                   const tags = (ts.tags || []).map((t) => t.key + ':' + t.value);
                   const colorKey = [...tags].sort((a, b) => a.localeCompare(b)).join(' ');
-                  const color = calculateColor(colorKey, ColorMode.Soft, theme.palette.mode);
+                  // the color of the first tag, like the tag itself
+                  const first = (ts.tags || [])[0];
+                  const color = (first && tagColors[first.key]) || calculateColor(colorKey, ColorMode.Soft, theme.palette.mode);
                   return {
                       start: moment(ts.start).toDate(),
                       end: moment(ts.end).toDate(),
                       // translucent, so that overlapping blocks stay readable; the solid color is the stripe at the left
-                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.38),
+                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.28 : 0.16),
                       id: String(ts.id),
                       title: tags.join(' '),
                       extendedProps: {ts, colors: tagColors},
@@ -140,16 +148,49 @@ export const CalendarPage: React.FC = () => {
     };
 
     return (
-        <TimesheetLayout view="calendar" actions={<ExportCsvButton onClick={exportCsv} disabled={timeSpans.length === 0} />}>
+        <TimesheetLayout
+            view="calendar"
+            nav={
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5, marginLeft: 1}}>
+                    <IconButton aria-label="上一页" size="small" onClick={() => api()?.prev()}>
+                        <PrevIcon />
+                    </IconButton>
+                    <IconButton aria-label="下一页" size="small" onClick={() => api()?.next()}>
+                        <NextIcon />
+                    </IconButton>
+                    <Button size="small" onClick={() => api()?.today()}>
+                        今天
+                    </Button>
+                    <Typography variant="h6" sx={{marginLeft: 1, fontWeight: 700, whiteSpace: 'nowrap'}}>
+                        {title}
+                    </Typography>
+                </Box>
+            }
+            actions={
+                <>
+                    <ToggleButtonGroup
+                        exclusive
+                        size="small"
+                        value={view === 'dayGridMonth' ? 'dayGridMonth' : 'timeGridWeek'}
+                        aria-label="日期范围"
+                        onChange={(_, value: string | null) => value && api()?.changeView(value)}>
+                        <ToggleButton value="timeGridWeek">周</ToggleButton>
+                        <ToggleButton value="dayGridMonth">月</ToggleButton>
+                    </ToggleButtonGroup>
+                    <ExportCsvButton onClick={exportCsv} disabled={timeSpans.length === 0} />
+                </>
+            }>
             <Paper sx={{flex: 1, minHeight: 0, padding: '10px'}}>
                 <FullCalendarStyling>
                     <FullCalendar
+                        ref={calendarRef}
                         locales={[zhCnLocale]}
                         locale="zh-cn"
                         initialView="timeGridWeek"
                         rerenderDelay={30}
                         datesSet={(x) => {
                             setView(x.view.type);
+                            setTitle(x.view.title);
                             const next = {
                                 start: moment(x.view.currentStart).format(),
                                 end: moment(x.view.currentEnd).format(),
@@ -167,7 +208,10 @@ export const CalendarPage: React.FC = () => {
                         editable={view !== 'dayGridMonth'}
                         // both edges can be dragged: the top edge changes the start, the bottom edge the end
                         eventResizableFromStart={true}
-                        snapDuration={{minutes: 5}}
+                        snapDuration={{minutes: 15}}
+                        // work blocks must not overlap
+                        eventOverlap={false}
+                        selectOverlap={false}
                         events={values}
                         allDaySlot={false}
                         selectable={view !== 'dayGridMonth'}
@@ -196,29 +240,44 @@ export const CalendarPage: React.FC = () => {
                         dayHeaderContent={(arg) => moment(arg.date).format(arg.view.type === 'dayGridMonth' ? 'ddd' : 'DD ddd')}
                         nowIndicator={true}
                         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                        headerToolbar={{
-                            center: 'title',
-                            left: 'prev,next today',
-                            right: 'timeGridWeek,dayGridMonth',
-                        }}
+                        headerToolbar={false}
                     />
                 </FullCalendarStyling>
             </Paper>
+            <Fab
+                color="primary"
+                aria-label="新建记录"
+                sx={{display: {xs: 'flex', sm: 'none'}, position: 'fixed', right: 20, bottom: 20, zIndex: 1100}}
+                onClick={() =>
+                    setEditor({
+                        mode: 'create',
+                        anchor: {getBoundingClientRect: () => new DOMRect(window.innerWidth / 2, 120, 0, 0)},
+                        start: nowInSteps().subtract(1, 'hour').toDate(),
+                        end: nowInSteps().toDate(),
+                        editableTime: true,
+                        unselect: () => {},
+                    })
+                }>
+                <AddIcon />
+            </Fab>
             {editor && editor.mode === 'create' ? (
                 <TimeSpanEditor
                     key="create"
+                    editableTime={editor.editableTime}
                     anchorEl={editor.anchor}
                     start={moment(editor.start)}
                     end={moment(editor.end)}
                     initialTags={[]}
                     initialNote=""
                     onConfirm={(result) =>
-                        mutations.create({...result, start: editor.start, end: editor.end}).then((ok) => {
-                            if (ok) {
-                                editor.unselect();
-                                setEditor(null);
-                            }
-                        })
+                        mutations
+                            .create(editor.editableTime ? result : {...result, start: editor.start, end: editor.end})
+                            .then((ok) => {
+                                if (ok) {
+                                    editor.unselect();
+                                    setEditor(null);
+                                }
+                            })
                     }
                     onCancel={closeEditor}
                 />
@@ -255,6 +314,7 @@ const describeEvent = (event: EventApi): {note: string; summary: string} => {
 
 // The tags are shown as small colored labels
 const TagPills: React.FC<{event: EventApi; maxLines?: number}> = ({event, maxLines}) => {
+    const theme = useTheme();
     const tags: Array<{key: string; value: string}> = (event.extendedProps.ts && event.extendedProps.ts.tags) || [];
     const colors: Record<string, string> = event.extendedProps.colors || {};
     if (tags.length === 0) {
@@ -268,7 +328,12 @@ const TagPills: React.FC<{event: EventApi; maxLines?: number}> = ({event, maxLin
                     <span
                         key={tag.key + ':' + tag.value}
                         className="pill"
-                        style={{background: color, color: bestContrast(color, ['#fff', '#000'])}}>
+                        style={{
+                            ...tagStyle(theme, color),
+                            backgroundColor: `color-mix(in srgb, ${color} 30%, ${theme.palette.background.paper})`,
+                            borderWidth: 1,
+                            borderStyle: 'solid',
+                        }}>
                         {tag.key}:{tag.value}
                     </span>
                 );

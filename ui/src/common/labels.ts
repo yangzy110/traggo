@@ -18,10 +18,8 @@ export const intervalLabels: Record<string, string> = {
 };
 
 export const themeLabels: Record<string, string> = {
-    GruvboxDark: 'Gruvbox 深色',
-    GruvboxLight: 'Gruvbox 浅色',
-    MaterialDark: 'Material 深色',
-    MaterialLight: 'Material 浅色',
+    MaterialLight: '浅色',
+    MaterialDark: '深色',
 };
 
 export const dateLocaleLabels: Record<string, string> = {

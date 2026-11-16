@@ -4,7 +4,6 @@ import {useQuery} from '@apollo/client/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
-import {alpha} from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import * as gqlTimeSpan from '../gql/timeSpan';
@@ -13,11 +12,13 @@ import {Tags, TimeSpans, TimeSpansVariables, TimeSpans_timeSpans_timeSpans} from
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {TagChip} from '../common/TagChip';
 import {toTagSelectorEntry} from '../tag/tagSelectorEntry';
-import {TimeSpanEditor} from './TimeSpanEditor';
+import {nowInSteps, TimeSpanEditor} from './TimeSpanEditor';
 import {TimesheetLayout} from './TimesheetLayout';
 import {useTimeSpanMutations} from './useTimeSpanMutations';
 import {groupByDay} from './timelist';
 import {DAY_FORMAT, exportLog, formatDuration} from './teamutils';
+import {EmptyState} from '../common/EmptyState';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 import {ExportCsvButton} from '../common/ExportCsvButton';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';
@@ -116,7 +117,7 @@ export const ListPage: React.FC = () => {
     };
 
     const close = () => setEditor(null);
-    const newEnd = moment().startOf('minute');
+    const newEnd = nowInSteps();
 
     return (
         <TimesheetLayout
@@ -135,26 +136,23 @@ export const ListPage: React.FC = () => {
             <Box ref={scroller} sx={{flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 0.5}}>
                 {timeSpansResult.loading && !timeSpansResult.data ? <CenteredSpinner /> : null}
                 {timeSpansResult.data && days.length === 0 ? (
-                    <Typography color="text.secondary" sx={{textAlign: 'center', marginTop: 6}}>
-                        还没有记录。点击右上角的“新建记录”，或者切换到日历直接拖拽创建。
-                    </Typography>
+                    <EmptyState icon={<EventNoteIcon />} title="还没有记录" hint="点击“新建记录”，或者切换到日历直接拖拽创建。" />
                 ) : null}
                 <Box sx={{maxWidth: 1000, margin: '0 auto'}}>
                     {days.map((day) => (
-                        <Box key={day.key} sx={{marginBottom: 1}}>
+                        <Paper key={day.key} sx={{marginBottom: 2, overflow: 'hidden'}}>
                             <Box
-                                sx={{
+                                sx={(theme) => ({
                                     display: 'flex',
                                     justifyContent: 'space-between',
-                                    marginTop: 2,
-                                    marginBottom: 1,
-                                    marginX: 0.5,
-                                }}>
-                                <Typography variant="subtitle1" color="text.secondary" sx={{fontWeight: 600}}>
-                                    {day.title}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    共 {formatDuration(day.seconds)}
+                                    alignItems: 'baseline',
+                                    padding: '10px 16px',
+                                    background: theme.palette.action.hover,
+                                    borderBottom: `1px solid ${theme.palette.divider}`,
+                                })}>
+                                <Typography variant="subtitle2">{day.title}</Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{fontVariantNumeric: 'tabular-nums'}}>
+                                    合计 <b>{formatDuration(day.seconds)}</b>
                                 </Typography>
                             </Box>
                             {day.timeSpans.map((timeSpan) => (
@@ -165,7 +163,7 @@ export const ListPage: React.FC = () => {
                                     onClick={(anchor) => setEditor({mode: 'edit', anchor, timeSpan})}
                                 />
                             ))}
-                        </Box>
+                        </Paper>
                     ))}
                     <div ref={sentinel} />
                     {loadingMore ? (
@@ -222,20 +220,19 @@ const TimeSpanRow: React.FC<{
     const firstTag = (timeSpan.tags || [])[0];
     const accent = (firstTag && colors[firstTag.key]) || DEFAULT_TAG_COLOR;
     return (
-        <Paper
-            elevation={1}
+        <Box
             onClick={(e) => onClick(e.currentTarget)}
-            sx={{
+            sx={(theme) => ({
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 2,
-                padding: '10px 16px',
-                marginBottom: 1,
+                padding: '12px 16px',
                 cursor: 'pointer',
-                borderLeft: `4px solid ${accent}`,
-                backgroundColor: (theme) => alpha(accent, theme.palette.mode === 'dark' ? 0.22 : 0.16),
-                '&:hover': {borderColor: 'primary.main', borderLeftColor: accent},
-            }}>
+                borderLeft: `3px solid ${accent}`,
+                borderBottom: `1px solid ${theme.palette.divider}`,
+                '&:last-of-type': {borderBottom: 0},
+                '&:hover': {background: theme.palette.action.hover},
+            })}>
             <Box sx={{minWidth: 112, fontVariantNumeric: 'tabular-nums'}}>
                 <Typography sx={{fontWeight: 700}}>
                     {start.format('HH:mm')} - {end.format('HH:mm')}
@@ -260,6 +257,6 @@ const TimeSpanRow: React.FC<{
                     </Typography>
                 ) : null}
             </Box>
-        </Paper>
+        </Box>
     );
 };

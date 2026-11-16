@@ -15,14 +15,16 @@ export const lastTimesheetView = (): TimesheetView => (window.localStorage.getIt
 
 interface TimesheetLayoutProps {
     view: TimesheetView;
-    // buttons next to the switch of the views
+    // the navigation of the calendar, next to the switch of the views
+    nav?: React.ReactNode;
+    // buttons at the right edge
     actions?: React.ReactNode;
 }
 
 // The frame of "My log": the switch between the calendar and the list and the content below of it.
 // All four edges are set, therefore the size does not depend on the content. The left and right edge match the
 // padding of the page, the top edge is below the app bar.
-export const TimesheetLayout: React.FC<React.PropsWithChildren<TimesheetLayoutProps>> = ({view, actions, children}) => {
+export const TimesheetLayout: React.FC<React.PropsWithChildren<TimesheetLayoutProps>> = ({view, nav, actions, children}) => {
     const navigate = useNavigate();
     React.useEffect(() => {
         window.localStorage.setItem(STORAGE_KEY, view);
@@ -56,8 +58,9 @@ export const TimesheetLayout: React.FC<React.PropsWithChildren<TimesheetLayoutPr
                         列表
                     </ToggleButton>
                 </ToggleButtonGroup>
+                {nav}
                 <Box sx={{flexGrow: 1}} />
-                <Box sx={{display: 'flex', gap: 1}}>{actions}</Box>
+                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>{actions}</Box>
             </Box>
             <Box sx={{flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column'}}>{children}</Box>
         </Box>

@@ -130,31 +130,6 @@ const plainAppBar = (): ThemeOptions => ({
     },
 });
 
-const gruvbox = (dark: boolean): ThemeOptions => ({
-    components: {
-        MuiLink: {styleOverrides: {root: {color: '#458588'}}},
-        MuiIconButton: {styleOverrides: {root: {color: 'inherit'}}},
-        MuiListItemIcon: {styleOverrides: {root: {color: 'inherit'}}},
-        MuiToolbar: {styleOverrides: {root: {background: dark ? '#a89984' : '#7c6f64'}}},
-        MuiAppBar: {defaultProps: {elevation: 0}},
-    },
-    palette: dark
-        ? {
-              mode: 'dark',
-              background: {default: '#282828', paper: '#32302f'},
-              text: {primary: '#fbf1d4', secondary: '#bdae93'},
-              primary: {main: '#a89984'},
-              secondary: {main: '#f44336'},
-          }
-        : {
-              mode: 'light',
-              background: {default: '#fbf1c7', paper: '#f9f5d7'},
-              text: {primary: '#282828', secondary: '#665c54'},
-              primary: {main: '#7c6f64'},
-              secondary: {main: '#f44336'},
-          },
-});
-
 type PlainObject = Record<string, unknown>;
 
 const isPlainObject = (value: unknown): value is PlainObject =>
@@ -174,39 +149,39 @@ const mergeObjects = (target: PlainObject, source: PlainObject): PlainObject => 
 const options = (...all: ThemeOptions[]): ThemeOptions =>
     all.reduce<PlainObject>((a, b) => mergeObjects(a, b as PlainObject), {});
 
-const themes: Record<SettingTheme, Theme> = {
-    [SettingTheme.GruvboxDark]: createTheme(options(common(true), gruvbox(true))),
-    [SettingTheme.GruvboxLight]: createTheme(options(common(false), gruvbox(false))),
-    [SettingTheme.MaterialLight]: createTheme(
-        options(common(false), plainAppBar(), {
-            palette: {
-                mode: 'light',
-                background: {default: '#f6f8fb', paper: '#ffffff'},
-                text: {primary: '#0f172a', secondary: '#526077'},
-                divider: '#e3e8ef',
-                primary: {main: '#2563eb', light: '#60a5fa', dark: '#1d4ed8', contrastText: '#ffffff'},
-                secondary: {main: '#e5484d'},
-            },
-        })
-    ),
-    [SettingTheme.MaterialDark]: createTheme(
-        options(common(true), plainAppBar(), {
-            palette: {
-                mode: 'dark',
-                background: {default: '#0b1120', paper: '#111a2e'},
-                text: {primary: '#e6edf7', secondary: '#9aa8bd'},
-                divider: '#1f2b44',
-                primary: {main: '#60a5fa', light: '#93c5fd', dark: '#3b82f6', contrastText: '#06101f'},
-                secondary: {main: '#f87171'},
-            },
-        })
-    ),
-};
+const light = createTheme(
+    options(common(false), plainAppBar(), {
+        palette: {
+            mode: 'light',
+            background: {default: '#f6f6f8', paper: '#ffffff'},
+            text: {primary: '#16181d', secondary: '#5d6472'},
+            divider: '#e6e7eb',
+            primary: {main: '#4f46e5', light: '#818cf8', dark: '#4338ca', contrastText: '#ffffff'},
+            secondary: {main: '#e5484d'},
+        },
+    })
+);
+
+const dark = createTheme(
+    options(common(true), plainAppBar(), {
+        palette: {
+            mode: 'dark',
+            background: {default: '#0f1013', paper: '#17181c'},
+            text: {primary: '#ececf1', secondary: '#9a9fab'},
+            divider: '#272a31',
+            primary: {main: '#8b93f8', light: '#a5b4fc', dark: '#6366f1', contrastText: '#0b0c10'},
+            secondary: {main: '#f87171'},
+        },
+    })
+);
+
+// The former gruvbox themes of existing users are shown as the light and the dark theme.
+const isDark = (theme: SettingTheme) => theme === SettingTheme.MaterialDark || theme === SettingTheme.GruvboxDark;
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const {theme} = useSettings();
     return (
-        <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.MaterialLight]}>
+        <MuiThemeProvider theme={isDark(theme) ? dark : light}>
             <CssBaseline />
             {children}
         </MuiThemeProvider>

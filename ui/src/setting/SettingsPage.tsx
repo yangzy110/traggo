@@ -65,7 +65,13 @@ export const SettingsPage: React.FC = () => {
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
-                value={settings.theme}
+                value={
+                    settings.theme === Theme.GruvboxDark
+                        ? Theme.MaterialDark
+                        : settings.theme === Theme.GruvboxLight
+                          ? Theme.MaterialLight
+                          : settings.theme
+                }
                 onChange={(e) => {
                     setSettings({variables: {settings: {...settings, theme: e.target.value as Theme}}})
                         .then(() =>
@@ -75,7 +81,7 @@ export const SettingsPage: React.FC = () => {
                         )
                         .catch(handleError('更改主题失败', enqueueSnackbar));
                 }}>
-                {Object.values(Theme).map((type) => (
+                {[Theme.MaterialLight, Theme.MaterialDark].map((type) => (
                     <option key={type} value={type}>
                         {label(themeLabels, type)}
                     </option>

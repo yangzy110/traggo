@@ -5,16 +5,23 @@ import moment, {LocaleSpecification} from 'moment';
 import {DateLocale, WeekDay} from '../gql/types';
 import {expectNever} from '../utils/never';
 
+// moment.locale(name, spec) would define a new locale which only consists of the spec (the names of the days are
+// lost), therefore the existing locale is updated.
+const applyLocale = (name: string, spec: LocaleSpecification) => {
+    moment.updateLocale(name, spec);
+    moment.locale(name);
+};
+
 const setLocale = (locale: DateLocale, spec: LocaleSpecification) => {
     switch (locale) {
         case DateLocale.Chinese:
-            moment.locale('zh-cn', spec);
+            applyLocale('zh-cn', spec);
             return;
         case DateLocale.American:
-            moment.locale('en', spec);
+            applyLocale('en', spec);
             return;
         case DateLocale.American24h:
-            moment.locale('en', {
+            applyLocale('en', {
                 ...spec,
                 longDateFormat: {
                     LTS: 'HH:mm:ss',
@@ -27,13 +34,13 @@ const setLocale = (locale: DateLocale, spec: LocaleSpecification) => {
             });
             return;
         case DateLocale.Australian:
-            moment.locale('en-au', spec);
+            applyLocale('en-au', spec);
             return;
         case DateLocale.British:
-            moment.locale('en-gb', spec);
+            applyLocale('en-gb', spec);
             return;
         case DateLocale.German:
-            moment.locale('de', spec);
+            applyLocale('de', spec);
             return;
         default:
             expectNever(locale);
@@ -65,7 +72,8 @@ const weekDayToMoment = (s: WeekDay): number => {
 export const BootUserSettings: React.FC<React.PropsWithChildren> = ({children}): React.ReactElement => {
     const {done, firstDayOfTheWeek, dateLocale} = useSettings();
 
-    React.useEffect(() => {
+    // The locale has to be set before the children are rendered, otherwise their first render uses the old locale.
+    React.useMemo(() => {
         if (!done) {
             return;
         }

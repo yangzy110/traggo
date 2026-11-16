@@ -5,6 +5,11 @@ import {defineConfig} from 'vitest/config';
 export default defineConfig({
     base: './',
     plugins: [react()],
+    resolve: {
+        // The locale files of moment require the file moment.js, the app must not use a second copy of moment (the
+        // locales would be registered in the copy which is not used and all dates would stay English).
+        alias: [{find: /^moment$/, replacement: 'moment/moment.js'}],
+    },
     build: {
         outDir: 'build',
         assetsDir: 'assets',

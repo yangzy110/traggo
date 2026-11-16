@@ -2,7 +2,7 @@ import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {Link as RouterLink} from 'react-router-dom';
-import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -51,6 +51,12 @@ const styles = {
     preset: (theme) => ({
         marginRight: theme.spacing(1),
     }),
+    cards: (theme) => ({
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: theme.spacing(2),
+        marginBottom: theme.spacing(2),
+    }),
     section: (theme) => ({
         padding: theme.spacing(2),
         marginBottom: theme.spacing(2),
@@ -79,6 +85,40 @@ const styles = {
         textAlign: 'right',
     },
 } satisfies Record<string, SxProps<MuiTheme>>;
+
+const SummaryCard: React.FC<{label: string; value: string}> = ({label, value}) => (
+    <Paper sx={{flex: '1 1 160px', padding: 2}}>
+        <Typography variant="body2" color="text.secondary">
+            {label}
+        </Typography>
+        <Typography variant="h5" sx={{marginTop: 0.5, fontVariantNumeric: 'tabular-nums'}}>
+            {value}
+        </Typography>
+    </Paper>
+);
+
+// One bar which shows how the total is divided, the smallest parts are summed up.
+const StackedBar: React.FC<{parts: Array<{label: string; seconds: number; color: string}>}> = ({parts}) => {
+    const total = parts.reduce((sum, part) => sum + part.seconds, 0);
+    if (total <= 0) {
+        return null;
+    }
+    const sorted = [...parts].sort((a, b) => b.seconds - a.seconds);
+    const shown = sorted.slice(0, 8);
+    const rest = sorted.slice(8).reduce((sum, part) => sum + part.seconds, 0);
+    const all = rest > 0 ? [...shown, {label: '其他', seconds: rest, color: '#9aa0a6'}] : shown;
+    return (
+        <Box sx={{display: 'flex', height: 12, borderRadius: 6, overflow: 'hidden', gap: '2px', marginBottom: 1.5}}>
+            {all.map((part) => (
+                <Box
+                    key={part.label}
+                    title={`${part.label} ${((part.seconds / total) * 100).toFixed(1)}%`}
+                    sx={{flex: part.seconds, background: part.color, minWidth: 3}}
+                />
+            ))}
+        </Box>
+    );
+};
 
 const ShareBar: React.FC<{share: number}> = ({share}) => (
     <Box sx={styles.share}>
@@ -173,21 +213,38 @@ export const StatsPage: React.FC = () => {
 
             {stats ? (
                 <>
+                    <Box sx={styles.cards}>
+                        <SummaryCard label="总时长" value={formatDuration(stats.totalSeconds)} />
+                        <SummaryCard
+                            label="参与成员"
+                            value={`${stats.members.filter((m) => m.seconds > 0).length} / ${stats.members.length}`}
+                        />
+                        <SummaryCard
+                            label="日均"
+                            value={formatDuration(stats.days.length > 0 ? stats.totalSeconds / stats.days.length : 0)}
+                        />
+                    </Box>
                     <Paper sx={styles.section}>
                         <Typography variant="h6" gutterBottom={true}>
                             团队工作时间(小时/天)
                         </Typography>
-                        <Typography color="textSecondary" gutterBottom={true}>
-                            合计 {formatDuration(stats.totalSeconds)}
-                        </Typography>
                         <Box sx={styles.chart}>
                             <ResponsiveContainer>
-                                <LineChart data={stats.days.map(({day, seconds}) => ({day, hours: hours(seconds)}))}>
+                                <AreaChart data={stats.days.map(({day, seconds}) => ({day, hours: hours(seconds)}))}>
+                                    <defs>
+                                        <linearGradient id="workTime" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.35} />
+                                            <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
                                     <XAxis
                                         dataKey="day"
                                         tickFormatter={(day: string) => day.slice(5)}
                                         interval="preserveStartEnd"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{fill: theme.palette.text.secondary, fontSize: 12}}
                                     />
                                     <YAxis
                                         type="number"
@@ -199,16 +256,17 @@ export const StatsPage: React.FC = () => {
                                         tick={{fill: theme.palette.text.secondary, fontSize: 12}}
                                     />
                                     <Tooltip formatter={(value): [string, string] => [`${value} h`, '工作时间']} />
-                                    <Line
+                                    <Area
                                         type="monotone"
                                         dataKey="hours"
                                         name="工作时间"
                                         stroke={theme.palette.primary.main}
                                         strokeWidth={2.5}
+                                        fill="url(#workTime)"
                                         dot={false}
                                         activeDot={{r: 5}}
                                     />
-                                </LineChart>
+                                </AreaChart>
                             </ResponsiveContainer>
                         </Box>
                     </Paper>
@@ -221,6 +279,13 @@ export const StatsPage: React.FC = () => {
                             <Typography color="textSecondary">这段时间内还没有带标签的记录。</Typography>
                         ) : (
                             <>
+                                <StackedBar
+                                    parts={stats.tags.map((tag) => ({
+                                        label: tag.key + ':' + tag.value,
+                                        seconds: tag.seconds,
+                                        color: calculateColor(tag.key, ColorMode.Soft, theme.palette.mode),
+                                    }))}
+                                />
                                 <Typography variant="caption" color="textSecondary">
                                     占比是该标签在所有标签总时长中的比例（一条记录有多个标签时每个标签都会计入）。点击一行可以查看每个人在该标签下的占比。
                                 </Typography>
@@ -254,7 +319,7 @@ export const StatsPage: React.FC = () => {
                                                                     label={id}
                                                                     color={calculateColor(
                                                                         tag.key,
-                                                                        ColorMode.Bold,
+                                                                        ColorMode.Soft,
                                                                         theme.palette.mode
                                                                     )}
                                                                 />

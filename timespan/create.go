@@ -19,6 +19,10 @@ func (r *ResolverForTimeSpan) CreateTimeSpan(ctx context.Context, start model.Ti
 		return nil, err
 	}
 
+	if err := checkNoOverlap(r.DB, timeSpan, 0); err != nil {
+		return nil, err
+	}
+
 	r.DB.Create(&timeSpan)
 
 	external := timeSpanToExternal(timeSpan)

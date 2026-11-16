@@ -31,6 +31,7 @@ const messages: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
     [/^timespan with id (\d+) has already an end date/, () => '记录已经结束'],
     [/^user with id (\d+) does not exist/, () => '用户不存在'],
     [/^user with name '(.*)' does already exist/, (m) => `用户“${m[1]}”已存在`],
+    [/^time span overlaps with another time span/, () => '与已有记录的时间重叠'],
     [/^start must be before end/, () => '开始时间必须早于结束时间'],
     [/^range start must be before range end/, () => '开始时间必须早于结束时间'],
     [/^failed to update tag filters/, () => '更新标签过滤失败'],

@@ -12,6 +12,19 @@ import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {DateTimeSelector} from '../common/DateTimeSelector';
 import {formatDuration} from './teamutils';
 
+// The times are chosen in steps of a quarter of an hour.
+export const MINUTES_STEP = 15;
+const roundToStep = (value: moment.Moment) =>
+    moment(value)
+        .startOf('minute')
+        .minutes(Math.round(value.minutes() / MINUTES_STEP) * MINUTES_STEP);
+
+// The current time, rounded down to a quarter of an hour.
+export const nowInSteps = () => {
+    const now = moment().startOf('minute');
+    return now.minutes(Math.floor(now.minutes() / MINUTES_STEP) * MINUTES_STEP);
+};
+
 export const EDITOR_CLASS = 'traggo-time-span-editor';
 
 export interface TimeSpanEditorResult {
@@ -112,14 +125,16 @@ export const TimeSpanEditor: React.FC<TimeSpanEditorProps> = ({
                                 label="开始"
                                 showDate={true}
                                 selectedDate={start}
-                                onSelectDate={setStart}
+                                onSelectDate={(date) => setStart(roundToStep(date))}
+                                minutesStep={MINUTES_STEP}
                                 popoverOpen={setPickerOpen}
                             />
                             <DateTimeSelector
                                 label="结束"
                                 showDate={true}
                                 selectedDate={end}
-                                onSelectDate={setEnd}
+                                onSelectDate={(date) => setEnd(roundToStep(date))}
+                                minutesStep={MINUTES_STEP}
                                 popoverOpen={setPickerOpen}
                             />
                             <Typography variant="caption" color={timeError ? 'error' : 'text.secondary'}>

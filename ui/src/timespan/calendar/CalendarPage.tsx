@@ -252,7 +252,17 @@ export const CalendarPage: React.FC = () => {
     }
 
     return (
-        <Paper style={{padding: 10, bottom: 10, top: 80, position: 'absolute'}} color="red">
+        // All four edges are set, therefore the size does not depend on the content. The left and right edge match the
+        // padding of the page, the top edge is below the app bar.
+        <Paper
+            sx={{
+                position: 'absolute',
+                top: '80px',
+                bottom: '10px',
+                left: {xs: '8px', md: '24px'},
+                right: {xs: '8px', md: '24px'},
+                padding: '10px',
+            }}>
             <FullCalendarStyling>
                 <FullCalendar
                     initialView="timeGridWeek"
@@ -283,7 +293,7 @@ export const CalendarPage: React.FC = () => {
                     selectable={true}
                     selectMirror={true}
                     handleWindowResize={true}
-                    height={'parent'}
+                    height="100%"
                     selectMinDistance={20}
                     now={currentDate.toDate()}
                     defaultTimedEventDuration={{minute: 15}}

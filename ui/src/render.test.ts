@@ -185,6 +185,17 @@ describe('pages', () => {
     });
 });
 
+describe('calendar', () => {
+    // The height has to be a valid css value: fullcalendar does not know the value `parent` of the former version.
+    // Without a height the calendar collapses.
+    it('fills the container', async () => {
+        await render('/timesheet/calendar');
+        await waitFor(() => !!document.querySelector('.fc'), 'the calendar');
+        expect((document.querySelector('.fc') as HTMLElement).style.height).toBe('100%');
+        await settle();
+    });
+});
+
 describe('dashboard entries', () => {
     afterEach(() => {
         entryType = 'LineChart';

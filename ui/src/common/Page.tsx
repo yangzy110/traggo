@@ -28,13 +28,12 @@ import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
 import Button from '@material-ui/core/Button';
 import AccountCircle from '@material-ui/icons/AccountCircle';
-import {Link} from 'react-router-dom';
+import {Link, Route, Routes, useLocation, useNavigate, useParams} from 'react-router-dom';
 import MenuItem from '@material-ui/core/MenuItem';
 import {useMutation, useQuery} from '@apollo/client/react';
 import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
 import * as gqlDashboard from '../gql/dashboard';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Route, RouteChildrenProps, Switch, useHistory, useLocation} from 'react-router';
 
 const drawerWidth = 240;
 
@@ -105,13 +104,19 @@ const useStyles = makeStyles((theme) => ({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const routerLink = (to: string): any => {
-    return React.forwardRef<HTMLAnchorElement>((props, ref) => <Link innerRef={ref} to={to} {...props} />);
+    return React.forwardRef<HTMLAnchorElement>((props, ref) => <Link ref={ref} to={to} {...props} />);
 };
 
-export const Page: React.FC = ({children}) => {
+const DashboardTitle: React.FC<{dashboards: Array<{id: number; name: string}>}> = ({dashboards}) => {
+    const {id} = useParams<{id: string}>();
+    const dashboard = dashboards.find((db) => '' + db.id === id);
+    return <>{'Dashboards / ' + (dashboard ? dashboard.name : '...')}</>;
+};
+
+export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const classes = useStyles();
     const location = useLocation();
-    const history = useHistory();
+    const navigate = useNavigate();
     const {data} = useQuery<CurrentUser>(gqlUser.CurrentUser);
 
     const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -225,7 +230,7 @@ export const Page: React.FC = ({children}) => {
                                         ? ' ' + classes.navButtonActive
                                         : '')
                                 }
-                                onClick={(e) => (to ? history.push(to) : setNavMenu({name, anchor: e.currentTarget}))}>
+                                onClick={(e) => (to ? navigate(to) : setNavMenu({name, anchor: e.currentTarget}))}>
                                 {name}
                             </Button>
                         ))}
@@ -249,46 +254,19 @@ export const Page: React.FC = ({children}) => {
                     </Hidden>
                     <Hidden mdUp implementation="js">
                         <Typography variant="h6" color="inherit" noWrap>
-                            <Switch>
-                                <Route exact path="/team">
-                                    团队日志
-                                </Route>
-                                <Route exact path="/team/:userId">
-                                    团队日志 / 成员
-                                </Route>
-                                <Route exact path="/stats">
-                                    统计
-                                </Route>
-                                <Route exact path="/timesheet/list">
-                                    Timesheet / List
-                                </Route>
-                                <Route exact path="/timesheet/calendar">
-                                    我的日志
-                                </Route>
-                                <Route exact path="/user/settings">
-                                    User / Settings
-                                </Route>
-                                <Route exact path="/user/devices">
-                                    User / Devices
-                                </Route>
-                                <Route exact path="/user/tags">
-                                    User / Tags
-                                </Route>
-                                <Route exact path="/admin/users">
-                                    Admin / Users
-                                </Route>
-                                <Route exact path="/dashboards">
-                                    Dashboards / Manage
-                                </Route>
-                                <Route exact path="/dashboard/:id/:name">
-                                    {(props: RouteChildrenProps<{id: string}>) => {
-                                        const db = dashboards.find(
-                                            (dashboard) => dashboard.id === parseInt(props.match!.params.id, 10)
-                                        );
-                                        return 'Dashboards / ' + (db ? db.name : '...');
-                                    }}
-                                </Route>
-                            </Switch>
+                            <Routes>
+                                <Route path="/team" element="团队日志" />
+                                <Route path="/team/:userId" element="团队日志 / 成员" />
+                                <Route path="/stats" element="统计" />
+                                <Route path="/timesheet/list" element="Timesheet / List" />
+                                <Route path="/timesheet/calendar" element="我的日志" />
+                                <Route path="/user/settings" element="User / Settings" />
+                                <Route path="/user/devices" element="User / Devices" />
+                                <Route path="/user/tags" element="User / Tags" />
+                                <Route path="/admin/users" element="Admin / Users" />
+                                <Route path="/dashboards" element="Dashboards / Manage" />
+                                <Route path="/dashboard/:id/*" element={<DashboardTitle dashboards={dashboards} />} />
+                            </Routes>
                         </Typography>
                     </Hidden>
                     <div className={classes.grow} />

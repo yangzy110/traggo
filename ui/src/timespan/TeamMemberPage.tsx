@@ -1,7 +1,7 @@
 import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
-import {RouteComponentProps, useHistory} from 'react-router';
+import {useNavigate, useParams} from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
@@ -60,12 +60,11 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-type Props = RouteComponentProps<{userId: string}>;
-
-export const TeamMemberPage: React.FC<Props> = ({match}) => {
+export const TeamMemberPage: React.FC = () => {
     const classes = useStyles();
-    const history = useHistory();
-    const userId = parseInt(match.params.userId, 10);
+    const navigate = useNavigate();
+    const params = useParams<{userId: string}>();
+    const userId = parseInt(params.userId || '', 10);
     const membersResult = useQuery<TeamMembers>(gqlTimeSpan.TeamMembers);
     const member = ((membersResult.data && membersResult.data.teamMembers) || []).find((m) => m.id === userId);
     const name = member ? member.name : '';
@@ -112,7 +111,7 @@ export const TeamMemberPage: React.FC<Props> = ({match}) => {
     return (
         <div>
             <div className={classes.header}>
-                <IconButton aria-label="back" onClick={() => history.push('/team')}>
+                <IconButton aria-label="back" onClick={() => navigate('/team')}>
                     <BackIcon />
                 </IconButton>
                 {member ? <MemberAvatar id={userId} name={name} /> : null}

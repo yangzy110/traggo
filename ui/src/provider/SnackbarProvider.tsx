@@ -17,7 +17,7 @@ const useStyles = makeStyles(() => ({
     },
 }));
 
-export const SnackbarProvider: React.FC = ({children}) => {
+export const SnackbarProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const classes = useStyles();
     return (
         <Provider

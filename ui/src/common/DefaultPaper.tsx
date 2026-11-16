@@ -12,7 +12,7 @@ const useStyles = makeStyles((theme) => ({
         borderTop: `5px solid ${theme.palette.primary.main}`,
     },
 }));
-export const DefaultPaper: React.FC = ({children}) => {
+export const DefaultPaper: React.FC<React.PropsWithChildren> = ({children}) => {
     const classes = useStyles();
     return (
         <Paper elevation={10} square={true} className={classes.root}>

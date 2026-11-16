@@ -230,7 +230,7 @@ const useStyle = makeStyles((theme) => {
     };
 });
 
-export const FullCalendarStyling: React.FC = ({children}) => {
+export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children}) => {
     const classes = useStyle();
     return <div className={classes.root}>{children}</div>;
 };

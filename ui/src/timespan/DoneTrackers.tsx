@@ -130,7 +130,7 @@ const DatedTimeSpans: React.FC<
         timeSpans: TimeSpanProps[];
     } & DoneTrackersProps
 > = ({name, timeSpans, addTagsToTracker, setHeight, height}) => {
-    const ref = React.useRef<HTMLDivElement | null>();
+    const ref = React.useRef<HTMLDivElement | null>(null);
     React.useEffect(() => {
         const currentHeight = ref.current && ref.current.getBoundingClientRect().height;
         if (currentHeight != null && currentHeight !== height) {

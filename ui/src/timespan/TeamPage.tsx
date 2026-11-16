@@ -1,7 +1,7 @@
 import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
-import {useHistory} from 'react-router';
+import {useNavigate} from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
@@ -74,7 +74,7 @@ export const memberLogPath = (id: number) => `/team/${id}`;
 
 export const TeamPage: React.FC = () => {
     const classes = useStyles();
-    const history = useHistory();
+    const navigate = useNavigate();
     const [date, setDate] = React.useState(moment().format(DAY_FORMAT));
     const colors = useTagColors();
 
@@ -126,7 +126,7 @@ export const TeamPage: React.FC = () => {
                             className={classes.avatarButton}
                             title={`查看 ${member.name} 的日志`}
                             aria-label={`查看 ${member.name} 的日志`}
-                            onClick={() => history.push(memberLogPath(member.id))}>
+                            onClick={() => navigate(memberLogPath(member.id))}>
                             <MemberAvatar id={member.id} name={member.name} />
                         </IconButton>
                         <Typography variant="h6" className={classes.memberName}>

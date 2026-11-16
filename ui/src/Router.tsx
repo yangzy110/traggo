@@ -11,7 +11,7 @@ import {CombinedGraphQLErrors} from '@apollo/client/errors';
 import Grid from '@material-ui/core/Grid';
 import {DefaultPaper} from './common/DefaultPaper';
 import {Page} from './common/Page';
-import {Redirect, Route, Switch} from 'react-router';
+import {Navigate, Outlet, Route, Routes} from 'react-router-dom';
 import {DailyPage} from './timespan/DailyPage';
 import {DevicesPage} from './devices/DevicesPage';
 import {UsersPage} from './user/UsersPage';
@@ -36,25 +36,33 @@ export const Router = () => {
     const admin = data && data.user && data.user.admin;
 
     return (
-        <Switch>
-            <Route path="/user/login">{loggedIn ? <Redirect to="/" /> : <LoginPage />}</Route>
-            {loggedIn ? null : <Redirect to="/user/login" />}
-
-            <Page>
-                <Route path="/dashboards" component={DashboardsPage} />
-                <Route path="/dashboard/:id" component={DashboardPage} />
-                <Route exact path="/timesheet/list" component={DailyPage} />
-                <Route exact path="/timesheet/calendar" component={CalendarPage} />
-                <Route exact path="/team" component={TeamPage} />
-                <Route exact path="/team/:userId" component={TeamMemberPage} />
-                <Route exact path="/stats" component={StatsPage} />
-                <Route exact path="/user/settings" component={SettingsPage} />
-                <Route exact path="/user/devices" component={DevicesPage} />
-                <Route exact path="/user/tags" component={TagPage} />
-                {admin ? <Route exact path="/admin/users" component={UsersPage} /> : null}
-                <Route exact path="/" render={() => <Redirect to="/timesheet/calendar" />} />
-            </Page>
-        </Switch>
+        <Routes>
+            <Route path="/user/login" element={loggedIn ? <Navigate to="/" replace /> : <LoginPage />} />
+            {loggedIn ? (
+                <Route
+                    element={
+                        <Page>
+                            <Outlet />
+                        </Page>
+                    }>
+                    <Route path="/dashboards" element={<DashboardsPage />} />
+                    <Route path="/dashboard/:id/*" element={<DashboardPage />} />
+                    <Route path="/timesheet/list" element={<DailyPage />} />
+                    <Route path="/timesheet/calendar" element={<CalendarPage />} />
+                    <Route path="/team" element={<TeamPage />} />
+                    <Route path="/team/:userId" element={<TeamMemberPage />} />
+                    <Route path="/stats" element={<StatsPage />} />
+                    <Route path="/user/settings" element={<SettingsPage />} />
+                    <Route path="/user/devices" element={<DevicesPage />} />
+                    <Route path="/user/tags" element={<TagPage />} />
+                    {admin ? <Route path="/admin/users" element={<UsersPage />} /> : null}
+                    <Route path="/" element={<Navigate to="/timesheet/calendar" replace />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+            ) : (
+                <Route path="*" element={<Navigate to="/user/login" replace />} />
+            )}
+        </Routes>
     );
 };
 

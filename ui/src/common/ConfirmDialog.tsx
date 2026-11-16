@@ -12,7 +12,7 @@ interface Props {
     fOnSubmit: () => void;
 }
 
-export const ConfirmDialog: React.FC<Props> = ({children, title, fClose, fOnSubmit}) => {
+export const ConfirmDialog: React.FC<React.PropsWithChildren<Props>> = ({children, title, fClose, fOnSubmit}) => {
     const submitAndClose = () => {
         fOnSubmit();
         fClose();

@@ -130,7 +130,7 @@ const themes: Record<SettingTheme, Theme> = {
     }),
 };
 
-export const ThemeProvider: React.FC = ({children}) => {
+export const ThemeProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const {theme} = useSettings();
     return (
         <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.GruvboxDark]}>

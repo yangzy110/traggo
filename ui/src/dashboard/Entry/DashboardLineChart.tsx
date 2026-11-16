@@ -1,10 +1,9 @@
-import {Stats_stats} from '../../gql/__generated__/Stats';
+import {Stats_stats, StatsInterval} from '../../gql/types';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import * as React from 'react';
 import {Colors} from './colors';
 import {ofSeconds} from './unit';
 import {ofInterval} from './dateformat';
-import {StatsInterval} from '../../gql/__generated__/globalTypes';
 import moment from 'moment';
 import {TagTooltip} from './TagTooltip';
 

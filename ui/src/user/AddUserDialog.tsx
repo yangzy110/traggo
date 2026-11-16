@@ -6,11 +6,11 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import * as gqlUser from '../gql/user';
-import {useMutation} from '@apollo/react-hooks';
+import {useMutation} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import {Checkbox} from '@material-ui/core';
-import {CreateUser, CreateUserVariables} from '../gql/__generated__/CreateUser';
+import {CreateUser, CreateUserVariables} from '../gql/types';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 interface AddTagDialogProps {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import moment from 'moment-timezone';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import {Link as RouterLink} from 'react-router-dom';
 import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import Button from '@material-ui/core/Button';
@@ -17,7 +17,7 @@ import Typography from '@material-ui/core/Typography';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {useTheme} from '@material-ui/core';
 import * as gqlTimeSpan from '../gql/timeSpan';
-import {TeamStats, TeamStatsVariables} from '../gql/__generated__/TeamStats';
+import {TeamStatistics, TeamStatisticsVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {inUserTz} from './timeutils';
 import {MemberAvatar} from './MemberAvatar';
@@ -81,7 +81,7 @@ export const StatsPage: React.FC = () => {
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
     const rangeError = validateRange(from, to, MAX_STATS_DAYS);
 
-    const {data, loading, error} = useQuery<TeamStats, TeamStatsVariables>(gqlTimeSpan.TeamStats, {
+    const {data, loading, error} = useQuery<TeamStatistics, TeamStatisticsVariables>(gqlTimeSpan.TeamStats, {
         variables: {
             start: inUserTz(moment(from, DAY_FORMAT).startOf('day')).format(),
             end: inUserTz(moment(to, DAY_FORMAT).endOf('day')).format(),

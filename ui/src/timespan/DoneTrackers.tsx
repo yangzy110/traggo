@@ -1,12 +1,11 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import * as gqlTag from '../gql/tags';
 import {TimeSpan, TimeSpanProps} from './TimeSpan';
-import {Tags} from '../gql/__generated__/Tags';
+import {Tags, TimeSpans, TimeSpansVariables} from '../gql/types';
 import useInterval from '@rooks/use-interval';
 import moment from 'moment';
-import {TimeSpans, TimeSpansVariables} from '../gql/__generated__/TimeSpans';
 import {Typography} from '@material-ui/core';
 import {GroupedTimeSpanProps, toGroupedTimeSpanProps} from './timespanutils';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';

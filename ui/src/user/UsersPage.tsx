@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Paper from '@material-ui/core/Paper';
-import {useMutation, useQuery} from '@apollo/react-hooks';
+import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlUser from '../gql/user';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import Table from '@material-ui/core/Table';
@@ -15,9 +15,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
 import {useSnackbar} from 'notistack';
 import {TextField} from '@material-ui/core';
-import {Users} from '../gql/__generated__/Users';
-import {RemoveUser, RemoveUserVariables} from '../gql/__generated__/RemoveUser';
-import {UpdateUser, UpdateUserVariables} from '../gql/__generated__/UpdateUser';
+import {Users, RemoveUser, RemoveUserVariables, UpdateUser, UpdateUserVariables} from '../gql/types';
 import Checkbox from '@material-ui/core/Checkbox';
 import Button from '@material-ui/core/Button';
 import {AddUserDialog} from './AddUserDialog';

@@ -1,9 +1,7 @@
-import {Trackers_timers} from '../gql/__generated__/Trackers';
-import {Tags_tags} from '../gql/__generated__/Tags';
+import {Trackers_timers, Tags_tags, TimeSpans_timeSpans_timeSpans} from '../gql/types';
 import {toTagSelectorEntry} from '../tag/tagSelectorEntry';
 import moment from 'moment';
 import {TimeSpanProps} from './TimeSpan';
-import {TimeSpans_timeSpans_timeSpans} from '../gql/__generated__/TimeSpans';
 
 export const toTimeSpanProps = (timers: Trackers_timers[], tags: Tags_tags[]): TimeSpanProps[] => {
     return [...timers].map((timer) => {

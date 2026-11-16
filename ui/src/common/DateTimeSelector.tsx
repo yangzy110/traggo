@@ -3,7 +3,7 @@ import {KeyboardDateTimePicker} from '@material-ui/pickers';
 import * as moment from 'moment';
 import {uglyConvertToLocalTime} from '../timespan/timeutils';
 import {useSettings} from '../gql/settings';
-import {DateTimeInputStyle} from '../gql/__generated__/globalTypes';
+import {DateTimeInputStyle} from '../gql/types';
 
 interface DateTimeSelectorProps {
     selectedDate: moment.Moment;

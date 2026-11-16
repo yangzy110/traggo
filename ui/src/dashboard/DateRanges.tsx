@@ -1,7 +1,16 @@
 import * as React from 'react';
-import {useMutation} from '@apollo/react-hooks';
+import {useMutation} from '@apollo/client/react';
 import * as gqlDashboard from '../gql/dashboard';
-import {Dashboards_dashboards, Dashboards_dashboards_ranges} from '../gql/__generated__/Dashboards';
+import {
+    Dashboards_dashboards,
+    Dashboards_dashboards_ranges,
+    RemoveDashboardRange,
+    RemoveDashboardRangeVariables,
+    UpdateDashboardRange,
+    UpdateDashboardRangeVariables,
+    AddDashboardRange,
+    AddDashboardRangeVariables,
+} from '../gql/types';
 import {IconButton, Paper, Typography} from '@material-ui/core';
 import {RelativeDateTimeSelector} from '../common/RelativeDateTimeSelector';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
@@ -9,11 +18,8 @@ import MoreVert from '@material-ui/icons/MoreVert';
 import PlusIcon from '@material-ui/icons/Add';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import {RemoveDashboardRange, RemoveDashboardRangeVariables} from '../gql/__generated__/RemoveDashboardRange';
-import {UpdateDashboardRange, UpdateDashboardRangeVariables} from '../gql/__generated__/UpdateDashboardRange';
 import {stripTypename} from '../utils/strip';
 import {Range} from '../utils/range';
-import {AddDashboardRange, AddDashboardRangeVariables} from '../gql/__generated__/AddDashboardRange';
 import Input from '@material-ui/core/Input';
 
 interface Props {

@@ -6,21 +6,27 @@ import Paper from '@material-ui/core/Paper';
 import {DateTimeSelector} from '../common/DateTimeSelector';
 import {Button, TextField, Typography, makeStyles} from '@material-ui/core';
 import {inUserTz} from './timeutils';
-import {useMutation} from '@apollo/react-hooks';
-import {StopTimer, StopTimerVariables} from '../gql/__generated__/StopTimer';
+import {useMutation} from '@apollo/client/react';
+import {
+    StopTimer,
+    StopTimerVariables,
+    UpdateTimeSpan,
+    UpdateTimeSpanVariables,
+    RemoveTimeSpan,
+    RemoveTimeSpanVariables,
+    TimeSpans,
+    Trackers,
+    StartTimer,
+    StartTimerVariables,
+} from '../gql/types';
 import * as gqlTimeSpan from '../gql/timeSpan';
-import {UpdateTimeSpan, UpdateTimeSpanVariables} from '../gql/__generated__/UpdateTimeSpan';
 import IconButton from '@material-ui/core/IconButton';
 import {MoreVert} from '@material-ui/icons';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import {RemoveTimeSpan, RemoveTimeSpanVariables} from '../gql/__generated__/RemoveTimeSpan';
 import {useStateAndDelegateWithDelayOnChange} from '../utils/hooks';
-import {TimeSpans} from '../gql/__generated__/TimeSpans';
 import {isSameDate} from '../utils/time';
-import {Trackers} from '../gql/__generated__/Trackers';
 import {addTimeSpanToCache, removeFromTrackersCache} from '../gql/utils';
-import {StartTimer, StartTimerVariables} from '../gql/__generated__/StartTimer';
 import {RelativeTime, RelativeToNow} from '../common/RelativeTime';
 
 interface Range {

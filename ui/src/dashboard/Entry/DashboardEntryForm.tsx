@@ -3,13 +3,17 @@ import TextField from '@material-ui/core/TextField';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/NativeSelect/NativeSelect';
-import {useQuery} from 'react-apollo';
-import {Tags} from '../../gql/__generated__/Tags';
+import {useQuery} from '@apollo/client/react';
+import {
+    Tags,
+    EntryType,
+    StatsInterval,
+    Dashboards_dashboards_items,
+    Dashboards_dashboards_items_statsSelection_range,
+} from '../../gql/types';
 import * as gqlTags from '../../gql/tags';
-import {EntryType, StatsInterval} from '../../gql/__generated__/globalTypes';
 import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
 import {FormTagSelector} from '../../tag/FormTagSelector';
-import {Dashboards_dashboards_items, Dashboards_dashboards_items_statsSelection_range} from '../../gql/__generated__/Dashboards';
 import {RelativeDateTimeSelector} from '../../common/RelativeDateTimeSelector';
 import {parseRelativeTime} from '../../utils/time';
 import {Grid, Typography, Switch} from '@material-ui/core';

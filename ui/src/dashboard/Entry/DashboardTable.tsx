@@ -1,6 +1,5 @@
-import {Stats_stats} from '../../gql/__generated__/Stats';
+import {Stats_stats, StatsInterval} from '../../gql/types';
 import * as React from 'react';
-import {StatsInterval} from '../../gql/__generated__/globalTypes';
 import moment from 'moment';
 import {Table, TableBody, TableCell, TableRow} from '@material-ui/core';
 import TableHead from '@material-ui/core/TableHead';

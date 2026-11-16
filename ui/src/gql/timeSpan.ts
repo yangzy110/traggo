@@ -1,4 +1,4 @@
-import {gql} from 'apollo-boost';
+import {gql} from '@apollo/client';
 
 export const Trackers = gql`
     query Trackers {
@@ -187,7 +187,7 @@ export const TeamMembers = gql`
 `;
 
 export const TeamStats = gql`
-    query TeamStats($start: Time!, $end: Time!) {
+    query TeamStatistics($start: Time!, $end: Time!) {
         teamStats(fromInclusive: $start, toInclusive: $end) {
             totalSeconds
             days {

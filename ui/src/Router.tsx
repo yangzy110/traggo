@@ -1,12 +1,13 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/react-hooks';
-import {CurrentUser} from './gql/__generated__/CurrentUser';
+import {useQuery} from '@apollo/client/react';
+import {CurrentUser} from './gql/types';
 import * as gqlUser from './gql/user';
 import {CenteredSpinner} from './common/CenteredSpinner';
 import {LoginPage} from './login/LoginPage';
 import {Typography} from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import {ApolloError} from 'apollo-boost';
+import type {ErrorLike} from '@apollo/client';
+import {CombinedGraphQLErrors} from '@apollo/client/errors';
 import Grid from '@material-ui/core/Grid';
 import {DefaultPaper} from './common/DefaultPaper';
 import {Page} from './common/Page';
@@ -57,7 +58,7 @@ export const Router = () => {
     );
 };
 
-const Error: React.FC<{error: ApolloError; refetch: () => void}> = ({error, refetch}) => {
+const Error: React.FC<{error: ErrorLike; refetch: () => void}> = ({error, refetch}) => {
     return (
         <Grid container direction="row" alignItems="center" justify="center" style={{height: '100%'}}>
             <Grid item>
@@ -66,8 +67,9 @@ const Error: React.FC<{error: ApolloError; refetch: () => void}> = ({error, refe
                         Error
                     </Typography>
                     <Typography component="p">
-                        {error.networkError && error.networkError.name + ': ' + error.networkError.message}
-                        {error.graphQLErrors.map((gqlError) => gqlError.message).join(', ')}
+                        {CombinedGraphQLErrors.is(error)
+                            ? error.errors.map((gqlError) => gqlError.message).join(', ')
+                            : error.name + ': ' + error.message}
                     </Typography>
                     <Button style={{marginTop: 10}} size="large" variant="outlined" onClick={() => refetch()}>
                         Retry

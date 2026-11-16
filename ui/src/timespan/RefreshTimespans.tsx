@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/react-hooks';
-import {TimeSpans, TimeSpansVariables} from '../gql/__generated__/TimeSpans';
+import {useQuery} from '@apollo/client/react';
+import {TimeSpans, TimeSpansVariables} from '../gql/types';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {useSnackbar} from 'notistack';
 import {isSameDate} from '../utils/time';

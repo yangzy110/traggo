@@ -1,13 +1,9 @@
-import {DataProxy} from 'apollo-cache';
-import {TimeSpans} from './__generated__/TimeSpans';
+import type {ApolloCache} from '@apollo/client';
+import {TimeSpans, AddTimeSpan_createTimeSpan, TimeSpansInRange, TimeSpansInRangeVariables, Trackers, StopTimer} from './types';
 import * as gqlTimeSpan from './timeSpan';
 import moment from 'moment';
-import {AddTimeSpan_createTimeSpan} from './__generated__/AddTimeSpan';
-import {TimeSpansInRange, TimeSpansInRangeVariables} from './__generated__/TimeSpansInRange';
-import {Trackers} from './__generated__/Trackers';
-import {StopTimer} from './__generated__/StopTimer';
 
-export const addTimeSpanToCache = (cache: DataProxy, ts: AddTimeSpan_createTimeSpan) => {
+export const addTimeSpanToCache = (cache: ApolloCache, ts: AddTimeSpan_createTimeSpan) => {
     let oldTimeSpans: TimeSpans | null = null;
     try {
         oldTimeSpans = cache.readQuery<TimeSpans>({query: gqlTimeSpan.TimeSpans});
@@ -28,7 +24,11 @@ export const addTimeSpanToCache = (cache: DataProxy, ts: AddTimeSpan_createTimeS
         },
     });
 };
-export const addTimeSpanInRangeToCache = (cache: DataProxy, ts: AddTimeSpan_createTimeSpan, vars: TimeSpansInRangeVariables) => {
+export const addTimeSpanInRangeToCache = (
+    cache: ApolloCache,
+    ts: AddTimeSpan_createTimeSpan,
+    vars: TimeSpansInRangeVariables
+) => {
     const oldTimeSpans = cache.readQuery<TimeSpansInRange>({query: gqlTimeSpan.TimeSpansInRange, variables: vars});
     if (!oldTimeSpans) {
         return;
@@ -47,7 +47,7 @@ export const addTimeSpanInRangeToCache = (cache: DataProxy, ts: AddTimeSpan_crea
         },
     });
 };
-export const removeFromTrackersCache = (cache: DataProxy, data: StopTimer) => {
+export const removeFromTrackersCache = (cache: ApolloCache, data: StopTimer) => {
     const oldTrackers = cache.readQuery<Trackers>({query: gqlTimeSpan.Trackers});
     if (!oldTrackers || !data || !data.stopTimeSpan) {
         return;
@@ -60,7 +60,7 @@ export const removeFromTrackersCache = (cache: DataProxy, data: StopTimer) => {
     });
 };
 
-export const removeFromTimeSpanInRangeCache = (cache: DataProxy, id: number, vars: TimeSpansInRangeVariables) => {
+export const removeFromTimeSpanInRangeCache = (cache: ApolloCache, id: number, vars: TimeSpansInRangeVariables) => {
     const old = cache.readQuery<TimeSpansInRange>({query: gqlTimeSpan.TimeSpansInRange, variables: vars});
     if (!old) {
         return;

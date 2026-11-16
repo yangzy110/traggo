@@ -2,12 +2,11 @@ import * as React from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Paper} from '@material-ui/core';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
-import {useMutation} from '@apollo/react-hooks';
-import {SetSettings, SetSettingsVariables} from '../gql/__generated__/SetSettings';
+import {useMutation} from '@apollo/client/react';
+import {SetSettings, SetSettingsVariables, DateLocale, Theme, WeekDay, DateTimeInputStyle} from '../gql/types';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/NativeSelect/NativeSelect';
-import {DateLocale, Theme, WeekDay, DateTimeInputStyle} from '../gql/__generated__/globalTypes';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 

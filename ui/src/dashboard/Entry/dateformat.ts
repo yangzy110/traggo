@@ -1,4 +1,4 @@
-import {StatsInterval} from '../../gql/__generated__/globalTypes';
+import {StatsInterval} from '../../gql/types';
 import * as moment from 'moment-timezone';
 import {expectNever} from '../../utils/never';
 

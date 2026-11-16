@@ -1,7 +1,6 @@
-import {gql} from 'apollo-boost';
-import {useQuery} from '@apollo/react-hooks';
-import {Settings as SettingsQueryResponse} from './__generated__/Settings';
-import {DateLocale, Theme, WeekDay, DateTimeInputStyle} from './__generated__/globalTypes';
+import {gql} from '@apollo/client';
+import {useQuery} from '@apollo/client/react';
+import {Settings as SettingsQueryResponse, DateLocale, Theme, WeekDay, DateTimeInputStyle} from './types';
 import {stripTypename} from '../utils/strip';
 
 export const Settings = gql`

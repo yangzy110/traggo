@@ -3,7 +3,7 @@ import {MuiThemeProvider, Theme} from '@material-ui/core/styles';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {useSettings} from '../gql/settings';
-import {Theme as SettingTheme} from '../gql/__generated__/globalTypes';
+import {Theme as SettingTheme} from '../gql/types';
 
 const themes: Record<SettingTheme, Theme> = {
     [SettingTheme.GruvboxDark]: createMuiTheme({

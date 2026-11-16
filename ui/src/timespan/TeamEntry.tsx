@@ -1,9 +1,9 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import Typography from '@material-ui/core/Typography';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import * as gqlTag from '../gql/tags';
-import {Tags} from '../gql/__generated__/Tags';
+import {Tags} from '../gql/types';
 import {TagChip} from '../common/TagChip';
 import {clock, formatDuration, spanSeconds} from './teamutils';
 

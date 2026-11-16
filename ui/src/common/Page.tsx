@@ -30,12 +30,9 @@ import Button from '@material-ui/core/Button';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import {Link} from 'react-router-dom';
 import MenuItem from '@material-ui/core/MenuItem';
-import {useMutation, useQuery} from '@apollo/react-hooks';
-import {Logout} from '../gql/__generated__/Logout';
-import {Version} from '../gql/__generated__/Version';
-import {CurrentUser} from '../gql/__generated__/CurrentUser';
+import {useMutation, useQuery} from '@apollo/client/react';
+import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
 import * as gqlDashboard from '../gql/dashboard';
-import {Dashboards} from '../gql/__generated__/Dashboards';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Route, RouteChildrenProps, Switch, useHistory, useLocation} from 'react-router';
 
@@ -121,7 +118,7 @@ export const Page: React.FC = ({children}) => {
     const [userMenuOpen, setUserMenuOpen] = React.useState<null | HTMLElement>(null);
     const [navMenu, setNavMenu] = React.useState<null | {name: string; anchor: HTMLElement}>(null);
     const [logout] = useMutation<Logout>(gqlUser.Logout, {refetchQueries: [{query: gqlUser.CurrentUser}]});
-    const {data: {version = gqlVersion.VersionDefault.version} = gqlVersion.VersionDefault} = useQuery<Version>(
+    const {data: {version = gqlVersion.VersionDefault.version} = gqlVersion.VersionDefault} = useQuery<ServerVersion>(
         gqlVersion.Version
     );
     const dashboardsQuery = useQuery<Dashboards>(gqlDashboard.Dashboards);

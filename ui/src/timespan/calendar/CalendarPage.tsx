@@ -1,11 +1,26 @@
 import * as React from 'react';
 import {Paper, useTheme} from '@material-ui/core';
 import moment from 'moment';
-import {useApolloClient, useMutation, useQuery} from '@apollo/react-hooks';
-import {TimeSpans_timeSpans_timeSpans} from '../../gql/__generated__/TimeSpans';
+import {useApolloClient, useMutation, useQuery} from '@apollo/client/react';
+import {
+    TimeSpans_timeSpans_timeSpans,
+    Trackers,
+    Tags,
+    UpdateTimeSpan,
+    UpdateTimeSpanVariables,
+    AddTimeSpan,
+    AddTimeSpanVariables,
+    StopTimer,
+    StopTimerVariables,
+    StartTimer,
+    StartTimerVariables,
+    TimeSpansInRange,
+    TimeSpansInRangeVariables,
+    InputCursor,
+    TimeSpansForExport,
+    TimeSpansForExportVariables,
+} from '../../gql/types';
 import * as gqlTimeSpan from '../../gql/timeSpan';
-import {Trackers} from '../../gql/__generated__/Trackers';
-import {Tags} from '../../gql/__generated__/Tags';
 import * as gqlTag from '../../gql/tags';
 import FullCalendar from '@fullcalendar/react';
 import {calculateColor, ColorMode} from '../colorutils';
@@ -17,30 +32,23 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import momentPlugin from '@fullcalendar/moment';
 import interactionPlugin from '@fullcalendar/interaction';
 import {OptionsInput} from '@fullcalendar/core';
-import {UpdateTimeSpan, UpdateTimeSpanVariables} from '../../gql/__generated__/UpdateTimeSpan';
 import Popper from '@material-ui/core/Popper';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import {TimeSpan} from '../TimeSpan';
 import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
-import {AddTimeSpan, AddTimeSpanVariables} from '../../gql/__generated__/AddTimeSpan';
 import {FullCalendarStyling} from './FullCalendarStyling';
 import useInterval from '@rooks/use-interval';
 import {EventApi} from '@fullcalendar/core/api/EventApi';
-import {StopTimer, StopTimerVariables} from '../../gql/__generated__/StopTimer';
 import {
     addTimeSpanInRangeToCache,
     addTimeSpanToCache,
     removeFromTimeSpanInRangeCache,
     removeFromTrackersCache,
 } from '../../gql/utils';
-import {StartTimer, StartTimerVariables} from '../../gql/__generated__/StartTimer';
 import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
-import {TimeSpansInRange, TimeSpansInRangeVariables} from '../../gql/__generated__/TimeSpansInRange';
 import {ExtendedEventSourceInput} from '@fullcalendar/core/structs/event-source';
 import {useSnackbar} from 'notistack';
-import {InputCursor} from '../../gql/__generated__/globalTypes';
-import {TimeSpansForExport, TimeSpansForExportVariables} from '../../gql/__generated__/TimeSpansForExport';
 import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
 
 // The server returns at most 100 time spans per request, so the export has to page through the range.
@@ -119,11 +127,14 @@ export const CalendarPage: React.FC = () => {
         try {
             let cursor: InputCursor | null = null;
             for (let page = 0; page < MAX_EXPORT_PAGES; page++) {
-                const result: {data: TimeSpansForExport} = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
+                const result = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
                     query: gqlTimeSpan.TimeSpansForExport,
                     variables: {start, end, cursor},
                     fetchPolicy: 'network-only',
                 });
+                if (!result.data) {
+                    throw result.error || new Error('no data received');
+                }
                 const paged = result.data.timeSpans;
                 paged.timeSpans.forEach((ts) =>
                     entries.push({member: '', start: ts.start, end: ts.end, tags: ts.tags, note: ts.note})
@@ -134,7 +145,7 @@ export const CalendarPage: React.FC = () => {
                 cursor = {startId: paged.cursor.startId, offset: paged.cursor.offset, pageSize: paged.cursor.pageSize};
             }
         } catch (e) {
-            enqueueSnackbar('导出失败: ' + e.message, {variant: 'error'});
+            enqueueSnackbar('导出失败: ' + (e instanceof Error ? e.message : String(e)), {variant: 'error'});
             return;
         }
         if (entries.length === 0) {

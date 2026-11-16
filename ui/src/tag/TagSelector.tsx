@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {Tags} from '../gql/__generated__/Tags';
+import {Tags} from '../gql/types';
 import * as gqlTags from '../gql/tags';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import {useError} from '../utils/errors';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';

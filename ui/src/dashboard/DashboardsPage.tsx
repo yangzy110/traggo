@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Paper from '@material-ui/core/Paper';
-import {useMutation, useQuery} from '@apollo/react-hooks';
+import {useMutation, useQuery} from '@apollo/client/react';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -16,9 +16,7 @@ import {useSnackbar} from 'notistack';
 import * as gqlDashboard from '../gql/dashboard';
 import {TextField} from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import {Dashboards} from '../gql/__generated__/Dashboards';
-import {RemoveDashboard, RemoveDashboardVariables} from '../gql/__generated__/RemoveDashboard';
-import {UpdateDashboard, UpdateDashboardVariables} from '../gql/__generated__/UpdateDashboard';
+import {Dashboards, RemoveDashboard, RemoveDashboardVariables, UpdateDashboard, UpdateDashboardVariables} from '../gql/types';
 import {AddDashboardDialog} from './AddDashboardDialog';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {ConfirmDialog} from '../common/ConfirmDialog';

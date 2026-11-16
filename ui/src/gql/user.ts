@@ -1,4 +1,4 @@
-import {gql} from 'apollo-boost';
+import {gql} from '@apollo/client';
 
 export const CurrentUser = gql`
     query CurrentUser {
@@ -11,7 +11,7 @@ export const CurrentUser = gql`
 `;
 
 export const Login = gql`
-    mutation Login($name: String!, $pass: String!, $deviceType: DeviceType!) {
+    mutation LoginUser($name: String!, $pass: String!, $deviceType: DeviceType!) {
         login(username: $name, pass: $pass, deviceName: "web ui", type: $deviceType, cookie: true) {
             user {
                 id

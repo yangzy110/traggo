@@ -1,12 +1,17 @@
 import * as React from 'react';
-import {withSnackbarProps} from 'notistack';
-import {ApolloError} from 'apollo-boost';
+import type {ErrorLike} from '@apollo/client';
+import {CombinedGraphQLErrors} from '@apollo/client/errors';
+import type {ProviderContext} from 'notistack';
 
-export const handleError = (prefix: string, enqueue: withSnackbarProps['enqueueSnackbar']): ((error: ApolloError) => void) => {
+export const handleError = (prefix: string, enqueue: ProviderContext['enqueueSnackbar']): ((error: ErrorLike) => void) => {
     return (error) => {
-        error.graphQLErrors.forEach((gqlError) => {
-            enqueue(`${prefix}: ${gqlError.message}`, {variant: 'warning'});
-        });
+        if (CombinedGraphQLErrors.is(error)) {
+            error.errors.forEach((gqlError) => {
+                enqueue(`${prefix}: ${gqlError.message}`, {variant: 'warning'});
+            });
+        } else {
+            enqueue(`${prefix}: ${error.message}`, {variant: 'warning'});
+        }
     };
 };
 

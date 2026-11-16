@@ -1,10 +1,17 @@
 import * as React from 'react';
-import {useMutation, useQuery} from '@apollo/react-hooks';
+import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlDashboard from '../gql/dashboard';
 import {default as ReactGrid, Layout, WidthProvider} from 'react-grid-layout';
-import {Dashboards, Dashboards_dashboards_items} from '../gql/__generated__/Dashboards';
-import {UpdatePos, UpdatePosVariables} from '../gql/__generated__/UpdatePos';
-import {EntryType, StatsInterval} from '../gql/__generated__/globalTypes';
+import {
+    Dashboards,
+    Dashboards_dashboards_items,
+    UpdatePos,
+    UpdatePosVariables,
+    EntryType,
+    StatsInterval,
+    RemoveDashboardEntry,
+    RemoveDashboardEntryVariables,
+} from '../gql/types';
 import {DashboardEntry} from './Entry/DashboardEntry';
 import Button from '@material-ui/core/Button';
 import clone from 'lodash.clonedeep';
@@ -15,7 +22,6 @@ import {CenteredSpinner} from '../common/CenteredSpinner';
 import {AddPopup} from './Entry/AddPopup';
 import {Paper} from '@material-ui/core';
 import {Center} from '../common/Center';
-import {RemoveDashboardEntry, RemoveDashboardEntryVariables} from '../gql/__generated__/RemoveDashboardEntry';
 import {RouteChildrenProps} from 'react-router';
 import {useSnackbar} from 'notistack';
 import {DateRanges} from './DateRanges';

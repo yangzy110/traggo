@@ -4,12 +4,11 @@ import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import {Paper} from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import {Dashboards_dashboards_items} from '../../gql/__generated__/Dashboards';
-import {useMutation} from '@apollo/react-hooks';
+import {Dashboards_dashboards_items, AddDashboardEntry, AddDashboardEntryVariables} from '../../gql/types';
+import {useMutation} from '@apollo/client/react';
 import * as gqlDashboard from '../../gql/dashboard';
 import {Fade} from '../../common/Fade';
 import {DashboardEntryForm, isValidDashboardEntry} from './DashboardEntryForm';
-import {AddDashboardEntry, AddDashboardEntryVariables} from '../../gql/__generated__/AddDashboardEntry';
 import {handleError} from '../../utils/errors';
 import {useSnackbar} from 'notistack';
 

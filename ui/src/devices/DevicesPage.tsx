@@ -1,10 +1,10 @@
 import * as React from 'react';
 import Paper from '@material-ui/core/Paper';
 import {makeStyles} from '@material-ui/core/styles';
-import {useMutation, useQuery} from '@apollo/react-hooks';
+import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlDevice from '../gql/device';
 import * as gqlUser from '../gql/user';
-import {Devices} from '../gql/__generated__/Devices';
+import {Devices, RemoveDevice, RemoveDeviceVariables, UpdateDevice, UpdateDeviceVariables, DeviceType} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -17,13 +17,10 @@ import EditIcon from '@material-ui/icons/Edit';
 import DoneIcon from '@material-ui/icons/Done';
 import CloseIcon from '@material-ui/icons/Close';
 import IconButton from '@material-ui/core/IconButton';
-import {RemoveDevice, RemoveDeviceVariables} from '../gql/__generated__/RemoveDevice';
-import {UpdateDevice, UpdateDeviceVariables} from '../gql/__generated__/UpdateDevice';
 import {useSnackbar} from 'notistack';
 import {TextField} from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import {AddDeviceDialog} from './AddDeviceDialog';
-import {DeviceType} from '../gql/__generated__/globalTypes';
 import {deviceTypeToString} from './typeutils';
 import Select from '@material-ui/core/NativeSelect';
 

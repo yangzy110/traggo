@@ -5,11 +5,11 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {useMutation} from '@apollo/react-hooks';
+import {useMutation} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import * as gqlDashboard from '../gql/dashboard';
-import {CreateDashboard, CreateDashboardVariables} from '../gql/__generated__/CreateDashboard';
+import {CreateDashboard, CreateDashboardVariables} from '../gql/types';
 
 interface AddTagDialogProps {
     open: boolean;

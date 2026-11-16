@@ -1,6 +1,6 @@
 import * as React from 'react';
 import moment from 'moment-timezone';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import {useHistory} from 'react-router';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -12,7 +12,7 @@ import NextIcon from '@material-ui/icons/ChevronRight';
 import DownloadIcon from '@material-ui/icons/GetApp';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import * as gqlTimeSpan from '../gql/timeSpan';
-import {TeamTimeSpans, TeamTimeSpansVariables} from '../gql/__generated__/TeamTimeSpans';
+import {TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {inUserTz} from './timeutils';
 import {TeamEntry, useTagColors} from './TeamEntry';

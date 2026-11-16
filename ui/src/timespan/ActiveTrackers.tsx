@@ -1,9 +1,8 @@
 import * as React from 'react';
-import {useQuery} from '@apollo/react-hooks';
+import {useQuery} from '@apollo/client/react';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import * as gqlTag from '../gql/tags';
-import {Trackers} from '../gql/__generated__/Trackers';
-import {Tags} from '../gql/__generated__/Tags';
+import {Trackers, Tags} from '../gql/types';
 import {TimeSpan} from './TimeSpan';
 import {toTimeSpanProps} from './timespanutils';
 import {Typography} from '@material-ui/core';

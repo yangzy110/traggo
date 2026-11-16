@@ -231,6 +231,8 @@ export const Page: React.FC = ({children}) => {
         },
         ...(admin ? [{name: 'Admin', items: [{label: 'Users', to: '/admin/users'}]}] : []),
     ];
+    const activeNavItems: Array<{label: string; to: string}> =
+        navGroups.find((group) => group.name === (navMenu && navMenu.name))?.items || [];
 
     return (
         <div className={classes.root}>
@@ -271,7 +273,7 @@ export const Page: React.FC = ({children}) => {
                             transformOrigin={{vertical: 'top', horizontal: 'left'}}
                             open={!!navMenu}
                             onClose={() => setNavMenu(null)}>
-                            {((navGroups.find((g) => g.name === (navMenu && navMenu.name)) || {items: []}).items).map(
+                            {activeNavItems.map(
                                 ({label, to}) => (
                                     <MenuItem
                                         key={to}

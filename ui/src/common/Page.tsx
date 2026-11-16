@@ -35,7 +35,7 @@ import {CurrentUser} from '../gql/__generated__/CurrentUser';
 import * as gqlDashboard from '../gql/dashboard';
 import {Dashboards} from '../gql/__generated__/Dashboards';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Route, RouteChildrenProps, Switch} from 'react-router';
+import {Route, RouteChildrenProps, Switch, useLocation} from 'react-router';
 
 const drawerWidth = 240;
 
@@ -53,6 +53,14 @@ const useStyles = makeStyles((theme) => ({
     navButton: {
         textTransform: 'none',
         marginRight: theme.spacing(1),
+        fontSize: '1rem',
+        borderRadius: 0,
+        borderBottom: '2px solid transparent',
+        height: 64,
+    },
+    navButtonActive: {
+        borderBottomColor: 'currentColor',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
     menuButton: {
         marginRight: 20,
@@ -75,21 +83,17 @@ const useStyles = makeStyles((theme) => ({
         paddingBottom: theme.spacing(2),
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
+        [theme.breakpoints.up('md')]: {
+            paddingTop: theme.spacing(3),
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
+        },
     },
     grow: {
         flexGrow: 1,
     },
     sectionDesktop: {
-        display: 'none',
-        [theme.breakpoints.up('xs')]: {
-            display: 'flex',
-        },
-    },
-    sectionMobile: {
         display: 'flex',
-        [theme.breakpoints.up('xs')]: {
-            display: 'none',
-        },
     },
 }));
 
@@ -100,6 +104,7 @@ const routerLink = (to: string): any => {
 
 export const Page: React.FC = ({children}) => {
     const classes = useStyles();
+    const location = useLocation();
     const {data} = useQuery<CurrentUser>(gqlUser.CurrentUser);
 
     const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -245,11 +250,16 @@ export const Page: React.FC = ({children}) => {
                         </Typography>
                     </Link>
                     <Hidden smDown implementation="js">
-                        {navGroups.map(({name}) => (
+                        {navGroups.map(({name, items}) => (
                             <Button
                                 key={name}
                                 color="inherit"
-                                className={classes.navButton}
+                                className={
+                                    classes.navButton +
+                                    (items.some(({to}) => location.pathname.startsWith(to.split('/').slice(0, 3).join('/')))
+                                        ? ' ' + classes.navButtonActive
+                                        : '')
+                                }
                                 onClick={(e) => setNavMenu({name, anchor: e.currentTarget})}>
                                 {name}
                             </Button>
@@ -263,7 +273,11 @@ export const Page: React.FC = ({children}) => {
                             onClose={() => setNavMenu(null)}>
                             {((navGroups.find((g) => g.name === (navMenu && navMenu.name)) || {items: []}).items).map(
                                 ({label, to}) => (
-                                    <MenuItem key={to} onClick={() => setNavMenu(null)} component={routerLink(to)}>
+                                    <MenuItem
+                                        key={to}
+                                        selected={location.pathname === to}
+                                        onClick={() => setNavMenu(null)}
+                                        component={routerLink(to)}>
                                         {label}
                                     </MenuItem>
                                 )
@@ -313,7 +327,8 @@ export const Page: React.FC = ({children}) => {
                         </Button>
                         <Menu
                             anchorEl={userMenuOpen}
-                            anchorOrigin={{vertical: 'top', horizontal: 'right'}}
+                            getContentAnchorEl={null}
+                            anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
                             transformOrigin={{vertical: 'top', horizontal: 'right'}}
                             open={!!userMenuOpen}
                             onClose={() => setUserMenuOpen(null)}>

@@ -9,7 +9,6 @@ import moment from 'moment';
 import {Typography} from '@mui/material';
 import {GroupedTimeSpanProps, toGroupedTimeSpanProps} from './timespanutils';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
-import ReactInfinite from 'react-infinite';
 import {isSameDate} from '../utils/time';
 
 interface DoneTrackersProps {
@@ -23,8 +22,9 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
     const loading = React.useRef(false);
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
     const [infiniteLoading, setInfiniteLoading] = React.useState(false);
+    const [hasMore, setHasMore] = React.useState(true);
+    const sentinel = React.useRef<HTMLDivElement | null>(null);
     const [currentDate, setCurrentDate] = React.useState(moment());
-    const [heights, setHeights] = React.useState<Record<string, number>>({});
     useInterval(
         () => {
             if (!isSameDate(currentDate, moment())) {
@@ -40,6 +40,7 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
             return;
         }
         loading.current = true;
+        setInfiniteLoading(true);
         const {offset, pageSize, startId} = trackersResult.data.timeSpans.cursor;
         trackersResult
             .fetchMore({
@@ -64,8 +65,12 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
                     };
                 },
             })
-            .then(() => {
+            .then((result) => {
                 loading.current = false;
+                // less time spans than requested means that there are no more
+                if (!result.data || result.data.timeSpans.timeSpans.length < pageSize) {
+                    setHasMore(false);
+                }
                 return setInfiniteLoading(false);
             })
             .catch(() => {
@@ -90,34 +95,39 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
         return toGroupedTimeSpanProps(trackersResult.data.timeSpans.timeSpans, tagsResult.data.tags, currentDate);
     }, [trackersResult, tagsResult, currentDate]);
 
+    // Load the next page when the end of the list is (almost) visible.
+    const fetchMoreRef = React.useRef(fetchMore);
+    fetchMoreRef.current = fetchMore;
+    const loadedCount = trackersResult.data ? trackersResult.data.timeSpans.timeSpans.length : 0;
+    React.useEffect(() => {
+        const element = sentinel.current;
+        if (!element || !hasMore) {
+            return;
+        }
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) {
+                    fetchMoreRef.current();
+                }
+            },
+            {rootMargin: '2000px'}
+        );
+        observer.observe(element);
+        return () => observer.disconnect();
+        // the observer is created again after a page was loaded, it reports the current state when it starts observing
+    }, [hasMore, loadedCount]);
+
     return (
         <div style={{marginTop: 10}}>
-            <ReactInfinite
-                key={1}
-                useWindowAsScrollContainer
-                preloadBatchSize={window.innerHeight}
-                onInfiniteLoad={fetchMore}
-                isInfiniteLoading={infiniteLoading}
-                infiniteLoadBeginEdgeOffset={2000}
-                loadingSpinnerDelegate={
-                    <Typography align={'center'} variant={'h5'}>
-                        .. loading time spans ..
-                    </Typography>
-                }
-                elementHeight={values.map((m) => heights[m.key] || 500)}>
-                {values.map(({key, timeSpans}) => {
-                    return (
-                        <DatedTimeSpans
-                            key={key}
-                            name={key}
-                            timeSpans={timeSpans}
-                            addTagsToTracker={addTagsToTracker}
-                            setHeight={setHeights}
-                            height={heights[key] || 500}
-                        />
-                    );
-                })}
-            </ReactInfinite>
+            {values.map(({key, timeSpans}) => (
+                <DatedTimeSpans key={key} name={key} timeSpans={timeSpans} addTagsToTracker={addTagsToTracker} />
+            ))}
+            <div ref={sentinel} />
+            {infiniteLoading ? (
+                <Typography align={'center'} variant={'h5'}>
+                    .. loading time spans ..
+                </Typography>
+            ) : null}
         </div>
     );
 };
@@ -125,21 +135,12 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
 const DatedTimeSpans: React.FC<
     {
         name: string;
-        setHeight: (cb: (height: Record<string, number>) => Record<string, number>) => void;
-        height: number;
         timeSpans: TimeSpanProps[];
     } & DoneTrackersProps
-> = ({name, timeSpans, addTagsToTracker, setHeight, height}) => {
-    const ref = React.useRef<HTMLDivElement | null>(null);
-    React.useEffect(() => {
-        const currentHeight = ref.current && ref.current.getBoundingClientRect().height;
-        if (currentHeight != null && currentHeight !== height) {
-            setHeight((old) => ({...old, [name]: currentHeight}));
-        }
-    }, [ref, name, setHeight, height]);
+> = ({name, timeSpans, addTagsToTracker}) => {
     return (
-        <div key={name} ref={ref}>
-            <Typography key={name} align="center" variant={'h5'}>
+        <div>
+            <Typography align="center" variant={'h5'}>
                 {name}
             </Typography>
             {timeSpans.map((timeSpanProps) => (

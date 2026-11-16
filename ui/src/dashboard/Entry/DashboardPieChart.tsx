@@ -1,5 +1,6 @@
 import {Stats_stats_entries} from '../../gql/types';
-import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, TooltipProps} from 'recharts';
+import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
+import type {TooltipContentProps} from 'recharts';
 import * as React from 'react';
 import {Colors} from './colors';
 import {Typography} from '@mui/material';
@@ -37,7 +38,8 @@ export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) =
     );
 };
 
-interface CustomTooltipProps extends TooltipProps {
+// recharts passes `active` and `payload` to the element which is given as `content`
+interface CustomTooltipProps extends Partial<Pick<TooltipContentProps, 'active' | 'payload'>> {
     total: number;
 }
 

@@ -1,6 +1,5 @@
 import * as React from 'react';
 import './global.css';
-import 'react-resizable/css/styles.css';
 import 'react-grid-layout/css/styles.css';
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';

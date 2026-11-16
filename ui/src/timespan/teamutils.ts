@@ -24,7 +24,7 @@ export const spanSeconds = (start: string, end: string) =>
     Math.max(0, moment.parseZone(end).diff(moment.parseZone(start), 'seconds'));
 
 export const formatDuration = (seconds: number) =>
-    seconds < 60 ? '<1m' : prettyMs(seconds * 1000, {unitCount: 2, secondsDecimalDigits: 0}).replace(/^~/, '');
+    seconds < 60 ? '<1m' : prettyMs(seconds * 1000, {unitCount: 2, secondsDecimalDigits: 0});
 
 // Returns an error message if the range cannot be queried.
 export const validateRange = (from: string, to: string, maxDays: number): string | null => {

@@ -64,7 +64,7 @@ const styles = {
     tagInput: {
         width: '100%',
         flex: '1',
-        marginRight: 10,
+        marginRight: '10px',
         '@media (max-width: 750px)': {
             display: 'flex',
             width: 'calc(100% - 48px)',

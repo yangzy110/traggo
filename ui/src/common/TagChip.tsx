@@ -1,6 +1,5 @@
 import Chip from '@mui/material/Chip';
 import * as React from 'react';
-// @ts-ignore
 import bestContrast from 'get-best-contrast-color';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 

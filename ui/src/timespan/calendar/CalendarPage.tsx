@@ -24,21 +24,16 @@ import * as gqlTimeSpan from '../../gql/timeSpan';
 import * as gqlTag from '../../gql/tags';
 import FullCalendar from '@fullcalendar/react';
 import {calculateColor, ColorMode} from '../colorutils';
-import '@fullcalendar/core/main.css';
-import '@fullcalendar/daygrid/main.css';
-import '@fullcalendar/timegrid/main.css';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import momentPlugin from '@fullcalendar/moment';
 import interactionPlugin from '@fullcalendar/interaction';
-import {OptionsInput} from '@fullcalendar/core';
+import type {CalendarOptions, EventApi, EventInput} from '@fullcalendar/core';
 import Popper from '@mui/material/Popper';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import {TimeSpan} from '../TimeSpan';
 import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
 import {FullCalendarStyling} from './FullCalendarStyling';
 import {useInterval} from '../../utils/hooks';
-import {EventApi} from '@fullcalendar/core/api/EventApi';
 import {
     addTimeSpanInRangeToCache,
     addTimeSpanToCache,
@@ -47,7 +42,6 @@ import {
 } from '../../gql/utils';
 import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
-import {ExtendedEventSourceInput} from '@fullcalendar/core/structs/event-source';
 import {useSnackbar} from 'notistack';
 import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
 
@@ -57,13 +51,6 @@ const MAX_EXPORT_PAGES = 200;
 const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
 };
-
-declare global {
-    interface Window {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        __TRAGGO_CALENDAR: any;
-    }
-}
 
 const StartTimerId = '-1';
 
@@ -101,10 +88,6 @@ export const CalendarPage: React.FC = () => {
         60000,
         true
     );
-    React.useEffect(() => {
-        window.__TRAGGO_CALENDAR = {};
-        return () => (window.__TRAGGO_CALENDAR = undefined);
-    });
     const [ignore, setIgnore] = React.useState<boolean>(false);
     const [selected, setSelected] = React.useState<{selected: HTMLElement | null; data: TimeSpans_timeSpans_timeSpans | null}>({
         selected: null,
@@ -160,7 +143,7 @@ export const CalendarPage: React.FC = () => {
     const exportRef = React.useRef(exportCsv);
     exportRef.current = exportCsv;
 
-    const values: ExtendedEventSourceInput[] = (() => {
+    const values: EventInput[] = (() => {
         if (
             timeSpansResult.error ||
             timeSpansResult.loading ||
@@ -190,12 +173,11 @@ export const CalendarPage: React.FC = () => {
                 return {
                     start: moment(ts.start).toDate(),
                     end: moment(ts.end || currentDate).toDate(),
-                    hasEnd: !!ts.end,
                     editable: !!ts.end,
+                    classNames: ts.end ? [] : ['__running'],
                     backgroundColor: color,
                     startEditable: true,
                     id: ts.id,
-                    tags: ts.tags!.map(({value, key}) => ({key, value})),
                     title: ts.tags!.map((t) => t.key + ':' + t.value).join(' '),
                     extendedProps: {ts},
                     textColor: theme.palette.getContrastText(color),
@@ -204,7 +186,7 @@ export const CalendarPage: React.FC = () => {
             });
     })();
 
-    const onDrop: OptionsInput['eventDrop'] = (data) => {
+    const onDrop: CalendarOptions['eventDrop'] = (data) => {
         updateTimeSpanMutation({
             variables: {
                 oldStart: moment(data.oldEvent.start!).format(),
@@ -216,10 +198,10 @@ export const CalendarPage: React.FC = () => {
             },
         });
     };
-    const onResize: OptionsInput['eventResize'] = (data) => {
+    const onResize: CalendarOptions['eventResize'] = (data) => {
         updateTimeSpanMutation({
             variables: {
-                oldStart: moment(data.prevEvent.start!).format(),
+                oldStart: moment(data.oldEvent.start!).format(),
                 start: moment(data.event.start!).format(),
                 end: moment(data.event.end!).format(),
                 id: parseInt(data.event.id, 10),
@@ -228,7 +210,7 @@ export const CalendarPage: React.FC = () => {
             },
         });
     };
-    const onSelect: OptionsInput['select'] = (data) => {
+    const onSelect: CalendarOptions['select'] = (data) => {
         addTimeSpan({
             variables: {
                 start: moment(data.start).format(),
@@ -238,7 +220,7 @@ export const CalendarPage: React.FC = () => {
             },
         });
     };
-    const onClick: OptionsInput['eventClick'] = (data) => {
+    const onClick: CalendarOptions['eventClick'] = (data) => {
         data.jsEvent.preventDefault();
         if (data.event.id === StartTimerId) {
             startTimer({variables: {start: moment().format(), tags: [], note: ''}}).then(() => {
@@ -251,10 +233,10 @@ export const CalendarPage: React.FC = () => {
         setSelected({data: data.event.extendedProps.ts, selected: data.jsEvent.target as any});
     };
     if (trackersResult.data && !(trackersResult.data.timers || []).length) {
-        const startTimerEvent: ExtendedEventSourceInput = {
+        const startTimerEvent: EventInput = {
             start: currentDate.toDate(),
             end: moment(currentDate).add(15, 'minute').toDate(),
-            className: '__start',
+            classNames: ['__start'],
             editable: false,
             id: StartTimerId,
         };
@@ -265,9 +247,9 @@ export const CalendarPage: React.FC = () => {
         <Paper style={{padding: 10, bottom: 10, top: 80, position: 'absolute'}} color="red">
             <FullCalendarStyling>
                 <FullCalendar
-                    defaultView="timeGridWeek"
+                    initialView="timeGridWeek"
                     rerenderDelay={30}
-                    datesRender={(x) => {
+                    datesSet={(x) => {
                         const range = {
                             start: moment(x.view.currentStart).format(),
                             end: moment(x.view.currentEnd).format(),
@@ -297,18 +279,14 @@ export const CalendarPage: React.FC = () => {
                     selectMinDistance={20}
                     now={currentDate.toDate()}
                     defaultTimedEventDuration={{minute: 15}}
-                    eventRender={(e) => {
-                        const content = e.el.getElementsByClassName('fc-content').item(0);
-                        if (content) {
-                            content.innerHTML = getElementContent(e.event, () => {
-                                stopTimer({
-                                    variables: {id: e.event.extendedProps.ts.id, end: moment().format()},
-                                });
-                            });
-                        }
-
-                        e.el.setAttribute('data-has-end', '' + (!e.event.extendedProps.ts || !!e.event.extendedProps.ts.end));
-                    }}
+                    eventContent={(arg) => (
+                        <EventContent
+                            event={arg.event}
+                            stop={() => {
+                                stopTimer({variables: {id: arg.event.extendedProps.ts.id, end: moment().format()}});
+                            }}
+                        />
+                    )}
                     slotLabelInterval={{minute: 60}}
                     slotDuration={{minute: 15}}
                     scrollTime={{hour: 6, minute: 30}}
@@ -317,17 +295,17 @@ export const CalendarPage: React.FC = () => {
                     eventResize={onResize}
                     eventClick={onClick}
                     eventDrop={onDrop}
-                    slotLabelFormat={(s) => toMoment(s.start.marker).format('LT')}
-                    columnHeaderFormat={(s) => toMoment(s.start.marker).format('DD ddd')}
+                    slotLabelFormat={(s) => toMoment(s.date.marker).format('LT')}
+                    dayHeaderFormat={(s) => toMoment(s.date.marker).format('DD ddd')}
                     nowIndicator={true}
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, momentPlugin]}
+                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     customButtons={{
                         export: {
                             text: '导出 CSV',
                             click: () => exportRef.current(),
                         },
                     }}
-                    header={{
+                    headerToolbar={{
                         center: 'title',
                         left: 'prev,next today',
                         right: 'export timeGridWeek,timeGrid5Day,timeGridDay',
@@ -384,56 +362,78 @@ export const CalendarPage: React.FC = () => {
     );
 };
 
-const getElementContent = (event: EventApi, stop: () => void): string => {
+const EventContent: React.FC<{event: EventApi; stop: () => void}> = ({event, stop}) => {
     if (!event.start || !event.end) {
-        return '';
+        return null;
     }
 
     if (event.id === StartTimerId) {
-        return 'START';
+        return <>START</>;
     }
 
     const start = moment(event.start);
     const end = moment(event.end);
-    const diff = end.diff(start, 'minute');
+    const lines = Math.floor(end.diff(start, 'minute') / 15);
+    const hasEnd = !event.extendedProps.ts || !!event.extendedProps.ts.end;
 
-    const lines = Math.floor(diff / 15);
-    const hasEnd = !event.extendedProps.ts || event.extendedProps.ts.end;
+    const stopButton = hasEnd ? null : (
+        <div className="stop">
+            <a
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    stop();
+                }}>
+                STOP {timeRunningCalendar(start, end)}
+            </a>
+        </div>
+    );
+    const clamp = (amount: number) => (
+        <span className="ellipsis" title={event.title} style={{WebkitLineClamp: amount}}>
+            {event.title}
+        </span>
+    );
+    const single = (
+        <span className="ellipsis-single" title={event.title}>
+            {event.title}
+        </span>
+    );
 
-    let stopButton = '';
-    if (!hasEnd) {
-        const id = event.extendedProps.ts.id;
-        if (!window.__TRAGGO_CALENDAR) {
-            window.__TRAGGO_CALENDAR = {};
-        }
-        window.__TRAGGO_CALENDAR[id] = (e: Event) => {
-            e.preventDefault();
-            e.stopPropagation();
-            stop();
-            return false;
-        };
-        stopButton = `<div class="stop"><a onClick="return window.__TRAGGO_CALENDAR[${id}](event)">STOP ${timeRunningCalendar(
-            start,
-            end
-        )}</a></div>`;
-    }
-    const clamp = (amount: number) =>
-        `<span class="ellipsis" title="${event.title}" style="-webkit-line-clamp: ${amount}">${event.title}</span>`;
-
-    const running = hasEnd ? `<span style="float: right">${timeRunningCalendar(start, end)}</span>` : '';
-    const date = `${start.format('LT')} - ${hasEnd ? end.format('LT') : 'now'} ${running}`;
+    const date = (
+        <>
+            {start.format('LT')} - {hasEnd ? end.format('LT') : 'now'}{' '}
+            {hasEnd ? <span style={{float: 'right'}}>{timeRunningCalendar(start, end)}</span> : null}
+        </>
+    );
     if (lines < 2) {
-        return event.title
-            ? `<span class="ellipsis-single" title="${event.title}">${event.title}</span>${stopButton}`
-            : `${date}${stopButton}`;
+        return (
+            <>
+                {event.title ? single : date}
+                {stopButton}
+            </>
+        );
     }
     if (lines === 2) {
-        if (hasEnd) {
-            return `${date}<span class="ellipsis-single" title="${event.title}">${event.title}</span>${stopButton}`;
-        } else {
-            return `${clamp(2)}${stopButton}`;
-        }
+        return hasEnd ? (
+            <>
+                {date}
+                {single}
+                {stopButton}
+            </>
+        ) : (
+            <>
+                {clamp(2)}
+                {stopButton}
+            </>
+        );
     }
 
-    return `${date}<br/>${clamp(lines - 1)}${stopButton}`;
+    return (
+        <>
+            {date}
+            <br />
+            {clamp(lines - 1)}
+            {stopButton}
+        </>
+    );
 };

@@ -151,7 +151,7 @@ export const StatsPage: React.FC = () => {
                                         interval="preserveStartEnd"
                                     />
                                     <YAxis type="number" unit="h" allowDecimals={true} />
-                                    <Tooltip formatter={(value: number) => [value + ' h', '工作时间']} />
+                                    <Tooltip formatter={(value): [string, string] => [`${value} h`, '工作时间']} />
                                     <Line dataKey="hours" name="工作时间" stroke={theme.palette.primary.main} strokeWidth={3} />
                                 </LineChart>
                             </ResponsiveContainer>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlDashboard from '../gql/dashboard';
-import {default as ReactGrid, Layout, WidthProvider} from 'react-grid-layout';
+import ReactGrid, {LayoutItem, WidthProvider} from 'react-grid-layout/legacy';
 import {
     Dashboards,
     Dashboards_dashboards_items,
@@ -127,7 +127,7 @@ export const DashboardPage: React.FC = () => {
 
     const dashboardEntries = dashboard.items;
 
-    const l: Layout[] = dashboard.items.map((item) => ({
+    const l: LayoutItem[] = dashboard.items.map((item) => ({
         i: '' + item.id,
         x: item.pos[viewType].x,
         w: item.pos[viewType].w,
@@ -138,7 +138,7 @@ export const DashboardPage: React.FC = () => {
     }));
     const maxY = l.reduce((a, b) => Math.max(a, b.y + b.h), 0);
     if (addEntry) {
-        const newEntryLayout: Layout = {i: '' + EditId, ...addEntry.pos[viewType], y: maxY, static: true};
+        const newEntryLayout: LayoutItem = {i: '' + EditId, ...addEntry.pos[viewType], y: maxY, static: true};
         l.push(newEntryLayout);
     }
 
@@ -150,7 +150,7 @@ export const DashboardPage: React.FC = () => {
 
     const indexedRanges = dashboard.ranges.reduce((a, range) => ({...a, [range.id]: diagramRanges[range.id] || range.range}), {});
 
-    const updatePosHandler = (_1: unknown, _2: unknown, newItem: Layout) => {
+    const updatePosHandler = (_1: unknown, _2: unknown, newItem: LayoutItem) => {
         updatePos({
             variables: {
                 entryId: parseInt(newItem.i!, 10),

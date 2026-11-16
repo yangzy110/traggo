@@ -129,7 +129,7 @@ export const Page: React.FC = ({children}) => {
     const username = (data && data.user && data.user.name) || 'unknown';
     const admin = data && data.user && data.user.admin;
 
-    const drawerLink = (to: string, label: string, icon: React.ReactNode) => (
+    const drawerLink = (to: string, label: string, icon: React.ReactElement) => (
         <ListItem button component={routerLink(to)} selected={location.pathname === to}>
             <ListItemIcon>{icon}</ListItemIcon>
             <ListItemText primary={label} />

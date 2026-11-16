@@ -5,64 +5,103 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jinzhu/copier"
+	"github.com/jinzhu/gorm"
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
 	"github.com/traggo/server/model"
 )
 
-// UpdateTag updates a tag.
-func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *string, color string) (*gqlmodel.TagDefinition, error) {
-	tag := model.TagDefinition{}
-	userID := auth.GetUser(ctx).ID
-	if r.DB.Where(&model.TagDefinition{UserID: userID, Key: key}).Find(&tag).RecordNotFound() {
+// timeSpansOf returns the sub query for the ids of the time spans which use the tag.
+// These are the time spans of the owner of the tag, for a shared tag it are the time spans of all users except of the users
+// who have an own tag with the same key (they use their own tag).
+func timeSpansOf(db *gorm.DB, tag model.TagDefinition) interface{} {
+	query := db.Model(new(model.TimeSpan)).Select("id")
+	if tag.Shared {
+		return query.Where("user_id NOT IN ("+usersWithOwnTag+")", tag.Key, false).SubQuery()
+	}
+	return query.Where("user_id = ?", tag.UserID).SubQuery()
+}
+
+// dashboardEntriesOf returns the dashboard entries which reference the tag.
+func dashboardEntriesOf(db *gorm.DB, tag model.TagDefinition) ([]model.DashboardEntry, error) {
+	query := db.Joins("INNER JOIN dashboards ON dashboard_entries.dashboard_id = dashboards.id")
+	if tag.Shared {
+		query = query.Where("dashboards.user_id NOT IN ("+usersWithOwnTag+")", tag.Key, false)
+	} else {
+		query = query.Where("dashboards.user_id = ?", tag.UserID)
+	}
+	entries := []model.DashboardEntry{}
+	err := query.
+		Where("keys LIKE ? OR keys LIKE ? OR keys LIKE ?", "%"+tag.Key, "%"+tag.Key+"%", tag.Key+"%").
+		Find(&entries).Error
+	return entries, err
+}
+
+// UpdateTag updates a tag. Shared tags can only be updated by admins, the changes apply to all users.
+func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *string, color string, shared *bool) (*gqlmodel.TagDefinition, error) {
+	user := auth.GetUser(ctx)
+	tag, found := find(r.DB, user.ID, key)
+	if !found {
 		return nil, fmt.Errorf("tag with key '%s' does not exist", key)
+	}
+	if err := checkCanChange(tag, user.ID, user.Admin); err != nil {
+		return nil, err
+	}
+
+	makeShared := shared != nil && *shared && !tag.Shared
+	if shared != nil && !*shared && tag.Shared {
+		return nil, fmt.Errorf("the shared tag '%s' cannot be made private again", tag.Key)
+	}
+	if makeShared && !user.Admin {
+		return nil, fmt.Errorf("only admins can share tags")
+	}
+
+	finalKey := tag.Key
+	if newKey != nil && *newKey != key {
+		if strings.Contains(*newKey, " ") {
+			return nil, fmt.Errorf("tag must not contain spaces")
+		}
+		finalKey = strings.ToLower(*newKey)
+	}
+	renamed := finalKey != tag.Key
+	if renamed || makeShared {
+		if renamed && !r.DB.Where("user_id = ?", tag.UserID).Where("key = ?", finalKey).Find(new(model.TagDefinition)).RecordNotFound() {
+			return nil, fmt.Errorf("tag with key '%s' does already exist", finalKey)
+		}
+		if sharedExists(r.DB, finalKey) {
+			return nil, fmt.Errorf("tag with key '%s' does already exist as a shared tag", finalKey)
+		}
 	}
 
 	tx := r.DB.Begin()
 
 	newValue := model.TagDefinition{
-		Key:    strings.ToLower(key),
+		Key:    finalKey,
 		Color:  color,
-		UserID: userID,
+		UserID: tag.UserID,
+		Shared: tag.Shared || makeShared,
 	}
 
-	if newKey != nil && *newKey != key {
-		if strings.Contains(*newKey, " ") {
-			tx.Rollback()
-			return nil, fmt.Errorf("tag must not contain spaces")
-		}
-		*newKey = strings.ToLower(*newKey)
-		newValue.Key = *newKey
-		timeSpansIdsOfUser := tx.Model(new(model.TimeSpan)).
-			Select("id").
-			Where(&model.TimeSpan{UserID: userID}).
-			SubQuery()
-
+	if renamed {
 		if err := tx.
 			Model(new(model.TimeSpanTag)).
-			Where("time_span_id in ?", timeSpansIdsOfUser).
-			Where(&model.TimeSpanTag{Key: key}).
-			Updates(&model.TimeSpanTag{Key: *newKey}).Error; err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-		usedInEntries := []model.DashboardEntry{}
-
-		if err := tx.
-			Joins("INNER JOIN dashboards ON dashboard_entries.dashboard_id = dashboards.id").
-			Where("dashboards.user_id = ?", userID).
-			Where("keys LIKE ? OR keys LIKE ? OR keys LIKE ?", "%"+key, "%"+key+"%", key+"%").
-			Find(&usedInEntries).Error; err != nil {
+			Where("time_span_id in ?", timeSpansOf(tx, tag)).
+			Where(&model.TimeSpanTag{Key: tag.Key}).
+			Updates(&model.TimeSpanTag{Key: finalKey}).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}
 
+		usedInEntries, err := dashboardEntriesOf(tx, tag)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
 		for _, entry := range usedInEntries {
 			tags := strings.Split(entry.Keys, ",")
 			for index, tagInEntry := range tags {
-				if tagInEntry == key {
-					tags[index] = *newKey
+				if tagInEntry == tag.Key {
+					tags[index] = finalKey
 				}
 			}
 			entry.Keys = strings.Join(tags, ",")
@@ -73,14 +112,11 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 		}
 	}
 
-	if err := tx.Model(new(model.TagDefinition)).Where(&model.TagDefinition{UserID: userID, Key: key}).Updates(&newValue).Error; err != nil {
+	if err := tx.Model(new(model.TagDefinition)).Where(&model.TagDefinition{UserID: tag.UserID, Key: tag.Key}).Updates(&newValue).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	update := tx.Commit()
-
-	gqlTag := &gqlmodel.TagDefinition{}
-	copier.Copy(gqlTag, &newValue)
-	return gqlTag, update.Error
+	return toExternal(newValue, user.ID, user.Admin), update.Error
 }

@@ -25,8 +25,8 @@ func TestGQL_SuggestTag_matchesTags(t *testing.T) {
 
 	require.Nil(t, err)
 	expected := []*gqlmodel.TagDefinition{
-		{Key: "project", Color: "#fff"},
-		{Key: "priority", Color: "#fff"},
+		{Key: "project", Color: "#fff", Editable: true},
+		{Key: "priority", Color: "#fff", Editable: true},
 	}
 	require.Equal(t, expected, tags)
 }

@@ -56,13 +56,65 @@ func (r *ResolverForTimeSpan) TeamTimeSpans(ctx context.Context, fromInclusive m
 		}
 	}
 
+	colors, err := r.tagColors(ids)
+	if err != nil {
+		return nil, err
+	}
+
 	result := []*gqlmodel.TeamMemberTimeSpan{}
 	for _, span := range timeSpans {
 		user, ok := users[span.UserID]
 		if !ok {
 			continue
 		}
-		result = append(result, &gqlmodel.TeamMemberTimeSpan{User: user, TimeSpan: timeSpanToExternal(span)})
+		result = append(result, &gqlmodel.TeamMemberTimeSpan{
+			User:      user,
+			TimeSpan:  timeSpanToExternal(span),
+			TagColors: colors.of(span),
+		})
 	}
 	return result, nil
+}
+
+// tagColors resolves the colors of tags: the tag of the owner of the time span wins over a shared tag.
+type tagColors struct {
+	own    map[int]map[string]string
+	shared map[string]string
+}
+
+func (r *ResolverForTimeSpan) tagColors(userIDs []int) (*tagColors, error) {
+	var definitions []model.TagDefinition
+	query := r.DB.Where("shared = ?", true)
+	if len(userIDs) > 0 {
+		query = r.DB.Where("shared = ? OR user_id IN (?)", true, userIDs)
+	}
+	if err := query.Find(&definitions).Error; err != nil {
+		return nil, err
+	}
+	colors := &tagColors{own: map[int]map[string]string{}, shared: map[string]string{}}
+	for _, definition := range definitions {
+		if definition.Shared {
+			colors.shared[definition.Key] = definition.Color
+			continue
+		}
+		if colors.own[definition.UserID] == nil {
+			colors.own[definition.UserID] = map[string]string{}
+		}
+		colors.own[definition.UserID][definition.Key] = definition.Color
+	}
+	return colors, nil
+}
+
+func (c *tagColors) of(span model.TimeSpan) []*gqlmodel.TagColor {
+	result := []*gqlmodel.TagColor{}
+	for _, tag := range span.Tags {
+		color, ok := c.own[span.UserID][tag.Key]
+		if !ok {
+			color, ok = c.shared[tag.Key]
+		}
+		if ok {
+			result = append(result, &gqlmodel.TagColor{Key: tag.Key, Color: color})
+		}
+	}
+	return result
 }

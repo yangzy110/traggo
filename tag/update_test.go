@@ -24,11 +24,12 @@ func TestUpdate_withKey(t *testing.T) {
 
 	resolver := ResolverForTag{DB: db.DB}
 	newTagName := "mega"
-	tag, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", &newTagName, "#abc")
+	tag, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", &newTagName, "#abc", nil)
 	require.NoError(t, err)
 	require.Equal(t, &gqlmodel.TagDefinition{
-		Color: "#abc",
-		Key:   "mega",
+		Color:    "#abc",
+		Key:      "mega",
+		Editable: true,
 	}, tag)
 	left.AssertHasTagDefinition("coolio", false).AssertHasTagDefinition("mega", true)
 	right.AssertHasTagDefinition("coolio", true).AssertHasTagDefinition("mega", false)
@@ -46,11 +47,12 @@ func TestUpdate_lowercases(t *testing.T) {
 
 	resolver := ResolverForTag{DB: db.DB}
 	newTagName := "Mega"
-	tag, err := resolver.UpdateTag(fake.User(user.User.ID), "coolio", &newTagName, "#abc")
+	tag, err := resolver.UpdateTag(fake.User(user.User.ID), "coolio", &newTagName, "#abc", nil)
 	require.NoError(t, err)
 	require.Equal(t, &gqlmodel.TagDefinition{
-		Color: "#abc",
-		Key:   "mega",
+		Color:    "#abc",
+		Key:      "mega",
+		Editable: true,
 	}, tag)
 	user.AssertHasTagDefinition("coolio", false).AssertHasTagDefinition("mega", true)
 	ts.AssertHasTag("mega", "mama", true).AssertHasTag("coolio", "mama", false)
@@ -64,7 +66,7 @@ func TestUpdate_disallow_space(t *testing.T) {
 
 	resolver := ResolverForTag{DB: db.DB}
 	newTagName := "the coolio"
-	_, err := resolver.UpdateTag(fake.User(user.User.ID), "coolio", &newTagName, "#abc")
+	_, err := resolver.UpdateTag(fake.User(user.User.ID), "coolio", &newTagName, "#abc", nil)
 	require.EqualError(t, err, "tag must not contain spaces")
 }
 
@@ -81,11 +83,12 @@ func TestUpdate_withoutKey(t *testing.T) {
 	rightTs.Tag("coolio", "mama")
 
 	resolver := ResolverForTag{DB: db.DB}
-	tag, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", nil, "#abc")
+	tag, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", nil, "#abc", nil)
 	require.NoError(t, err)
 	assert.Equal(t, &gqlmodel.TagDefinition{
-		Color: "#abc",
-		Key:   "coolio",
+		Color:    "#abc",
+		Key:      "coolio",
+		Editable: true,
 	}, tag)
 }
 
@@ -102,7 +105,7 @@ func TestUpdate_dashboardEntryKey(t *testing.T) {
 
 	newTag := "yes"
 	resolver := ResolverForTag{DB: db.DB}
-	_, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", &newTag, "#abc")
+	_, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", &newTag, "#abc", nil)
 	require.NoError(t, err)
 
 	db.Find(&entry)
@@ -119,7 +122,7 @@ func TestUpdate_noPermissions(t *testing.T) {
 	rightTs.Tag("coolio", "mama")
 
 	resolver := ResolverForTag{DB: db.DB}
-	_, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", nil, "#abc")
+	_, err := resolver.UpdateTag(fake.User(left.User.ID), "coolio", nil, "#abc", nil)
 	require.EqualError(t, err, "tag with key 'coolio' does not exist")
 	right.AssertHasTagDefinition("coolio", true)
 }
@@ -147,7 +150,7 @@ func TestUpdate_dashboardEntryKey_crossUserIsolation(t *testing.T) {
 
 	newTag := "newproject"
 	resolver := ResolverForTag{DB: db.DB}
-	_, err := resolver.UpdateTag(fake.User(userA.User.ID), "project", &newTag, "#abc")
+	_, err := resolver.UpdateTag(fake.User(userA.User.ID), "project", &newTag, "#abc", nil)
 	require.NoError(t, err)
 
 	db.Find(&entryA)

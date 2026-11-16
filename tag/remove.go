@@ -4,57 +4,48 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/jinzhu/copier"
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
 	"github.com/traggo/server/model"
 )
 
-// RemoveTag removes a tag.
+// RemoveTag removes a tag. Shared tags can only be removed by admins, they are removed for all users.
 func (r *ResolverForTag) RemoveTag(ctx context.Context, key string) (*gqlmodel.TagDefinition, error) {
-	tag := model.TagDefinition{}
-	userID := auth.GetUser(ctx).ID
-	if r.DB.Where(&model.TagDefinition{UserID: userID, Key: key}).Find(&tag).RecordNotFound() {
+	user := auth.GetUser(ctx)
+	tag, found := find(r.DB, user.ID, key)
+	if !found {
 		return nil, fmt.Errorf("tag with key '%s' does not exist", key)
 	}
+	if err := checkCanChange(tag, user.ID, user.Admin); err != nil {
+		return nil, err
+	}
 
-	usedInEntries := []model.DashboardEntry{}
-	if err := r.DB.
-		Joins("INNER JOIN dashboards ON dashboard_entries.dashboard_id = dashboards.id").
-		Where("dashboards.user_id = ?", userID).
-		Where("keys LIKE ? OR keys LIKE ? OR keys LIKE ?", "%"+key, "%"+key+"%", key+"%").
-		Find(&usedInEntries).Error; err != nil {
+	usedInEntries, err := dashboardEntriesOf(r.DB, tag)
+	if err != nil {
 		return nil, err
 	}
 
 	if len(usedInEntries) > 0 {
 		dashboard := &model.Dashboard{ID: usedInEntries[0].DashboardID}
 		r.DB.Find(dashboard)
-		return nil, fmt.Errorf("tag '%s' is used in dashboard '%s' entry '%s', remove this reference before deleting the tag", key, dashboard.Name, usedInEntries[0].Title)
+		return nil, fmt.Errorf("tag '%s' is used in dashboard '%s' entry '%s', remove this reference before deleting the tag", tag.Key, dashboard.Name, usedInEntries[0].Title)
 	}
 
 	tx := r.DB.Begin()
-	if err := tx.Where(model.TagDefinition{Key: key, UserID: userID}).
+	if err := tx.Where(model.TagDefinition{Key: tag.Key, UserID: tag.UserID}).
 		Delete(new(model.TagDefinition)).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	timeSpansIdsOfUser := tx.Model(new(model.TimeSpan)).
-		Select("id").
-		Where(&model.TimeSpan{UserID: userID}).
-		SubQuery()
-
 	if err := tx.
-		Where("time_span_id in ?", timeSpansIdsOfUser).
-		Where(&model.TimeSpanTag{Key: key}).
+		Where("time_span_id in ?", timeSpansOf(tx, tag)).
+		Where(&model.TimeSpanTag{Key: tag.Key}).
 		Delete(new(model.TimeSpanTag)).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
 	remove := tx.Commit()
-	gqlTag := &gqlmodel.TagDefinition{}
-	copier.Copy(gqlTag, &tag)
-	return gqlTag, remove.Error
+	return toExternal(tag, user.ID, user.Admin), remove.Error
 }

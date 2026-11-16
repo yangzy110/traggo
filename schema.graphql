@@ -10,8 +10,10 @@ schema {
 }
 
 type RootMutation {
-    createTag(key: String!, color: String!): TagDefinition @hasRole(role: USER)
-    updateTag(key: String!, newKey: String, color: String!): TagDefinition @hasRole(role: USER)
+    # shared tags can only be created by admins, they can be used by everyone
+    createTag(key: String!, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
+    # a tag can be made shared by an admin, but a shared tag cannot be made private again
+    updateTag(key: String!, newKey: String, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
     removeTag(key: String!): TagDefinition @hasRole(role: USER)
 
     createUser(name: String!, pass: String!, admin: Boolean!): User @hasRole(role: ADMIN)
@@ -149,6 +151,15 @@ type TagDefinition {
     key: String!
     user: User!
     usages: Int!
+    # shared tags are available to all users
+    shared: Boolean!
+    # if the current user is allowed to change or remove the tag
+    editable: Boolean!
+}
+
+type TagColor {
+    key: String!
+    color: String!
 }
 
 type User {
@@ -176,6 +187,8 @@ type TeamMember {
 type TeamMemberTimeSpan {
     user: TeamMember!
     timeSpan: TimeSpan!
+    # the colors of the tags of the time span: the tag of the owner, or the shared tag
+    tagColors: [TagColor!]!
 }
 
 type TeamStatsDay {

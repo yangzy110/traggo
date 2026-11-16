@@ -29,8 +29,8 @@ func TestGQL_Tags(t *testing.T) {
 
 	require.Nil(t, err)
 	expected := []*gqlmodel.TagDefinition{
-		{Key: "my tag", Usages: 3},
-		{Key: "my tag 2", Usages: 2},
+		{Key: "my tag", Usages: 3, Editable: true},
+		{Key: "my tag 2", Usages: 2, Editable: true},
 	}
 	require.Equal(t, expected, tags)
 }

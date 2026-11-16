@@ -42,19 +42,17 @@ const drawerWidth = 240;
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
+        flexDirection: 'column',
         height: '100%',
     },
-    drawer: {
-        [theme.breakpoints.up('md')]: {
-            width: drawerWidth,
-            flexShrink: 0,
-        },
+    brand: {
+        marginRight: theme.spacing(3),
+        color: 'inherit',
+        textDecoration: 'none',
     },
-    appBar: {
-        marginLeft: drawerWidth,
-        [theme.breakpoints.up('md')]: {
-            width: `calc(100% - ${drawerWidth}px)`,
-        },
+    navButton: {
+        textTransform: 'none',
+        marginRight: theme.spacing(1),
     },
     menuButton: {
         marginRight: 20,
@@ -106,6 +104,7 @@ export const Page: React.FC = ({children}) => {
 
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const [userMenuOpen, setUserMenuOpen] = React.useState<null | HTMLElement>(null);
+    const [navMenu, setNavMenu] = React.useState<null | {name: string; anchor: HTMLElement}>(null);
     const [logout] = useMutation<Logout>(gqlUser.Logout, {refetchQueries: [{query: gqlUser.CurrentUser}]});
     const {data: {version = gqlVersion.VersionDefault.version} = gqlVersion.VersionDefault} = useQuery<Version>(
         gqlVersion.Version
@@ -205,10 +204,33 @@ export const Page: React.FC = ({children}) => {
         </div>
     );
 
+    const navGroups: Array<{name: string; items: Array<{label: string; to: string}>}> = [
+        {
+            name: 'Dashboards',
+            items: [
+                ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
+                {label: 'Manage', to: '/dashboards'},
+            ],
+        },
+        {
+            name: 'Timesheet',
+            items: [{label: 'List', to: '/timesheet/list'}, {label: 'Calendar', to: '/timesheet/calendar'}],
+        },
+        {
+            name: 'User',
+            items: [
+                {label: 'Tags', to: '/user/tags'},
+                {label: 'Devices', to: '/user/devices'},
+                {label: 'Settings', to: '/user/settings'},
+            ],
+        },
+        ...(admin ? [{name: 'Admin', items: [{label: 'Users', to: '/admin/users'}]}] : []),
+    ];
+
     return (
         <div className={classes.root}>
             <CssBaseline />
-            <AppBar position="fixed" className={classes.appBar}>
+            <AppBar position="fixed">
                 <Toolbar>
                     <IconButton
                         color="inherit"
@@ -217,6 +239,38 @@ export const Page: React.FC = ({children}) => {
                         className={classes.menuButton}>
                         <MenuIcon />
                     </IconButton>
+                    <Link to="/" className={classes.brand}>
+                        <Typography variant="h6" color="inherit" noWrap>
+                            traggo
+                        </Typography>
+                    </Link>
+                    <Hidden smDown implementation="js">
+                        {navGroups.map(({name}) => (
+                            <Button
+                                key={name}
+                                color="inherit"
+                                className={classes.navButton}
+                                onClick={(e) => setNavMenu({name, anchor: e.currentTarget})}>
+                                {name}
+                            </Button>
+                        ))}
+                        <Menu
+                            anchorEl={navMenu && navMenu.anchor}
+                            getContentAnchorEl={null}
+                            anchorOrigin={{vertical: 'bottom', horizontal: 'left'}}
+                            transformOrigin={{vertical: 'top', horizontal: 'left'}}
+                            open={!!navMenu}
+                            onClose={() => setNavMenu(null)}>
+                            {((navGroups.find((g) => g.name === (navMenu && navMenu.name)) || {items: []}).items).map(
+                                ({label, to}) => (
+                                    <MenuItem key={to} onClick={() => setNavMenu(null)} component={routerLink(to)}>
+                                        {label}
+                                    </MenuItem>
+                                )
+                            )}
+                        </Menu>
+                    </Hidden>
+                    <Hidden mdUp implementation="js">
                     <Typography variant="h6" color="inherit" noWrap>
                         <Switch>
                             <Route exact path="/timesheet/list">
@@ -250,6 +304,7 @@ export const Page: React.FC = ({children}) => {
                             </Route>
                         </Switch>
                     </Typography>
+                    </Hidden>
                     <div className={classes.grow} />
                     <div className={classes.sectionDesktop}>
                         <Button color="inherit" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
@@ -276,29 +331,15 @@ export const Page: React.FC = ({children}) => {
                     </div>
                 </Toolbar>
             </AppBar>
-            <nav className={classes.drawer}>
-                <Hidden mdUp implementation="js">
-                    <Drawer
-                        variant="temporary"
-                        open={mobileOpen}
-                        onClose={() => setMobileOpen(false)}
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}>
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-                <Hidden smDown implementation="js">
-                    <Drawer
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        variant="permanent"
-                        open>
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-            </nav>
+            <Hidden mdUp implementation="js">
+                <Drawer
+                    variant="temporary"
+                    open={mobileOpen}
+                    onClose={() => setMobileOpen(false)}
+                    classes={{paper: classes.drawerPaper}}>
+                    {drawer}
+                </Drawer>
+            </Hidden>
             <main className={classes.content}>
                 <div className={classes.toolbar} />
                 {children}

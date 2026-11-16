@@ -4,16 +4,18 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "^4.3.8",
-    "@date-io/moment": "^1.1.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource/roboto": "^5.2.0",
     "@fullcalendar/core": "^4.3.1",
     "@fullcalendar/daygrid": "^4.3.0",
     "@fullcalendar/interaction": "^4.3.0",
     "@fullcalendar/moment": "^4.3.0",
     "@fullcalendar/react": "^4.3.0",
     "@fullcalendar/timegrid": "^4.3.0",
-    "@material-ui/core": "^4.6.1",
-    "@material-ui/icons": "^4.5.1",
-    "@material-ui/pickers": "^3.2.8",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.5.0",
+    "@mui/x-date-pickers": "^9.18.0",
     "@rooks/use-interval": "^1.2.0",
     "@rooks/use-timeout": "^3.0.1",
     "color-hash": "^1.0.3",
@@ -32,8 +34,7 @@
     "react-infinite": "^0.13.0",
     "react-router-dom": "^7.18.5",
     "recharts": "^1.8.5",
-    "rxjs": "^7.8.2",
-    "typeface-roboto": "^0.0.54"
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

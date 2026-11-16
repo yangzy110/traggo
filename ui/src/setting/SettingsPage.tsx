@@ -1,37 +1,36 @@
 import * as React from 'react';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Paper} from '@material-ui/core';
+import {Paper} from '@mui/material';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
 import {useMutation} from '@apollo/client/react';
 import {SetSettings, SetSettingsVariables, DateLocale, Theme, WeekDay, DateTimeInputStyle} from '../gql/types';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import Select from '@material-ui/core/NativeSelect/NativeSelect';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/NativeSelect';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
+import {gutters} from '../common/styles';
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        ...theme.mixins.gutters(),
-        paddingTop: theme.spacing(1),
-        paddingBottom: theme.spacing(3),
-        maxWidth: 500,
-        margin: '0 auto',
-    },
-}));
+const rootSx: SxProps<MuiTheme> = (theme) => ({
+    ...gutters(theme),
+    paddingTop: theme.spacing(1),
+    paddingBottom: theme.spacing(3),
+    maxWidth: 500,
+    margin: '0 auto',
+});
 
 export const SettingsPage: React.FC = () => {
-    const classes = useStyles();
     const {done, ...settings} = useSettings();
     const {enqueueSnackbar} = useSnackbar();
     const [setSettings] = useMutation<SetSettings, SetSettingsVariables>(SetSettingsGQL, {
         refetchQueries: [{query: SettingsGQL}],
     });
     return (
-        <Paper elevation={1} className={classes.root}>
-            <FormControl margin={'normal'} fullWidth>
+        <Paper elevation={1} sx={rootSx}>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>Date Locale</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     value={settings.dateLocale}
                     onChange={(e) => {
@@ -62,9 +61,10 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </Select>
             </FormControl>
-            <FormControl margin={'normal'} fullWidth>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>Theme</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     value={settings.theme}
                     onChange={(e) => {
@@ -83,9 +83,10 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </Select>
             </FormControl>
-            <FormControl margin={'normal'} fullWidth>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>First day of the week</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     value={settings.firstDayOfTheWeek}
                     onChange={(e) => {
@@ -119,9 +120,10 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </Select>
             </FormControl>
-            <FormControl margin={'normal'} fullWidth>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>Datetime input style</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     value={settings.dateTimeInputStyle}
                     onChange={(e) => {

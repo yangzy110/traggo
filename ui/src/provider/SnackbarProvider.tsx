@@ -1,29 +1,26 @@
 import * as React from 'react';
-import {SnackbarProvider as Provider} from 'notistack';
-import {makeStyles} from '@material-ui/core/styles';
+import {MaterialDesignContent, SnackbarProvider as Provider} from 'notistack';
+import {styled} from '@mui/material/styles';
 
-const useStyles = makeStyles(() => ({
-    error: {
+// notistack adds the class `notistack-MuiContent-<variant>` to the content of a snackbar.
+const Content = styled(MaterialDesignContent)({
+    '&.notistack-MuiContent-error': {
         background: '#E53935',
         color: '#fff',
     },
-    warning: {
+    '&.notistack-MuiContent-warning': {
         background: '#d35400',
         color: '#fff',
     },
-    info: {
+    '&.notistack-MuiContent-info': {
         background: '#2980b9',
         color: '#fff',
     },
-}));
+});
 
 export const SnackbarProvider: React.FC<React.PropsWithChildren> = ({children}) => {
-    const classes = useStyles();
     return (
-        <Provider
-            maxSnack={3}
-            classes={{variantError: classes.error, variantWarning: classes.warning, variantInfo: classes.info}}
-            autoHideDuration={3500}>
+        <Provider maxSnack={3} Components={{error: Content, warning: Content, info: Content}} autoHideDuration={3500}>
             {children}
         </Provider>
     );

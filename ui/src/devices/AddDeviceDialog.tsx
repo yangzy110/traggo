@@ -1,20 +1,20 @@
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import * as gqlDevice from '../gql/device';
 import {useMutation} from '@apollo/client/react';
 import {CreateDevice, CreateDeviceVariables, DeviceType} from '../gql/types';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import {deviceTypeToString} from './typeutils';
-import Select from '@material-ui/core/NativeSelect';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@mui/material/NativeSelect';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 
 interface AddTagDialogProps {
     initialName: string;
@@ -59,6 +59,7 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                     <DialogContent>
                         <DialogContentText />
                         <TextField
+                            variant="standard"
                             autoFocus
                             margin="dense"
                             id="name"
@@ -68,9 +69,13 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
-                        <FormControl margin={'normal'} fullWidth>
+                        <FormControl variant="standard" margin={'normal'} fullWidth>
                             <InputLabel>Expires after</InputLabel>
-                            <Select value={deviceType} onChange={(e) => setDeviceType(e.target.value as DeviceType)} fullWidth>
+                            <Select
+                                variant="standard"
+                                value={deviceType}
+                                onChange={(e) => setDeviceType(e.target.value as DeviceType)}
+                                fullWidth>
                                 <option value={DeviceType.NoExpiry}>{deviceTypeToString(DeviceType.NoExpiry)}</option>
                                 <option value={DeviceType.ShortExpiry}>{deviceTypeToString(DeviceType.ShortExpiry)}</option>
                                 <option value={DeviceType.LongExpiry}>{deviceTypeToString(DeviceType.LongExpiry)}</option>

@@ -5,7 +5,7 @@ import * as gqlTag from '../gql/tags';
 import {Trackers, Tags} from '../gql/types';
 import {TimeSpan} from './TimeSpan';
 import {toTimeSpanProps} from './timespanutils';
-import {Typography} from '@material-ui/core';
+import {Typography} from '@mui/material';
 
 export const ActiveTrackers = () => {
     const trackersResult = useQuery<Trackers>(gqlTimeSpan.Trackers, {fetchPolicy: 'cache-and-network'});

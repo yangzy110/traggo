@@ -1,19 +1,19 @@
-import Chip from '@material-ui/core/Chip';
+import Chip from '@mui/material/Chip';
 import * as React from 'react';
 // @ts-ignore
 import bestContrast from 'get-best-contrast-color';
-import {makeStyles, Theme} from '@material-ui/core';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 
-const useStyles = makeStyles((theme: Theme) => ({
-    chip: {
+const styles = {
+    chip: (theme) => ({
         margin: theme.spacing(0.5, 0.6),
         cursor: 'text',
         minHeight: '32px',
         height: 'fit-content',
         whiteSpace: 'normal',
         wordBreak: 'break-word',
-    },
-}));
+    }),
+} satisfies Record<string, SxProps<MuiTheme>>;
 
 interface TagChipProps {
     label: string;
@@ -22,13 +22,12 @@ interface TagChipProps {
 }
 
 export const TagChip: React.FC<TagChipProps> = ({color, label, onClick}) => {
-    const classes = useStyles();
     const textColor = bestContrast(color, ['#fff', '#000']);
     return (
         <Chip
             tabIndex={-1}
             variant="outlined"
-            className={classes.chip}
+            sx={styles.chip}
             style={{background: color, color: textColor}}
             label={label}
             onClick={onClick}

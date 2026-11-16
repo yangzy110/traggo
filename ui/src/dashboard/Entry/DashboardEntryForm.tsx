@@ -1,8 +1,8 @@
 import * as React from 'react';
-import TextField from '@material-ui/core/TextField';
-import FormControl from '@material-ui/core/FormControl';
-import InputLabel from '@material-ui/core/InputLabel';
-import Select from '@material-ui/core/NativeSelect/NativeSelect';
+import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/NativeSelect';
 import {useQuery} from '@apollo/client/react';
 import {
     Tags,
@@ -16,7 +16,7 @@ import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
 import {FormTagSelector} from '../../tag/FormTagSelector';
 import {RelativeDateTimeSelector} from '../../common/RelativeDateTimeSelector';
 import {parseRelativeTime} from '../../utils/time';
-import {Grid, Typography, Switch} from '@material-ui/core';
+import {Box, Typography, Switch} from '@mui/material';
 
 interface EditPopupProps {
     entry: Dashboards_dashboards_items;
@@ -62,6 +62,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
     return (
         <>
             <TextField
+                variant="standard"
                 label={'Title'}
                 value={entry.title}
                 disabled={disabled}
@@ -71,9 +72,10 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 }}
                 fullWidth
             />
-            <FormControl margin={'normal'} fullWidth>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>Type</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     value={entry.entryType}
                     disabled={disabled}
@@ -88,9 +90,10 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                     ))}
                 </Select>
             </FormControl>
-            <FormControl margin={'normal'} fullWidth>
+            <FormControl variant="standard" margin={'normal'} fullWidth>
                 <InputLabel>Interval</InputLabel>
                 <Select
+                    variant="standard"
                     fullWidth
                     disabled={disabled}
                     value={entry.statsSelection.interval}
@@ -106,10 +109,10 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 </Select>
             </FormControl>
             <Typography component="div">
-                <Grid component="label" container alignItems="center" spacing={1}>
-                    <Grid item>Range: </Grid>
-                    <Grid item>Global</Grid>
-                    <Grid item>
+                <Box component="label" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                    <Box>Range: </Box>
+                    <Box>Global</Box>
+                    <Box>
                         <Switch
                             checked={staticRange}
                             onChange={(e) => {
@@ -127,9 +130,9 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                                 }
                             }}
                         />
-                    </Grid>
-                    <Grid item>Static</Grid>
-                </Grid>
+                    </Box>
+                    <Box>Static</Box>
+                </Box>
             </Typography>
             {staticRange ? (
                 <>
@@ -158,6 +161,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 </>
             ) : (
                 <Select
+                    variant="standard"
                     fullWidth
                     disabled={disabled}
                     value={entry.statsSelection.rangeId || ''}
@@ -183,9 +187,9 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
             )}
             {entry.entryType !== EntryType.PieChart ? (
                 <Typography component="div">
-                    <Grid component="label" container alignItems="center" spacing={1}>
-                        <Grid item>{getTotalTitle(entry.entryType)}</Grid>
-                        <Grid item>
+                    <Box component="label" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
+                        <Box>{getTotalTitle(entry.entryType)}</Box>
+                        <Box>
                             <Switch
                                 checked={entry.total}
                                 onChange={(e) => {
@@ -193,8 +197,8 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                                     setEntry(entry);
                                 }}
                             />
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Box>
                 </Typography>
             ) : undefined}
             <FormTagSelector

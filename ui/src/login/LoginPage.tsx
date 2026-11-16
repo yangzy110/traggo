@@ -1,52 +1,46 @@
 import * as React from 'react';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import {LoginForm} from './LoginForm';
-import Link from '@material-ui/core/Link';
+import Link from '@mui/material/Link';
 import {DefaultPaper} from '../common/DefaultPaper';
 import * as gqlVersion from '../gql/version';
 import {useQuery} from '@apollo/client/react';
 import {ServerVersion} from '../gql/types';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const useStyles = makeStyles(() => ({
-    footerLink: {
-        margin: '0 2px',
-    },
-}));
+const footerLinkSx = {margin: '0 2px'};
 
 export const LoginPage = () => {
-    const classes = useStyles();
     const {data: {version = gqlVersion.VersionDefault.version} = gqlVersion.VersionDefault} = useQuery<ServerVersion>(
         gqlVersion.Version
     );
     return (
-        <Grid container={true} direction="row" alignItems="center" justify="center" style={{height: '95%'}}>
-            <Grid item>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '95%'}}>
+            <Box>
                 <DefaultPaper>
                     <Typography variant="h1" component="h1" gutterBottom={true}>
                         traggo
                     </Typography>
                     <LoginForm />
                 </DefaultPaper>
-            </Grid>
+            </Box>
             <div style={{position: 'absolute', bottom: 10, display: 'flex'}}>
-                <Typography variant="subtitle1" component="span" className={classes.footerLink}>
+                <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     <Link href="https://github.com/traggo/server">Source Code</Link>
                 </Typography>
-                <Typography variant="subtitle1" component="span" className={classes.footerLink}>
+                <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     |
                 </Typography>
-                <Typography variant="subtitle1" component="span" className={classes.footerLink}>
+                <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     <Link href="https://github.com/traggo/server/issues">Bug Tracker</Link>
                 </Typography>
-                <Typography variant="subtitle1" component="span" className={classes.footerLink}>
+                <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     |
                 </Typography>
-                <Typography variant="subtitle1" component="span" className={classes.footerLink}>
+                <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     {version.name}@{version.commit.slice(0, 8)}
                 </Typography>
             </div>
-        </Grid>
+        </Box>
     );
 };

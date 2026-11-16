@@ -1,43 +1,41 @@
 import * as React from 'react';
-import Paper from '@material-ui/core/Paper';
-import {makeStyles} from '@material-ui/core/styles';
+import Paper from '@mui/material/Paper';
 import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlTag from '../gql/tags';
 import * as gqlDashboard from '../gql/dashboard';
 import {CenteredSpinner} from '../common/CenteredSpinner';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
-import DoneIcon from '@material-ui/icons/Done';
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from '@material-ui/core/IconButton';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import DoneIcon from '@mui/icons-material/Done';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 import {useSnackbar} from 'notistack';
-import {TextField} from '@material-ui/core';
-import Button from '@material-ui/core/Button';
+import {TextField} from '@mui/material';
+import Button from '@mui/material/Button';
 import {Tags, RemoveTag, RemoveTagVariables, UpdateTag, UpdateTagVariables} from '../gql/types';
 import {AddTagDialog} from './AddTagDialog';
 import {SliderPicker} from 'react-color';
 import {TagChip} from '../common/TagChip';
 import {handleError} from '../utils/errors';
 import {ConfirmDialog} from '../common/ConfirmDialog';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
+import {gutters} from '../common/styles';
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        ...theme.mixins.gutters(),
-        paddingTop: theme.spacing(3),
-        paddingBottom: theme.spacing(3),
-        textAlign: 'center',
-        maxWidth: 1200,
-        margin: '0 auto',
-    },
-}));
+const rootSx: SxProps<MuiTheme> = (theme) => ({
+    ...gutters(theme),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
+    textAlign: 'center',
+    maxWidth: 1200,
+    margin: '0 auto',
+});
 
 export const TagPage = () => {
-    const classes = useStyles();
     const {data, loading} = useQuery<Tags>(gqlTag.Tags);
     const [removeTagConfirm, setRemoveTagConfirm] = React.useState('');
     const refetch = {refetchQueries: [{query: gqlTag.Tags}, {query: gqlDashboard.Dashboards}]};
@@ -74,6 +72,7 @@ export const TagPage = () => {
                 <TableCell>
                     {isEdited ? (
                         <TextField
+                            variant="standard"
                             value={editKeyNew}
                             onChange={(e) => setEditing([editKey, e.target.value, editColor])}
                             onKeyDown={(e) => {
@@ -122,7 +121,7 @@ export const TagPage = () => {
     });
 
     return (
-        <Paper elevation={1} square={true} className={classes.root}>
+        <Paper elevation={1} square={true} sx={rootSx}>
             <Button
                 color={'primary'}
                 variant={'outlined'}

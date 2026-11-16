@@ -1,17 +1,17 @@
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import * as gqlUser from '../gql/user';
 import {useMutation} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
-import {Checkbox} from '@material-ui/core';
+import {Checkbox} from '@mui/material';
 import {CreateUser, CreateUserVariables} from '../gql/types';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 interface AddTagDialogProps {
     open: boolean;
@@ -43,6 +43,7 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                 <DialogTitle id="form-dialog-title">Create User</DialogTitle>
                 <DialogContent>
                     <TextField
+                        variant="standard"
                         autoFocus
                         margin="dense"
                         id="name"
@@ -53,6 +54,7 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                         onChange={(e) => setName(e.target.value)}
                     />
                     <TextField
+                        variant="standard"
                         margin="dense"
                         label="Password"
                         type="password"

@@ -4,9 +4,9 @@ import * as gqlTimeSpan from '../gql/timeSpan';
 import * as gqlTag from '../gql/tags';
 import {TimeSpan, TimeSpanProps} from './TimeSpan';
 import {Tags, TimeSpans, TimeSpansVariables} from '../gql/types';
-import useInterval from '@rooks/use-interval';
+import {useInterval} from '../utils/hooks';
 import moment from 'moment';
-import {Typography} from '@material-ui/core';
+import {Typography} from '@mui/material';
 import {GroupedTimeSpanProps, toGroupedTimeSpanProps} from './timespanutils';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import ReactInfinite from 'react-infinite';
@@ -138,7 +138,7 @@ const DatedTimeSpans: React.FC<
         }
     }, [ref, name, setHeight, height]);
     return (
-        <div key={name} ref={(r) => (ref.current = r)}>
+        <div key={name} ref={ref}>
             <Typography key={name} align="center" variant={'h5'}>
                 {name}
             </Typography>

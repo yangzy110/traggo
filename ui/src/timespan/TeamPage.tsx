@@ -2,15 +2,14 @@ import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {useNavigate} from 'react-router-dom';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import PrevIcon from '@material-ui/icons/ChevronLeft';
-import NextIcon from '@material-ui/icons/ChevronRight';
-import DownloadIcon from '@material-ui/icons/GetApp';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import PrevIcon from '@mui/icons-material/ChevronLeft';
+import NextIcon from '@mui/icons-material/ChevronRight';
+import DownloadIcon from '@mui/icons-material/GetApp';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
@@ -18,34 +17,36 @@ import {inUserTz} from './timeutils';
 import {TeamEntry, useTagColors} from './TeamEntry';
 import {MemberAvatar} from './MemberAvatar';
 import {DAY_FORMAT, exportLog, formatDuration, LogEntry, spanSeconds} from './teamutils';
+import Box from '@mui/material/Box';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 
-const useStyles = makeStyles((theme) => ({
-    controls: {
+const styles = {
+    controls: (theme) => ({
         display: 'flex',
         alignItems: 'center',
         marginBottom: theme.spacing(2),
         flexWrap: 'wrap',
-    },
+    }),
     grow: {
         flexGrow: 1,
     },
-    member: {
+    member: (theme) => ({
         marginBottom: theme.spacing(2),
         padding: theme.spacing(2),
-    },
-    memberHeader: {
+    }),
+    memberHeader: (theme) => ({
         display: 'flex',
         alignItems: 'center',
         marginBottom: theme.spacing(1),
-    },
-    avatarButton: {
+    }),
+    avatarButton: (theme) => ({
         padding: 0,
         marginRight: theme.spacing(1.5),
-    },
+    }),
     memberName: {
         flexGrow: 1,
     },
-}));
+} satisfies Record<string, SxProps<MuiTheme>>;
 
 interface Member {
     id: number;
@@ -73,7 +74,6 @@ const groupByMember = (items: TeamTimeSpans['teamTimeSpans']): Member[] => {
 export const memberLogPath = (id: number) => `/team/${id}`;
 
 export const TeamPage: React.FC = () => {
-    const classes = useStyles();
     const navigate = useNavigate();
     const [date, setDate] = React.useState(moment().format(DAY_FORMAT));
     const colors = useTagColors();
@@ -100,40 +100,46 @@ export const TeamPage: React.FC = () => {
 
     return (
         <div>
-            <div className={classes.controls}>
+            <Box sx={styles.controls}>
                 <IconButton aria-label="previous day" onClick={() => shift(-1)} disabled={!validDay}>
                     <PrevIcon />
                 </IconButton>
-                <TextField type="date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{shrink: true}} />
+                <TextField
+                    variant="standard"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    slotProps={{inputLabel: {shrink: true}}}
+                />
                 <IconButton aria-label="next day" onClick={() => shift(1)} disabled={!validDay}>
                     <NextIcon />
                 </IconButton>
                 <Button onClick={() => setDate(moment().format(DAY_FORMAT))}>今天</Button>
-                <div className={classes.grow} />
+                <Box sx={styles.grow} />
                 <Button startIcon={<DownloadIcon />} onClick={exportCsv} disabled={items.length === 0}>
                     导出 CSV
                 </Button>
-            </div>
+            </Box>
 
             {error ? <Typography color="error">{error.message}</Typography> : null}
             {loading && !data ? <CenteredSpinner /> : null}
             {data && members.length === 0 ? <Typography color="textSecondary">这一天团队里没有人记录工作。</Typography> : null}
 
             {members.map((member) => (
-                <Paper key={member.id} className={classes.member}>
-                    <div className={classes.memberHeader}>
+                <Paper key={member.id} sx={styles.member}>
+                    <Box sx={styles.memberHeader}>
                         <IconButton
-                            className={classes.avatarButton}
+                            sx={styles.avatarButton}
                             title={`查看 ${member.name} 的日志`}
                             aria-label={`查看 ${member.name} 的日志`}
                             onClick={() => navigate(memberLogPath(member.id))}>
                             <MemberAvatar id={member.id} name={member.name} />
                         </IconButton>
-                        <Typography variant="h6" className={classes.memberName}>
+                        <Typography variant="h6" sx={styles.memberName}>
                             {member.name}
                         </Typography>
                         <Typography color="textSecondary">共 {formatDuration(member.seconds)}</Typography>
-                    </div>
+                    </Box>
                     {member.entries.map(({timeSpan}) => (
                         <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
                     ))}

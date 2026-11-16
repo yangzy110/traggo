@@ -2,20 +2,21 @@ import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {useNavigate, useParams} from 'react-router-dom';
-import Button from '@material-ui/core/Button';
-import IconButton from '@material-ui/core/IconButton';
-import Paper from '@material-ui/core/Paper';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import BackIcon from '@material-ui/icons/ArrowBack';
-import DownloadIcon from '@material-ui/icons/GetApp';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import BackIcon from '@mui/icons-material/ArrowBack';
+import DownloadIcon from '@mui/icons-material/GetApp';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamMembers, TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {inUserTz} from './timeutils';
 import {TeamEntry, useTagColors} from './TeamEntry';
 import {MemberAvatar} from './MemberAvatar';
+import Box from '@mui/material/Box';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 import {
     DAY_FORMAT,
     exportLog,
@@ -27,41 +28,40 @@ import {
     validateRange,
 } from './teamutils';
 
-const useStyles = makeStyles((theme) => ({
-    header: {
+const styles = {
+    header: (theme) => ({
         display: 'flex',
         alignItems: 'center',
         marginBottom: theme.spacing(2),
-    },
-    title: {
+    }),
+    title: (theme) => ({
         marginLeft: theme.spacing(1.5),
         flexGrow: 1,
-    },
-    controls: {
+    }),
+    controls: (theme) => ({
         display: 'flex',
         alignItems: 'center',
         marginBottom: theme.spacing(2),
         flexWrap: 'wrap',
-    },
-    separator: {
+    }),
+    separator: (theme) => ({
         margin: theme.spacing(0, 1),
-    },
+    }),
     grow: {
         flexGrow: 1,
     },
-    day: {
+    day: (theme) => ({
         marginBottom: theme.spacing(2),
         padding: theme.spacing(2),
-    },
-    dayHeader: {
+    }),
+    dayHeader: (theme) => ({
         display: 'flex',
         justifyContent: 'space-between',
         marginBottom: theme.spacing(1),
-    },
-}));
+    }),
+} satisfies Record<string, SxProps<MuiTheme>>;
 
 export const TeamMemberPage: React.FC = () => {
-    const classes = useStyles();
     const navigate = useNavigate();
     const params = useParams<{userId: string}>();
     const userId = parseInt(params.userId || '', 10);
@@ -110,26 +110,40 @@ export const TeamMemberPage: React.FC = () => {
 
     return (
         <div>
-            <div className={classes.header}>
+            <Box sx={styles.header}>
                 <IconButton aria-label="back" onClick={() => navigate('/team')}>
                     <BackIcon />
                 </IconButton>
                 {member ? <MemberAvatar id={userId} name={name} /> : null}
-                <Typography variant="h5" className={classes.title}>
+                <Typography variant="h5" sx={styles.title}>
                     {member ? `${name} 的日志` : ''}
                 </Typography>
                 <Typography color="textSecondary">{rangeError ? '' : `共 ${formatDuration(total)}`}</Typography>
-            </div>
+            </Box>
 
-            <div className={classes.controls}>
-                <TextField type="date" value={from} onChange={(e) => setFrom(e.target.value)} InputLabelProps={{shrink: true}} />
-                <span className={classes.separator}>—</span>
-                <TextField type="date" value={to} onChange={(e) => setTo(e.target.value)} InputLabelProps={{shrink: true}} />
-                <div className={classes.grow} />
+            <Box sx={styles.controls}>
+                <TextField
+                    variant="standard"
+                    type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                    slotProps={{inputLabel: {shrink: true}}}
+                />
+                <Box component="span" sx={styles.separator}>
+                    —
+                </Box>
+                <TextField
+                    variant="standard"
+                    type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    slotProps={{inputLabel: {shrink: true}}}
+                />
+                <Box sx={styles.grow} />
                 <Button startIcon={<DownloadIcon />} onClick={exportCsv} disabled={items.length === 0}>
                     导出 CSV
                 </Button>
-            </div>
+            </Box>
 
             {unknownMember ? <Typography color="error">成员不存在。</Typography> : null}
             {rangeError ? <Typography color="error">{rangeError}</Typography> : null}
@@ -140,11 +154,11 @@ export const TeamMemberPage: React.FC = () => {
             ) : null}
 
             {days.map(({day, entries, seconds}) => (
-                <Paper key={day} className={classes.day}>
-                    <div className={classes.dayHeader}>
+                <Paper key={day} sx={styles.day}>
+                    <Box sx={styles.dayHeader}>
                         <Typography variant="h6">{moment(day, DAY_FORMAT).format('YYYY-MM-DD ddd')}</Typography>
                         <Typography color="textSecondary">共 {formatDuration(seconds)}</Typography>
-                    </div>
+                    </Box>
                     {entries.map(({timeSpan}) => (
                         <TeamEntry key={timeSpan.id} timeSpan={timeSpan} colors={colors} />
                     ))}

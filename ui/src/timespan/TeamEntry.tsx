@@ -1,31 +1,13 @@
 import * as React from 'react';
 import {useQuery} from '@apollo/client/react';
-import Typography from '@material-ui/core/Typography';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import * as gqlTag from '../gql/tags';
 import {Tags} from '../gql/types';
 import {TagChip} from '../common/TagChip';
 import {clock, formatDuration, spanSeconds} from './teamutils';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';
-
-const useStyles = makeStyles((theme) => ({
-    entry: {
-        display: 'flex',
-        alignItems: 'flex-start',
-        padding: theme.spacing(1, 0),
-        borderTop: `1px solid ${theme.palette.divider}`,
-    },
-    time: {
-        minWidth: 120,
-        marginRight: theme.spacing(2),
-        fontVariantNumeric: 'tabular-nums',
-    },
-    note: {
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-    },
-}));
 
 // Maps a tag key to its color.
 export const useTagColors = (): Record<string, string> => {
@@ -46,10 +28,15 @@ interface TeamEntryProps {
 }
 
 export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, colors}) => {
-    const classes = useStyles();
     return (
-        <div className={classes.entry}>
-            <Typography className={classes.time}>
+        <Box
+            sx={(theme) => ({
+                display: 'flex',
+                alignItems: 'flex-start',
+                padding: theme.spacing(1, 0),
+                borderTop: `1px solid ${theme.palette.divider}`,
+            })}>
+            <Typography sx={{minWidth: 120, marginRight: 2, fontVariantNumeric: 'tabular-nums'}}>
                 {clock(timeSpan.start)} - {timeSpan.end ? clock(timeSpan.end) : ''}
                 <br />
                 <Typography variant="caption" color="textSecondary">
@@ -67,11 +54,11 @@ export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, colors}) => {
                     ))}
                 </div>
                 {timeSpan.note ? (
-                    <Typography variant="body2" className={classes.note}>
+                    <Typography variant="body2" sx={{whiteSpace: 'pre-wrap', wordBreak: 'break-word'}}>
                         {timeSpan.note}
                     </Typography>
                 ) : null}
             </div>
-        </div>
+        </Box>
     );
 };

@@ -4,11 +4,11 @@ import {CurrentUser} from './gql/types';
 import * as gqlUser from './gql/user';
 import {CenteredSpinner} from './common/CenteredSpinner';
 import {LoginPage} from './login/LoginPage';
-import {Typography} from '@material-ui/core';
-import Button from '@material-ui/core/Button';
+import {Typography} from '@mui/material';
+import Button from '@mui/material/Button';
 import type {ErrorLike} from '@apollo/client';
 import {CombinedGraphQLErrors} from '@apollo/client/errors';
-import Grid from '@material-ui/core/Grid';
+import Box from '@mui/material/Box';
 import {DefaultPaper} from './common/DefaultPaper';
 import {Page} from './common/Page';
 import {Navigate, Outlet, Route, Routes} from 'react-router-dom';
@@ -68,8 +68,8 @@ export const Router = () => {
 
 const Error: React.FC<{error: ErrorLike; refetch: () => void}> = ({error, refetch}) => {
     return (
-        <Grid container direction="row" alignItems="center" justify="center" style={{height: '100%'}}>
-            <Grid item>
+        <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%'}}>
+            <Box>
                 <DefaultPaper>
                     <Typography variant="h3" component="h1" gutterBottom={true}>
                         Error
@@ -83,8 +83,8 @@ const Error: React.FC<{error: ErrorLike; refetch: () => void}> = ({error, refetc
                         Retry
                     </Button>
                 </DefaultPaper>
-            </Grid>
-        </Grid>
+            </Box>
+        </Box>
     );
 };
 

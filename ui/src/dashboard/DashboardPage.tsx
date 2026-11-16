@@ -13,14 +13,14 @@ import {
     RemoveDashboardEntryVariables,
 } from '../gql/types';
 import {DashboardEntry} from './Entry/DashboardEntry';
-import Button from '@material-ui/core/Button';
+import Button from '@mui/material/Button';
 import clone from 'lodash.clonedeep';
 import {EditPopup} from './Entry/EditPopup';
 import {EditGlass} from './Entry/EditGlass';
 import {Fade} from '../common/Fade';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {AddPopup} from './Entry/AddPopup';
-import {Paper} from '@material-ui/core';
+import {Paper} from '@mui/material';
 import {Center} from '../common/Center';
 import {Navigate, useParams} from 'react-router-dom';
 import {useSnackbar} from 'notistack';
@@ -236,7 +236,7 @@ export const DashboardPage: React.FC = () => {
                     {addEntry ? (
                         <div
                             key={'' + EditId}
-                            ref={(ref: HTMLDivElement) => {
+                            ref={(ref: HTMLDivElement | null) => {
                                 setAddRef(ref);
                                 if (ref) {
                                     ref.scrollIntoView({behavior: 'smooth'});

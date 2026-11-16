@@ -1,14 +1,14 @@
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import {SliderPicker} from 'react-color';
-import {InputLabel} from '@material-ui/core';
-import FormControl from '@material-ui/core/FormControl';
+import {InputLabel} from '@mui/material';
+import FormControl from '@mui/material/FormControl';
 import {AddTag, AddTagVariables} from '../gql/types';
 import * as gqlTags from '../gql/tags';
 import {TagSelectorEntry} from './tagSelectorEntry';
@@ -48,6 +48,7 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                 <DialogContent>
                     <DialogContentText />
                     <TextField
+                        variant="standard"
                         autoFocus
                         margin="dense"
                         id="name"
@@ -57,7 +58,7 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
-                    <FormControl fullWidth margin="dense">
+                    <FormControl variant="standard" fullWidth margin="dense">
                         <InputLabel htmlFor="color-picker" shrink={true}>
                             Color
                         </InputLabel>

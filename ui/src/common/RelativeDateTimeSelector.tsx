@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {TextField} from '@material-ui/core';
+import {TextField} from '@mui/material';
 import {parseRelativeTime} from '../utils/time';
-import Typography from '@material-ui/core/Typography';
-import useTimeout from '@rooks/use-timeout';
+import Typography from '@mui/material/Typography';
+import {useTimeout} from '../utils/hooks';
 
 interface RelativeDateTimeSelectorProps {
     value: string;
@@ -36,7 +36,7 @@ export const RelativeDateTimeSelector: React.FC<RelativeDateTimeSelectorProps> =
             style={style}
             value={value}
             disabled={disabled}
-            InputProps={{disableUnderline}}
+            slotProps={{input: {disableUnderline}}}
             onChange={(e) => {
                 const newValue = e.target.value;
                 const result = parseRelativeTime(newValue, type);

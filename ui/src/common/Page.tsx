@@ -1,39 +1,40 @@
 import * as React from 'react';
-import AppBar from '@material-ui/core/AppBar';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Divider from '@material-ui/core/Divider';
-import Drawer from '@material-ui/core/Drawer';
-import Hidden from '@material-ui/core/Hidden';
-import IconButton from '@material-ui/core/IconButton';
-import UsersIcon from '@material-ui/icons/SupervisorAccount';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import DashboardIcon from '@material-ui/icons/Dashboard';
-import MenuIcon from '@material-ui/icons/Menu';
-import SettingsIcon from '@material-ui/icons/Settings';
-import DevicesIcon from '@material-ui/icons/DevicesOther';
-import TeamIcon from '@material-ui/icons/People';
-import StatsIcon from '@material-ui/icons/ShowChart';
-import LabelIcon from '@material-ui/icons/Label';
-import DashboardManageIcon from '@material-ui/icons/ListAlt';
-import TimeLineIcon from '@material-ui/icons/Timeline';
-import CalendarIcon from '@material-ui/icons/CalendarToday';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import {ListSubheader, Menu} from '@material-ui/core';
-import HrefLink from '@material-ui/core/Link';
+import AppBar from '@mui/material/AppBar';
+import CssBaseline from '@mui/material/CssBaseline';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import UsersIcon from '@mui/icons-material/SupervisorAccount';
+import List from '@mui/material/List';
+import ListItemButton from '@mui/material/ListItemButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import MenuIcon from '@mui/icons-material/Menu';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DevicesIcon from '@mui/icons-material/DevicesOther';
+import TeamIcon from '@mui/icons-material/People';
+import StatsIcon from '@mui/icons-material/ShowChart';
+import LabelIcon from '@mui/icons-material/Label';
+import DashboardManageIcon from '@mui/icons-material/ListAlt';
+import TimeLineIcon from '@mui/icons-material/Timeline';
+import CalendarIcon from '@mui/icons-material/CalendarToday';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import ListSubheader from '@mui/material/ListSubheader';
+import Menu from '@mui/material/Menu';
+import HrefLink from '@mui/material/Link';
 import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
-import Button from '@material-ui/core/Button';
-import AccountCircle from '@material-ui/icons/AccountCircle';
+import Button from '@mui/material/Button';
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import {Link, Route, Routes, useLocation, useNavigate, useParams} from 'react-router-dom';
-import MenuItem from '@material-ui/core/MenuItem';
+import MenuItem from '@mui/material/MenuItem';
 import {useMutation, useQuery} from '@apollo/client/react';
 import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
 import * as gqlDashboard from '../gql/dashboard';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import type {SxProps, Theme} from '@mui/material/styles';
 
 const drawerWidth = 240;
 
@@ -44,45 +45,46 @@ interface NavGroup {
     items: Array<{label: string; to: string}>;
 }
 
-const useStyles = makeStyles((theme) => ({
+const styles = {
     root: {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
     },
-    brand: {
+    brand: (theme) => ({
         marginRight: theme.spacing(3),
         color: 'inherit',
         textDecoration: 'none',
-    },
-    navButton: {
+    }),
+    navButton: (theme) => ({
         textTransform: 'none',
         marginRight: theme.spacing(1),
         fontSize: '1rem',
         borderRadius: 0,
         borderBottom: '2px solid transparent',
         height: 64,
-    },
+    }),
     navButtonActive: {
         borderBottomColor: 'currentColor',
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
     },
-    menuButton: {
-        marginRight: 20,
+    menuButton: (theme) => ({
+        marginRight: '20px',
         [theme.breakpoints.up('md')]: {
             display: 'none',
         },
-    },
-    toolbar: {
+    }),
+    toolbar: (theme) => ({
         ...theme.mixins.toolbar,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
+    }),
+    drawer: {
+        display: {xs: 'block', md: 'none'},
+        '& .MuiDrawer-paper': {width: drawerWidth},
     },
-    drawerPaper: {
-        width: drawerWidth,
-    },
-    content: {
+    content: (theme) => ({
         flexGrow: 1,
         paddingTop: theme.spacing(2),
         paddingBottom: theme.spacing(2),
@@ -93,6 +95,13 @@ const useStyles = makeStyles((theme) => ({
             paddingLeft: theme.spacing(3),
             paddingRight: theme.spacing(3),
         },
+    }),
+    desktopOnly: {
+        display: {xs: 'none', md: 'flex'},
+        alignItems: 'center',
+    },
+    mobileOnly: {
+        display: {xs: 'block', md: 'none'},
     },
     grow: {
         flexGrow: 1,
@@ -100,12 +109,7 @@ const useStyles = makeStyles((theme) => ({
     sectionDesktop: {
         display: 'flex',
     },
-}));
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const routerLink = (to: string): any => {
-    return React.forwardRef<HTMLAnchorElement>((props, ref) => <Link ref={ref} to={to} {...props} />);
-};
+} satisfies Record<string, SxProps<Theme>>;
 
 const DashboardTitle: React.FC<{dashboards: Array<{id: number; name: string}>}> = ({dashboards}) => {
     const {id} = useParams<{id: string}>();
@@ -114,7 +118,6 @@ const DashboardTitle: React.FC<{dashboards: Array<{id: number; name: string}>}> 
 };
 
 export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
-    const classes = useStyles();
     const location = useLocation();
     const navigate = useNavigate();
     const {data} = useQuery<CurrentUser>(gqlUser.CurrentUser);
@@ -133,15 +136,15 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const admin = data && data.user && data.user.admin;
 
     const drawerLink = (to: string, label: string, icon: React.ReactElement) => (
-        <ListItem button component={routerLink(to)} selected={location.pathname === to}>
+        <ListItemButton component={Link} to={to} selected={location.pathname === to}>
             <ListItemIcon>{icon}</ListItemIcon>
             <ListItemText primary={label} />
-        </ListItem>
+        </ListItemButton>
     );
 
     const drawer = (
         <div>
-            <div className={classes.toolbar}>
+            <Box sx={styles.toolbar}>
                 <HrefLink href="https://github.com/traggo" underline="none" target="_blank">
                     <Typography variant="h5" align="center" color="textPrimary">
                         traggo
@@ -152,7 +155,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                         {version.name}@{version.commit.slice(0, 8)}
                     </Typography>
                 </HrefLink>
-            </div>
+            </Box>
             <Divider />
             <List dense={true}>
                 {drawerLink('/timesheet/calendar', '我的日志', <CalendarIcon />)}
@@ -164,12 +167,12 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
             <List subheader={<ListSubheader>其他</ListSubheader>} dense={true}>
                 {drawerLink('/timesheet/list', 'List', <TimeLineIcon />)}
                 {dashboards.map(({id, name}) => (
-                    <ListItem key={id} button component={routerLink(`/dashboard/${id}/${encodeURIComponent(name)}`)}>
+                    <ListItemButton key={id} component={Link} to={`/dashboard/${id}/${encodeURIComponent(name)}`}>
                         <ListItemIcon>
                             <DashboardIcon />
                         </ListItemIcon>
                         <ListItemText primary={name} />
-                    </ListItem>
+                    </ListItemButton>
                 ))}
                 {drawerLink('/dashboards', 'Manage dashboards', <DashboardManageIcon />)}
                 {drawerLink('/user/tags', 'Tags', <LabelIcon />)}
@@ -203,40 +206,37 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const activeNavItems: Array<{label: string; to: string}> = activeNavGroup ? activeNavGroup.items : [];
 
     return (
-        <div className={classes.root}>
+        <Box sx={styles.root}>
             <CssBaseline />
-            <AppBar position="fixed">
+            <AppBar position="fixed" enableColorOnDark>
                 <Toolbar>
                     <IconButton
                         color="inherit"
                         aria-label="Open drawer"
                         onClick={() => setMobileOpen(!mobileOpen)}
-                        className={classes.menuButton}>
+                        sx={styles.menuButton}>
                         <MenuIcon />
                     </IconButton>
-                    <Link to="/" className={classes.brand}>
+                    <Box component={Link} to="/" sx={styles.brand}>
                         <Typography variant="h6" color="inherit" noWrap>
                             traggo
                         </Typography>
-                    </Link>
-                    <Hidden smDown implementation="js">
+                    </Box>
+                    <Box sx={styles.desktopOnly}>
                         {navGroups.map(({name, to, paths}) => (
                             <Button
                                 key={name}
                                 color="inherit"
-                                className={
-                                    classes.navButton +
-                                    (paths.some((path) => location.pathname.startsWith(path))
-                                        ? ' ' + classes.navButtonActive
-                                        : '')
-                                }
+                                sx={[
+                                    styles.navButton,
+                                    paths.some((path) => location.pathname.startsWith(path)) && styles.navButtonActive,
+                                ]}
                                 onClick={(e) => (to ? navigate(to) : setNavMenu({name, anchor: e.currentTarget}))}>
                                 {name}
                             </Button>
                         ))}
                         <Menu
                             anchorEl={navMenu && navMenu.anchor}
-                            getContentAnchorEl={null}
                             anchorOrigin={{vertical: 'bottom', horizontal: 'left'}}
                             transformOrigin={{vertical: 'top', horizontal: 'left'}}
                             open={!!navMenu}
@@ -246,13 +246,14 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                                     key={to}
                                     selected={location.pathname === to}
                                     onClick={() => setNavMenu(null)}
-                                    component={routerLink(to)}>
+                                    component={Link}
+                                    to={to}>
                                     {label}
                                 </MenuItem>
                             ))}
                         </Menu>
-                    </Hidden>
-                    <Hidden mdUp implementation="js">
+                    </Box>
+                    <Box sx={styles.mobileOnly}>
                         <Typography variant="h6" color="inherit" noWrap>
                             <Routes>
                                 <Route path="/team" element="团队日志" />
@@ -268,21 +269,20 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                                 <Route path="/dashboard/:id/*" element={<DashboardTitle dashboards={dashboards} />} />
                             </Routes>
                         </Typography>
-                    </Hidden>
-                    <div className={classes.grow} />
-                    <div className={classes.sectionDesktop}>
+                    </Box>
+                    <Box sx={styles.grow} />
+                    <Box sx={styles.sectionDesktop}>
                         <Button color="inherit" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
                             <AccountCircle />
                             &nbsp;{username}
                         </Button>
                         <Menu
                             anchorEl={userMenuOpen}
-                            getContentAnchorEl={null}
                             anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
                             transformOrigin={{vertical: 'top', horizontal: 'right'}}
                             open={!!userMenuOpen}
                             onClose={() => setUserMenuOpen(null)}>
-                            <MenuItem onClick={() => setUserMenuOpen(null)} component={routerLink('/user/settings')}>
+                            <MenuItem onClick={() => setUserMenuOpen(null)} component={Link} to="/user/settings">
                                 Settings
                             </MenuItem>
                             <MenuItem
@@ -293,22 +293,16 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                                 Logout
                             </MenuItem>
                         </Menu>
-                    </div>
+                    </Box>
                 </Toolbar>
             </AppBar>
-            <Hidden mdUp implementation="js">
-                <Drawer
-                    variant="temporary"
-                    open={mobileOpen}
-                    onClose={() => setMobileOpen(false)}
-                    classes={{paper: classes.drawerPaper}}>
-                    {drawer}
-                </Drawer>
-            </Hidden>
-            <main className={classes.content}>
-                <div className={classes.toolbar} />
+            <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} sx={styles.drawer}>
+                {drawer}
+            </Drawer>
+            <Box component="main" sx={styles.content}>
+                <Box sx={styles.toolbar} />
                 {children}
-            </main>
-        </div>
+            </Box>
+        </Box>
     );
 };

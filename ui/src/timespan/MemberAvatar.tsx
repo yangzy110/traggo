@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Avatar from '@material-ui/core/Avatar';
+import Avatar from '@mui/material/Avatar';
 
 // Gives every member a stable color derived from the user id.
 const colorOf = (id: number) => `hsl(${(id * 47) % 360}, 55%, 42%)`;

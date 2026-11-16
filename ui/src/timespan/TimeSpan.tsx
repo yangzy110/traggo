@@ -2,9 +2,9 @@ import * as React from 'react';
 import {TagSelectorEntry, toInputTags} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment';
-import Paper from '@material-ui/core/Paper';
+import Paper from '@mui/material/Paper';
 import {DateTimeSelector} from '../common/DateTimeSelector';
-import {Button, TextField, Typography, makeStyles} from '@material-ui/core';
+import {Button, TextField, Typography} from '@mui/material';
 import {inUserTz} from './timeutils';
 import {useMutation} from '@apollo/client/react';
 import {
@@ -20,14 +20,16 @@ import {
     StartTimerVariables,
 } from '../gql/types';
 import * as gqlTimeSpan from '../gql/timeSpan';
-import IconButton from '@material-ui/core/IconButton';
-import {MoreVert} from '@material-ui/icons';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import {MoreVert} from '@mui/icons-material';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import {useStateAndDelegateWithDelayOnChange} from '../utils/hooks';
 import {isSameDate} from '../utils/time';
 import {addTimeSpanToCache, removeFromTrackersCache} from '../gql/utils';
 import {RelativeTime, RelativeToNow} from '../common/RelativeTime';
+import Box from '@mui/material/Box';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 
 interface Range {
     from: moment.Moment;
@@ -48,7 +50,7 @@ export interface TimeSpanProps {
     elevation?: number;
 }
 
-const useStyles = makeStyles(() => ({
+const styles = {
     innerTimespan: {
         position: 'relative',
         width: '100%',
@@ -86,7 +88,7 @@ const useStyles = makeStyles(() => ({
             right: '0',
         },
     },
-}));
+} satisfies Record<string, SxProps<MuiTheme>>;
 
 export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
     ({
@@ -102,7 +104,6 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
         elevation = 1,
         addTagsToTracker,
     }) => {
-        const styles = useStyles();
         const [showNotes, toggleShowingNotes] = React.useState(initialNote !== '');
         const note = React.useRef<{value: string; handle?: number}>({value: initialNote});
 
@@ -194,8 +195,8 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                     opacity: wasMoved ? 0.5 : 1,
                     width: '100%',
                 }}>
-                <div className={styles.innerTimespan}>
-                    <div className={styles.tagInput}>
+                <Box sx={styles.innerTimespan}>
+                    <Box sx={styles.tagInput}>
                         <TagSelector
                             dialogOpen={dateSelectorOpen}
                             selectedEntries={selectedEntries}
@@ -212,9 +213,9 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                 });
                             }}
                         />
-                    </div>
+                    </Box>
 
-                    <div className={styles.timeSelection}>
+                    <Box sx={styles.timeSelection}>
                         <div style={{alignItems: 'center', display: 'flex', justifyContent: 'space-evenly', flexWrap: 'wrap'}}>
                             <DateTimeSelector
                                 popoverOpen={dateSelectorOpen}
@@ -303,10 +304,10 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                                 {to ? <RelativeTime from={from} to={to} /> : <RelativeToNow from={from} />}
                             </Typography>
                         </div>
-                    </div>
+                    </Box>
 
                     <IconButton
-                        className={styles.showMoreButton}
+                        sx={styles.showMoreButton}
                         onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
                         <MoreVert />
                     </IconButton>
@@ -351,10 +352,11 @@ export const TimeSpan: React.FC<TimeSpanProps> = React.memo(
                             Delete
                         </MenuItem>
                     </Menu>
-                </div>
+                </Box>
                 {showNotes ? (
                     <div>
                         <TextField
+                            variant="standard"
                             label="Note"
                             fullWidth
                             multiline

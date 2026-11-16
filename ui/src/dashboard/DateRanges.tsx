@@ -11,16 +11,16 @@ import {
     AddDashboardRange,
     AddDashboardRangeVariables,
 } from '../gql/types';
-import {IconButton, Paper, Typography} from '@material-ui/core';
+import {IconButton, Paper, Typography} from '@mui/material';
 import {RelativeDateTimeSelector} from '../common/RelativeDateTimeSelector';
-import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
-import MoreVert from '@material-ui/icons/MoreVert';
-import PlusIcon from '@material-ui/icons/Add';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import MoreVert from '@mui/icons-material/MoreVert';
+import PlusIcon from '@mui/icons-material/Add';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import {stripTypename} from '../utils/strip';
 import {Range} from '../utils/range';
-import Input from '@material-ui/core/Input';
+import Input from '@mui/material/Input';
 
 interface Props {
     changeMode: boolean;

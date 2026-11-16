@@ -3,31 +3,32 @@ import {Tags} from '../gql/types';
 import * as gqlTags from '../gql/tags';
 import {useQuery} from '@apollo/client/react';
 import {useError} from '../utils/errors';
-import Typography from '@material-ui/core/Typography';
-import Tooltip from '@material-ui/core/Tooltip';
-import MenuItem from '@material-ui/core/MenuItem';
+import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
+import MenuItem from '@mui/material/MenuItem';
 import {AddTagDialog} from './AddTagDialog';
 import {TagSelectorEntry, itemLabel, label, addValues} from './tagSelectorEntry';
 import {useSuggest} from './suggest';
-import Paper from '@material-ui/core/Paper';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import Input from '@material-ui/core/Input';
+import Paper from '@mui/material/Paper';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Input from '@mui/material/Input';
 import {useStateAndDelegateWithDelayOnChange} from '../utils/hooks';
 import {TagChip} from '../common/TagChip';
-import {makeStyles, Theme} from '@material-ui/core/styles';
+import Box from '@mui/material/Box';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 
-const useStyles = makeStyles((theme: Theme) => ({
+const styles = {
     root: {
         width: '100%',
     },
     inputRoot: {display: 'flex', flexWrap: 'wrap', cursor: 'text', width: '100%'},
     inputInput: {height: 40, minWidth: 150, flexGrow: 1},
-    paper: {
+    paper: (theme) => ({
         position: 'absolute',
         zIndex: 1,
         marginTop: theme.spacing(1),
-    },
-}));
+    }),
+} satisfies Record<string, SxProps<MuiTheme>>;
 
 export interface TagSelectorProps {
     onSelectedEntriesChanged: (entries: TagSelectorEntry[]) => void;
@@ -48,7 +49,6 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     allowDuplicateKeys = false,
     onlySelectKeys = false,
 }) => {
-    const classes = useStyles();
     const [tooltipErrorActive, tooltipError, showTooltipError] = useError(4000);
     const [open, setOpen] = React.useState(false);
     const [currentValue, setCurrentValueInternal] = React.useState('');
@@ -176,7 +176,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
     return (
         <ClickAwayListener onClickAway={() => setOpen(false)}>
-            <div className={classes.root}>
+            <Box sx={styles.root}>
                 <Tooltip
                     disableFocusListener
                     disableHoverListener
@@ -189,27 +189,24 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                             {tooltipError}
                         </Typography>
                     }>
-                    <div ref={(ref) => (container.current = ref)} className={classes.inputRoot} onClick={focusInput}>
+                    <Box ref={container} sx={styles.inputRoot} onClick={focusInput}>
                         {toChips(selectedEntries, onlySelectKeys, onTagClicked)}
                         <Input
                             margin="none"
                             value={currentValue}
-                            inputRef={(ref) => (input.current = ref)}
+                            inputRef={input}
                             onFocus={() => setOpen(true)}
                             onKeyDown={onKeyDown}
                             disableUnderline={true}
                             onChange={(e) => setCurrentValue(e.target.value)}
                             placeholder="Enter Tags"
-                            className={classes.inputInput}
+                            sx={styles.inputInput}
                         />
-                    </div>
+                    </Box>
                 </Tooltip>
 
                 {open ? (
-                    <Paper
-                        className={classes.paper}
-                        style={{width: (container.current && container.current.clientWidth) || 300}}
-                        square>
+                    <Paper sx={styles.paper} style={{width: (container.current && container.current.clientWidth) || 300}} square>
                         {suggestions.map((entry, index) => (
                             <Item
                                 key={label(entry)}
@@ -235,7 +232,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                         }}
                     />
                 )}
-            </div>
+            </Box>
         </ClickAwayListener>
     );
 };

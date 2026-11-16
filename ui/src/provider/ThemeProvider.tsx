@@ -1,31 +1,38 @@
 import * as React from 'react';
-import {MuiThemeProvider, Theme} from '@material-ui/core/styles';
-import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
-import CssBaseline from '@material-ui/core/CssBaseline';
+import {createTheme, ThemeProvider as MuiThemeProvider, type Theme} from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import {useSettings} from '../gql/settings';
 import {Theme as SettingTheme} from '../gql/types';
 
 const themes: Record<SettingTheme, Theme> = {
-    [SettingTheme.GruvboxDark]: createMuiTheme({
-        overrides: {
+    [SettingTheme.GruvboxDark]: createTheme({
+        components: {
             MuiLink: {
-                root: {
-                    color: '#458588',
+                styleOverrides: {
+                    root: {
+                        color: '#458588',
+                    },
                 },
             },
             MuiIconButton: {
-                root: {
-                    color: 'inherit',
+                styleOverrides: {
+                    root: {
+                        color: 'inherit',
+                    },
                 },
             },
             MuiListItemIcon: {
-                root: {
-                    color: 'inherit',
+                styleOverrides: {
+                    root: {
+                        color: 'inherit',
+                    },
                 },
             },
             MuiToolbar: {
-                root: {
-                    background: '#a89984',
+                styleOverrides: {
+                    root: {
+                        background: '#a89984',
+                    },
                 },
             },
         },
@@ -43,29 +50,37 @@ const themes: Record<SettingTheme, Theme> = {
             secondary: {
                 main: '#f44336',
             },
-            type: 'dark',
+            mode: 'dark',
         },
     }),
-    [SettingTheme.GruvboxLight]: createMuiTheme({
-        overrides: {
+    [SettingTheme.GruvboxLight]: createTheme({
+        components: {
             MuiLink: {
-                root: {
-                    color: '#458588',
+                styleOverrides: {
+                    root: {
+                        color: '#458588',
+                    },
                 },
             },
             MuiIconButton: {
-                root: {
-                    color: 'inherit',
+                styleOverrides: {
+                    root: {
+                        color: 'inherit',
+                    },
                 },
             },
             MuiListItemIcon: {
-                root: {
-                    color: 'inherit',
+                styleOverrides: {
+                    root: {
+                        color: 'inherit',
+                    },
                 },
             },
             MuiToolbar: {
-                root: {
-                    background: '#7c6f64',
+                styleOverrides: {
+                    root: {
+                        background: '#7c6f64',
+                    },
                 },
             },
         },
@@ -83,19 +98,23 @@ const themes: Record<SettingTheme, Theme> = {
             secondary: {
                 main: '#f44336',
             },
-            type: 'light',
+            mode: 'light',
         },
     }),
-    [SettingTheme.MaterialLight]: createMuiTheme({
-        overrides: {
+    [SettingTheme.MaterialLight]: createTheme({
+        components: {
             MuiLink: {
-                root: {
-                    color: '#2980b9',
+                styleOverrides: {
+                    root: {
+                        color: '#2980b9',
+                    },
                 },
             },
             MuiIconButton: {
-                root: {
-                    color: 'inherit',
+                styleOverrides: {
+                    root: {
+                        color: 'inherit',
+                    },
                 },
             },
         },
@@ -107,14 +126,16 @@ const themes: Record<SettingTheme, Theme> = {
             secondary: {
                 main: '#f44336',
             },
-            type: 'light',
+            mode: 'light',
         },
     }),
-    [SettingTheme.MaterialDark]: createMuiTheme({
-        overrides: {
+    [SettingTheme.MaterialDark]: createTheme({
+        components: {
             MuiLink: {
-                root: {
-                    color: '#3498db',
+                styleOverrides: {
+                    root: {
+                        color: '#3498db',
+                    },
                 },
             },
         },
@@ -125,7 +146,7 @@ const themes: Record<SettingTheme, Theme> = {
             secondary: {
                 main: '#f44336',
             },
-            type: 'dark',
+            mode: 'dark',
         },
     }),
 };

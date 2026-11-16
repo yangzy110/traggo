@@ -1,42 +1,40 @@
 import * as React from 'react';
-import Paper from '@material-ui/core/Paper';
-import {makeStyles} from '@material-ui/core/styles';
+import Paper from '@mui/material/Paper';
 import {useMutation, useQuery} from '@apollo/client/react';
 import * as gqlDevice from '../gql/device';
 import * as gqlUser from '../gql/user';
 import {Devices, RemoveDevice, RemoveDeviceVariables, UpdateDevice, UpdateDeviceVariables, DeviceType} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
 import moment from 'moment-timezone';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/Edit';
-import DoneIcon from '@material-ui/icons/Done';
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from '@material-ui/core/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import DoneIcon from '@mui/icons-material/Done';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 import {useSnackbar} from 'notistack';
-import {TextField} from '@material-ui/core';
-import Button from '@material-ui/core/Button';
+import {TextField} from '@mui/material';
+import Button from '@mui/material/Button';
 import {AddDeviceDialog} from './AddDeviceDialog';
 import {deviceTypeToString} from './typeutils';
-import Select from '@material-ui/core/NativeSelect';
+import Select from '@mui/material/NativeSelect';
+import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
+import {gutters} from '../common/styles';
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        ...theme.mixins.gutters(),
-        paddingTop: theme.spacing(3),
-        paddingBottom: theme.spacing(3),
-        textAlign: 'center',
-        maxWidth: 1200,
-        margin: '0 auto',
-    },
-}));
+const rootSx: SxProps<MuiTheme> = (theme) => ({
+    ...gutters(theme),
+    paddingTop: theme.spacing(3),
+    paddingBottom: theme.spacing(3),
+    textAlign: 'center',
+    maxWidth: 1200,
+    margin: '0 auto',
+});
 
 export const DevicesPage = () => {
-    const classes = useStyles();
     const {data, loading} = useQuery<Devices>(gqlDevice.Devices);
     const refetch = {refetchQueries: [{query: gqlDevice.Devices}, {query: gqlUser.CurrentUser}]};
     const {enqueueSnackbar} = useSnackbar();
@@ -73,6 +71,7 @@ export const DevicesPage = () => {
                 <TableCell>
                     {isEdited ? (
                         <TextField
+                            variant="standard"
                             value={editName}
                             onChange={(e) => setEditing([editId, e.target.value, editDeviceType])}
                             onKeyDown={(e) => {
@@ -91,6 +90,7 @@ export const DevicesPage = () => {
                 <TableCell title={device.type} style={{minWidth: 128}}>
                     {isEdited ? (
                         <Select
+                            variant="standard"
                             value={editDeviceType}
                             onChange={(e) => setEditing([editId, editName, e.target.value as DeviceType])}>
                             <option value={DeviceType.NoExpiry}>{deviceTypeToString(DeviceType.NoExpiry)}</option>
@@ -128,7 +128,7 @@ export const DevicesPage = () => {
     });
 
     return (
-        <Paper elevation={1} square={true} className={classes.root}>
+        <Paper elevation={1} square={true} sx={rootSx}>
             <Button
                 color={'primary'}
                 variant={'outlined'}

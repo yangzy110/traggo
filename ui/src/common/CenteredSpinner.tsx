@@ -1,11 +1,9 @@
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Grid from '@material-ui/core/Grid';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 import * as React from 'react';
 
 export const CenteredSpinner = () => (
-    <Grid container={true} direction="row" alignItems="center" justify="center" style={{height: '95%'}}>
-        <Grid item>
-            <CircularProgress size={100} />
-        </Grid>
-    </Grid>
+    <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height: '95%'}}>
+        <CircularProgress size={100} />
+    </Box>
 );

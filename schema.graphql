@@ -49,9 +49,15 @@ type RootMutation {
     setUserSettings(settings: InputUserSettings!): UserSettings! @hasRole(role: USER)
 }
 
+type UsedTagValue {
+    key: String!
+    value: String!
+}
+
 type RootQuery {
     suggestTag(query: String!): [TagDefinition!] @hasRole(role: USER)
     suggestTagValue(key: String!, query: String!): [String!] @hasRole(role: USER)
+    usedTagValues: [UsedTagValue!] @hasRole(role: USER)
     tags: [TagDefinition!] @hasRole(role: USER)
     users: [User!] @hasRole(role: ADMIN)
     currentUser: User
@@ -202,8 +208,18 @@ type TeamMemberStats {
     seconds: Float!
 }
 
+type TeamTagStats {
+    key: String!
+    value: String!
+    seconds: Float!
+    # The time of the members for this tag, the most first. Only members with time are contained.
+    members: [TeamMemberStats!]!
+}
+
 type TeamStats {
     totalSeconds: Float!
+    # The time per tag (a time span with several tags is counted for each of them), the most used first.
+    tags: [TeamTagStats!]!
     days: [TeamStatsDay!]!
     # Contains every member, also those without any tracked time.
     members: [TeamMemberStats!]!

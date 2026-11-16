@@ -3,7 +3,12 @@ import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {Link as RouterLink} from 'react-router-dom';
 import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import Button from '@mui/material/Button';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import {TagChip} from '../common/TagChip';
+import {calculateColor, ColorMode} from './colorutils';
 import MuiLink from '@mui/material/Link';
 import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
@@ -26,10 +31,12 @@ import Box from '@mui/material/Box';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 
 const PRESETS = [
-    {label: '近 7 天', days: 7},
-    {label: '近 14 天', days: 14},
-    {label: '近 30 天', days: 30},
-];
+    {value: 'week', label: '近一周', days: 7},
+    {value: 'month', label: '近一个月', days: 30},
+    {value: 'year', label: '近一年', days: 365},
+] as const;
+
+type Preset = (typeof PRESETS)[number]['value'] | 'custom';
 
 const styles = {
     controls: (theme) => ({
@@ -73,10 +80,20 @@ const styles = {
     },
 } satisfies Record<string, SxProps<MuiTheme>>;
 
+const ShareBar: React.FC<{share: number}> = ({share}) => (
+    <Box sx={styles.share}>
+        <LinearProgress sx={styles.shareBar} variant="determinate" value={Math.min(100, share * 100)} />
+        <Box component="span" sx={styles.shareText}>
+            {(share * 100).toFixed(1)}%
+        </Box>
+    </Box>
+);
+
 const hours = (seconds: number) => Math.round((seconds / 3600) * 100) / 100;
 
 export const StatsPage: React.FC = () => {
     const theme = useTheme();
+    const [preset, setPreset] = React.useState<Preset>('week');
     const [from, setFrom] = React.useState(moment().subtract(6, 'day').format(DAY_FORMAT));
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
     const rangeError = validateRange(from, to, MAX_STATS_DAYS);
@@ -91,39 +108,63 @@ export const StatsPage: React.FC = () => {
     });
 
     const stats = !rangeError && data ? data.teamStats : null;
+    const tagTotal = stats ? stats.tags.reduce((sum, tag) => sum + tag.seconds, 0) : 0;
+    const [openTag, setOpenTag] = React.useState('');
 
-    const applyPreset = (days: number) => {
-        setFrom(
-            moment()
-                .subtract(days - 1, 'day')
-                .format(DAY_FORMAT)
-        );
-        setTo(moment().format(DAY_FORMAT));
+    // one click selects the whole range
+    const applyPreset = (value: Preset | null) => {
+        if (!value) {
+            return;
+        }
+        setPreset(value);
+        const preset = PRESETS.find((p) => p.value === value);
+        if (preset) {
+            setFrom(
+                moment()
+                    .subtract(preset.days - 1, 'day')
+                    .format(DAY_FORMAT)
+            );
+            setTo(moment().format(DAY_FORMAT));
+        }
     };
 
     return (
         <div>
             <Box sx={styles.controls}>
-                {PRESETS.map(({label, days}) => (
-                    <Button key={days} sx={styles.preset} variant="outlined" onClick={() => applyPreset(days)}>
-                        {label}
-                    </Button>
-                ))}
-                <TextField
-                    type="date"
-                    value={from}
-                    onChange={(e) => setFrom(e.target.value)}
-                    slotProps={{inputLabel: {shrink: true}}}
-                />
-                <Box component="span" sx={styles.separator}>
-                    —
-                </Box>
-                <TextField
-                    type="date"
-                    value={to}
-                    onChange={(e) => setTo(e.target.value)}
-                    slotProps={{inputLabel: {shrink: true}}}
-                />
+                <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    color="primary"
+                    value={preset}
+                    aria-label="统计范围"
+                    sx={styles.preset}
+                    onChange={(_, value: Preset | null) => applyPreset(value)}>
+                    {PRESETS.map(({value, label}) => (
+                        <ToggleButton key={value} value={value}>
+                            {label}
+                        </ToggleButton>
+                    ))}
+                    <ToggleButton value="custom">自定义</ToggleButton>
+                </ToggleButtonGroup>
+                {preset === 'custom' ? (
+                    <>
+                        <TextField
+                            type="date"
+                            value={from}
+                            onChange={(e) => setFrom(e.target.value)}
+                            slotProps={{inputLabel: {shrink: true}}}
+                        />
+                        <Box component="span" sx={styles.separator}>
+                            —
+                        </Box>
+                        <TextField
+                            type="date"
+                            value={to}
+                            onChange={(e) => setTo(e.target.value)}
+                            slotProps={{inputLabel: {shrink: true}}}
+                        />
+                    </>
+                ) : null}
             </Box>
 
             {rangeError ? <Typography color="error">{rangeError}</Typography> : null}
@@ -170,6 +211,94 @@ export const StatsPage: React.FC = () => {
                                 </LineChart>
                             </ResponsiveContainer>
                         </Box>
+                    </Paper>
+
+                    <Paper sx={styles.section}>
+                        <Typography variant="h6" gutterBottom={true}>
+                            标签工作量
+                        </Typography>
+                        {stats.tags.length === 0 ? (
+                            <Typography color="textSecondary">这段时间内还没有带标签的记录。</Typography>
+                        ) : (
+                            <>
+                                <Typography variant="caption" color="textSecondary">
+                                    占比是该标签在所有标签总时长中的比例（一条记录有多个标签时每个标签都会计入）。点击一行可以查看每个人在该标签下的占比。
+                                </Typography>
+                                <Table size="small">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>标签</TableCell>
+                                            <TableCell align="right">工作时间</TableCell>
+                                            <TableCell>占比</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {stats.tags.map((tag) => {
+                                            const id = tag.key + ':' + tag.value;
+                                            const share = tagTotal > 0 ? tag.seconds / tagTotal : 0;
+                                            const open = openTag === id;
+                                            return (
+                                                <React.Fragment key={id}>
+                                                    <TableRow
+                                                        hover={true}
+                                                        sx={{cursor: 'pointer'}}
+                                                        onClick={() => setOpenTag(open ? '' : id)}>
+                                                        <TableCell>
+                                                            <Box sx={styles.member}>
+                                                                {open ? (
+                                                                    <ExpandLess fontSize="small" />
+                                                                ) : (
+                                                                    <ExpandMore fontSize="small" />
+                                                                )}
+                                                                <TagChip
+                                                                    label={id}
+                                                                    color={calculateColor(
+                                                                        tag.key,
+                                                                        ColorMode.Bold,
+                                                                        theme.palette.mode
+                                                                    )}
+                                                                />
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell align="right">{formatDuration(tag.seconds)}</TableCell>
+                                                        <TableCell>
+                                                            <ShareBar share={share} />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                    {open
+                                                        ? tag.members.map(({member, seconds}) => (
+                                                              <TableRow key={id + member.id}>
+                                                                  <TableCell sx={{paddingLeft: 6}}>
+                                                                      <Box sx={styles.member}>
+                                                                          <MemberAvatar
+                                                                              id={member.id}
+                                                                              name={member.name}
+                                                                              size={24}
+                                                                          />
+                                                                          <MuiLink
+                                                                              sx={styles.memberName}
+                                                                              component={RouterLink}
+                                                                              to={memberLogPath(member.id)}>
+                                                                              {member.name}
+                                                                          </MuiLink>
+                                                                      </Box>
+                                                                  </TableCell>
+                                                                  <TableCell align="right">{formatDuration(seconds)}</TableCell>
+                                                                  <TableCell>
+                                                                      <ShareBar
+                                                                          share={tag.seconds > 0 ? seconds / tag.seconds : 0}
+                                                                      />
+                                                                  </TableCell>
+                                                              </TableRow>
+                                                          ))
+                                                        : null}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </>
+                        )}
                     </Paper>
 
                     <Paper sx={styles.section}>

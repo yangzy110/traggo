@@ -20,10 +20,10 @@ func (r *ResolverForTag) CreateTag(ctx context.Context, key string, color string
 	}
 
 	user := auth.GetUser(ctx)
-	isShared := shared != nil && *shared
-	if isShared && !user.Admin {
-		return nil, fmt.Errorf("only admins can create shared tags")
+	if !user.Admin {
+		return nil, fmt.Errorf("only admins can create tags")
 	}
+	isShared := shared != nil && *shared
 
 	definition := &model.TagDefinition{
 		Key:    strings.ToLower(key),

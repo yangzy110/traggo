@@ -131,3 +131,31 @@ func TestTeamMembers(t *testing.T) {
 	require.Equal(t, 1, members[0].ID)
 	require.Equal(t, "bob", members[1].Name)
 }
+
+func TestTeamStats_sumsPerTag(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+
+	db.User(1).TimeSpan("2019-06-10T09:00:00Z", "2019-06-10T12:00:00Z").Tag("proj", "a").Tag("type", "dev") // 3h
+	db.User(2).TimeSpan("2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z").Tag("proj", "a")                    // 1h
+	db.User(2).TimeSpan("2019-06-11T09:00:00Z", "2019-06-11T09:30:00Z").Tag("proj", "b")                    // 0.5h
+
+	resolver := ResolverForTimeSpan{DB: db.DB}
+	stats, err := resolver.TeamStats(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-11T00:00:00Z"))
+	require.NoError(t, err)
+
+	require.Len(t, stats.Tags, 3)
+	require.Equal(t, "proj", stats.Tags[0].Key)
+	require.Equal(t, "a", stats.Tags[0].Value)
+	require.Equal(t, 4*3600.0, stats.Tags[0].Seconds)
+	require.Equal(t, "type", stats.Tags[1].Key)
+	require.Equal(t, 3*3600.0, stats.Tags[1].Seconds)
+	require.Equal(t, "b", stats.Tags[2].Value)
+
+	// the members of a tag
+	require.Len(t, stats.Tags[0].Members, 2)
+	require.Equal(t, "test1", stats.Tags[0].Members[0].Member.Name)
+	require.Equal(t, 3*3600.0, stats.Tags[0].Members[0].Seconds)
+	require.Equal(t, "test2", stats.Tags[0].Members[1].Member.Name)
+	require.Equal(t, 1*3600.0, stats.Tags[0].Members[1].Seconds)
+}

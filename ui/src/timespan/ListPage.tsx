@@ -4,6 +4,7 @@ import {useQuery} from '@apollo/client/react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
+import {alpha} from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import * as gqlTimeSpan from '../gql/timeSpan';
@@ -217,6 +218,9 @@ const TimeSpanRow: React.FC<{
 }> = ({timeSpan, colors, onClick}) => {
     const start = moment(timeSpan.start);
     const end = moment(timeSpan.end || timeSpan.start);
+    // the row has the color of its first tag, so it differs from the background
+    const firstTag = (timeSpan.tags || [])[0];
+    const accent = (firstTag && colors[firstTag.key]) || DEFAULT_TAG_COLOR;
     return (
         <Paper
             elevation={1}
@@ -228,10 +232,12 @@ const TimeSpanRow: React.FC<{
                 padding: '10px 16px',
                 marginBottom: 1,
                 cursor: 'pointer',
-                '&:hover': {borderColor: 'primary.main'},
+                borderLeft: `4px solid ${accent}`,
+                backgroundColor: (theme) => alpha(accent, theme.palette.mode === 'dark' ? 0.22 : 0.16),
+                '&:hover': {borderColor: 'primary.main', borderLeftColor: accent},
             }}>
             <Box sx={{minWidth: 112, fontVariantNumeric: 'tabular-nums'}}>
-                <Typography>
+                <Typography sx={{fontWeight: 700}}>
                     {start.format('HH:mm')} - {end.format('HH:mm')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">

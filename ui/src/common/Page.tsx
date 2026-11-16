@@ -39,6 +39,9 @@ import {lastTimesheetView} from '../timespan/TimesheetLayout';
 
 const drawerWidth = 240;
 
+// The menu of the dashboards is hidden for now, the pages are still reachable by their url.
+const SHOW_DASHBOARDS = false;
+
 interface NavGroup {
     name: string;
     to?: string;
@@ -191,18 +194,22 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                 {drawerLink('/stats', '统计', <StatsIcon />)}
             </List>
             <Divider />
-            <List subheader={<ListSubheader>仪表盘</ListSubheader>} dense={true}>
-                {dashboards.map(({id, name}) => (
-                    <ListItemButton key={id} component={Link} to={`/dashboard/${id}/${encodeURIComponent(name)}`}>
-                        <ListItemIcon>
-                            <DashboardIcon />
-                        </ListItemIcon>
-                        <ListItemText primary={name} />
-                    </ListItemButton>
-                ))}
-                {drawerLink('/dashboards', '管理仪表盘', <DashboardManageIcon />)}
-            </List>
-            <Divider />
+            {SHOW_DASHBOARDS ? (
+                <>
+                    <List subheader={<ListSubheader>仪表盘</ListSubheader>} dense={true}>
+                        {dashboards.map(({id, name}) => (
+                            <ListItemButton key={id} component={Link} to={`/dashboard/${id}/${encodeURIComponent(name)}`}>
+                                <ListItemIcon>
+                                    <DashboardIcon />
+                                </ListItemIcon>
+                                <ListItemText primary={name} />
+                            </ListItemButton>
+                        ))}
+                        {drawerLink('/dashboards', '管理仪表盘', <DashboardManageIcon />)}
+                    </List>
+                    <Divider />
+                </>
+            ) : null}
             <List subheader={<ListSubheader>账号</ListSubheader>} dense={true}>
                 {drawerLink('/user/tags', '标签', <LabelIcon />)}
                 {drawerLink('/user/devices', '设备', <DevicesIcon />)}
@@ -223,14 +230,18 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
         {name: '我的日志', to: `/timesheet/${lastTimesheetView()}`, paths: ['/timesheet'], items: []},
         {name: '团队日志', to: '/team', paths: ['/team'], items: []},
         {name: '统计', to: '/stats', paths: ['/stats'], items: []},
-        {
-            name: '仪表盘',
-            paths: ['/dashboard'],
-            items: [
-                ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
-                {label: '管理仪表盘', to: '/dashboards'},
-            ],
-        },
+        ...(SHOW_DASHBOARDS
+            ? [
+                  {
+                      name: '仪表盘',
+                      paths: ['/dashboard'],
+                      items: [
+                          ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
+                          {label: '管理仪表盘', to: '/dashboards'},
+                      ],
+                  },
+              ]
+            : []),
     ];
     // the pages of the account are in the menu of the user
     const userMenuItems = [

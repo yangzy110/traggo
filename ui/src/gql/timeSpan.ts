@@ -124,6 +124,18 @@ export const TeamStats = gql`
     query TeamStatistics($start: Time!, $end: Time!) {
         teamStats(fromInclusive: $start, toInclusive: $end) {
             totalSeconds
+            tags {
+                key
+                value
+                seconds
+                members {
+                    member {
+                        id
+                        name
+                    }
+                    seconds
+                }
+            }
             days {
                 day
                 seconds

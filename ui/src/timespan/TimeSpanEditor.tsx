@@ -7,7 +7,7 @@ import Paper from '@mui/material/Paper';
 import Popper, {type PopperProps} from '@mui/material/Popper';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import {FormTagSelector} from '../tag/FormTagSelector';
+import {TagPicker} from '../tag/TagPicker';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {DateTimeSelector} from '../common/DateTimeSelector';
 import {formatDuration} from './teamutils';
@@ -59,10 +59,9 @@ export const TimeSpanEditor: React.FC<TimeSpanEditorProps> = ({
     const [start, setStart] = React.useState(initialStart);
     const [end, setEnd] = React.useState(initialEnd);
     const [busy, setBusy] = React.useState(false);
-    // The dialog to create a tag and the popup of the time are not part of the card, clicking inside of them must not close it.
-    const [tagDialogOpen, setTagDialogOpen] = React.useState(false);
+    // The popup of the time is not part of the card, clicking inside of it must not close it.
     const [pickerOpen, setPickerOpen] = React.useState(false);
-    const blocked = tagDialogOpen || pickerOpen;
+    const blocked = pickerOpen;
     const mounted = React.useRef(true);
     React.useEffect(
         () => () => {
@@ -149,14 +148,7 @@ export const TimeSpanEditor: React.FC<TimeSpanEditorProps> = ({
                             }
                         }}
                     />
-                    <FormTagSelector
-                        label="标签"
-                        selectedEntries={tags}
-                        onSelectedEntriesChanged={setTags}
-                        dialogOpen={setTagDialogOpen}
-                        onCtrlEnter={confirm}
-                        closeAfterSelect
-                    />
+                    <TagPicker label="标签" selectedEntries={tags} onSelectedEntriesChanged={setTags} />
                     <Box sx={{display: 'flex', alignItems: 'center', gap: 1, marginTop: 2}}>
                         {onDelete ? (
                             <Button color="error" disabled={busy} onClick={() => run(onDelete)}>

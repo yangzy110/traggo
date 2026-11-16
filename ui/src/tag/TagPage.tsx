@@ -1,3 +1,4 @@
+import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import Paper from '@mui/material/Paper';
 import {useMutation, useQuery} from '@apollo/client/react';
@@ -13,6 +14,7 @@ import TableRow from '@mui/material/TableRow';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Public';
+import PrivateIcon from '@mui/icons-material/PublicOff';
 import LockIcon from '@mui/icons-material/Lock';
 import Chip from '@mui/material/Chip';
 import Tooltip from '@mui/material/Tooltip';
@@ -46,6 +48,7 @@ export const TagPage = () => {
     const admin = !!(currentUser && currentUser.user && currentUser.user.admin);
     const [removeTagConfirm, setRemoveTagConfirm] = React.useState('');
     const [shareTagConfirm, setShareTagConfirm] = React.useState('');
+    const [privateTagConfirm, setPrivateTagConfirm] = React.useState('');
     const refetch = {refetchQueries: [{query: gqlTag.Tags}, {query: gqlDashboard.Dashboards}]};
     const {enqueueSnackbar} = useSnackbar();
     const [removeTag] = useMutation<RemoveTag, RemoveTagVariables>(gqlTag.RemoveTag, refetch);
@@ -69,6 +72,15 @@ export const TagPage = () => {
         return updateTag({variables: {key: tag.key, color: tag.color, shared: true}})
             .then(() => enqueueSnackbar('标签已共享给所有用户', {variant: 'success'}))
             .catch(handleError('共享标签失败', enqueueSnackbar));
+    };
+    const onClickPrivate = () => {
+        const tag = data.tags!.find((t) => t.key === privateTagConfirm);
+        if (!tag) {
+            return;
+        }
+        return updateTag({variables: {key: tag.key, color: tag.color, shared: false}})
+            .then(() => enqueueSnackbar('标签已改为私有', {variant: 'success'}))
+            .catch(handleError('改为私有失败', enqueueSnackbar));
     };
     const removeTagIsShared = !!data.tags.find((t) => t.key === removeTagConfirm && t.shared);
 
@@ -136,6 +148,11 @@ export const TagPage = () => {
                                     <ShareIcon />
                                 </IconButton>
                             ) : null}
+                            {admin && tag.shared ? (
+                                <IconButton onClick={() => setPrivateTagConfirm(tag.key)} title="改为私有">
+                                    <PrivateIcon />
+                                </IconButton>
+                            ) : null}
                             <IconButton onClick={() => setEditing([tag.key, tag.key, tag.color])} title="编辑">
                                 <EditIcon />
                             </IconButton>
@@ -155,15 +172,21 @@ export const TagPage = () => {
 
     return (
         <Paper elevation={1} sx={rootSx}>
-            <Button
-                color={'primary'}
-                variant={'outlined'}
-                size="small"
-                onClick={() => setAddActive(true)}
-                fullWidth
-                style={{marginBottom: 10}}>
-                创建标签
-            </Button>
+            {admin ? (
+                <Button
+                    color={'primary'}
+                    variant={'outlined'}
+                    size="small"
+                    onClick={() => setAddActive(true)}
+                    fullWidth
+                    style={{marginBottom: 10}}>
+                    创建标签
+                </Button>
+            ) : (
+                <Typography color="textSecondary" sx={{marginBottom: 1.5}}>
+                    标签由管理员创建，你可以在记录里选择它们。
+                </Typography>
+            )}
             <Table>
                 <TableHead>
                     <TableRow>
@@ -183,8 +206,8 @@ export const TagPage = () => {
                             fOnSubmit={onClickDelete}>
                             <b>此操作无法撤销。</b>{' '}
                             {removeTagIsShared
-                                ? 'Deleting the shared tag will remove all references in the time spans of all users.'
-                                : 'Deleting the tag will remove all references in time spans.'}
+                                ? '删除公用标签会从所有用户的记录中移除该标签。'
+                                : '删除标签会从记录中移除该标签。'}
                         </ConfirmDialog>
                     ) : null}
                     {shareTagConfirm ? (
@@ -192,7 +215,15 @@ export const TagPage = () => {
                             title={`共享标签 ${shareTagConfirm}`}
                             fClose={() => setShareTagConfirm('')}
                             fOnSubmit={onClickShare}>
-                            共享后所有用户都可以使用该标签，只有管理员可以修改或删除。 <b>公用标签无法再改回私有。</b>
+                            共享后所有用户都可以使用该标签，只有管理员可以修改或删除。之后可以再改回私有。
+                        </ConfirmDialog>
+                    ) : null}
+                    {privateTagConfirm ? (
+                        <ConfirmDialog
+                            title={`将标签 ${privateTagConfirm} 改为私有`}
+                            fClose={() => setPrivateTagConfirm('')}
+                            fOnSubmit={onClickPrivate}>
+                            改为私有后，用过该标签的其他用户会各自保留一份自己的同名标签，已有记录不受影响；之后只有你可以使用和修改它。
                         </ConfirmDialog>
                     ) : null}
                 </TableBody>

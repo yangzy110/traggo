@@ -157,6 +157,16 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     overflow: 'hidden',
                 },
                 '& .fc .note': {opacity: 0.9, fontSize: '0.75rem'},
+                '& .fc .time': {fontWeight: 700},
+                '& .fc .pills': {display: 'flex', flexWrap: 'wrap', gap: '3px', overflow: 'hidden', margin: '2px 0'},
+                '& .fc .ellipsis-single .pills': {display: 'inline-flex', flexWrap: 'nowrap', verticalAlign: 'middle'},
+                '& .fc .pill': {
+                    borderRadius: '10px',
+                    padding: '0 6px',
+                    fontSize: '0.68rem',
+                    lineHeight: 1.5,
+                    whiteSpace: 'nowrap',
+                },
                 '& .fc .ellipsis-single': {
                     textOverflow: 'ellipsis',
                     display: 'inline-block',

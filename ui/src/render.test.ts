@@ -42,6 +42,8 @@ const createSchema = () => {
             // the dashboards of every response have the ids 100 and 101
             Dashboard: () => ({id: [100, 101][dashboardCount++ % 2]}),
             TagDefinition: () => ({color: '#336699', key: 'key' + ++counter, shared: tagsShared, editable: tagsEditable}),
+            // the tag of the picker has to exist and has to be used
+            RootQuery: () => ({tags: [{key: 'project'}], usedTagValues: [{key: 'project', value: 'web'}]}),
             StatsSelection: () => ({rangeId: null}),
             // enums are chosen randomly otherwise
             EntryType: () => entryType,
@@ -257,17 +259,16 @@ describe('time span editor', () => {
     });
 });
 
-describe('tag input', () => {
-    // MUI throws if a MenuItem is not placed inside of a MenuList: the page crashed as soon as the input was focused
-    it('shows the suggestions when it is focused', async () => {
+describe('tag picker', () => {
+    // The tags of the editor can only be selected: they are shown as chips and there is no input to create tags.
+    it('shows the existing tags as chips in the editor', async () => {
         await render('/timesheet/list');
         await waitFor(() => !!button('新建记录'), 'the create button');
         await click(button('新建记录')!);
-        await waitFor(() => !!document.querySelector('input[placeholder="输入标签"]'), 'the tag input');
-        await act(async () => {
-            (document.querySelector('input[placeholder="输入标签"]') as HTMLInputElement).focus();
-        });
-        await waitFor(() => document.querySelectorAll('[role="menuitem"]').length > 0, 'the suggestions');
+        await waitFor(() => document.querySelectorAll('.traggo-time-span-editor .MuiChip-root').length > 0, 'the tag chips');
+        expect(document.querySelector('.traggo-time-span-editor input[placeholder]')).toBeNull();
+        await click(document.querySelector('.traggo-time-span-editor .MuiChip-root')!);
+        expect(document.querySelector('.traggo-time-span-editor .MuiChip-root[aria-pressed="true"]')).not.toBeNull();
         await settle();
     });
 });

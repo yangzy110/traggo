@@ -28,7 +28,7 @@ interface AddTagDialogProps {
 export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialName, onAdded = () => {}}) => {
     const [name, setName] = React.useState(initialName);
     const [color, setColor] = React.useState('#e6b3b3');
-    const [shared, setShared] = React.useState(false);
+    const [shared, setShared] = React.useState(true);
     const {enqueueSnackbar} = useSnackbar();
     const {data: currentUser} = useQuery<CurrentUser>(gqlUser.CurrentUser);
     const admin = !!(currentUser && currentUser.user && currentUser.user.admin);

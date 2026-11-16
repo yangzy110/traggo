@@ -52,3 +52,12 @@ export const RemoveTag = gql`
         }
     }
 `;
+
+export const UsedTagValues = gql`
+    query UsedTagValues {
+        usedTagValues {
+            key
+            value
+        }
+    }
+`;

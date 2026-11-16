@@ -49,9 +49,7 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 	}
 
 	makeShared := shared != nil && *shared && !tag.Shared
-	if shared != nil && !*shared && tag.Shared {
-		return nil, fmt.Errorf("the shared tag '%s' cannot be made private again", tag.Key)
-	}
+	makePrivate := shared != nil && !*shared && tag.Shared
 	if makeShared && !user.Admin {
 		return nil, fmt.Errorf("only admins can share tags")
 	}
@@ -79,7 +77,7 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 		Key:    finalKey,
 		Color:  color,
 		UserID: tag.UserID,
-		Shared: tag.Shared || makeShared,
+		Shared: (tag.Shared && !makePrivate) || makeShared,
 	}
 
 	if renamed {
@@ -117,6 +115,38 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 		return nil, err
 	}
 
+	if makePrivate {
+		// the other users keep the tag they used: they get an own copy, so their time spans stay valid
+		if err := tx.Model(new(model.TagDefinition)).Where(&model.TagDefinition{UserID: tag.UserID, Key: finalKey}).Update("shared", false).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		if err := copyToUsersOfSharedTag(tx, tag, color); err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
 	update := tx.Commit()
 	return toExternal(newValue, user.ID, user.Admin), update.Error
+}
+
+// copyToUsersOfSharedTag gives every other user who used the shared tag an own tag with the same key and color.
+func copyToUsersOfSharedTag(tx *gorm.DB, tag model.TagDefinition, color string) error {
+	var users []model.TimeSpan
+	err := tx.Select("DISTINCT time_spans.user_id").
+		Joins("JOIN time_span_tags ON time_span_tags.time_span_id = time_spans.id").
+		Where("time_span_tags.key = ?", tag.Key).
+		Where("time_spans.user_id <> ?", tag.UserID).
+		Where("time_spans.user_id NOT IN ("+usersWithOwnTag+")", tag.Key, false).
+		Find(&users).Error
+	if err != nil {
+		return err
+	}
+	for _, user := range users {
+		if err := tx.Create(&model.TagDefinition{Key: tag.Key, Color: color, UserID: user.UserID}).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }

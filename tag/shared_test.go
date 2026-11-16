@@ -35,7 +35,7 @@ func TestShared_onlyAdminsCanCreate(t *testing.T) {
 	defer db.Close()
 
 	_, err := resolver.CreateTag(fake.UserWithPerm(alice, false), "project", "#fff", bp(true))
-	require.EqualError(t, err, "only admins can create shared tags")
+	require.EqualError(t, err, "only admins can create tags")
 	assertTagCount(t, db, 0)
 
 	tag, err := resolver.CreateTag(fake.UserWithPerm(adminA, true), "project", "#fff", bp(true))
@@ -48,8 +48,7 @@ func TestShared_visibleForEveryoneButOnlyEditableByAdmins(t *testing.T) {
 	defer db.Close()
 	_, err := resolver.CreateTag(fake.UserWithPerm(adminA, true), "project", "#fff", bp(true))
 	require.NoError(t, err)
-	_, err = resolver.CreateTag(fake.UserWithPerm(alice, false), "private", "#000", nil)
-	require.NoError(t, err)
+	db.Create(&model.TagDefinition{Key: "private", Color: "#000", UserID: alice})
 
 	forAlice, err := resolver.Tags(fake.UserWithPerm(alice, false))
 	require.NoError(t, err)
@@ -90,7 +89,7 @@ func TestShared_noDuplicateKeys(t *testing.T) {
 	db.Create(&model.TagDefinition{Key: "mine", Color: "#fff", UserID: adminB})
 
 	// a private tag must not have the key of a shared tag
-	_, err := resolver.CreateTag(fake.UserWithPerm(alice, false), "project", "#fff", nil)
+	_, err := resolver.CreateTag(fake.UserWithPerm(adminB, true), "project", "#fff", nil)
 	require.EqualError(t, err, "tag with key 'project' does already exist as a shared tag")
 	// another admin cannot create the same shared tag
 	_, err = resolver.CreateTag(fake.UserWithPerm(adminB, true), "project", "#fff", bp(true))
@@ -163,7 +162,7 @@ func TestShared_removeRemovesTheTagFromTheTimeSpansOfAllUsers(t *testing.T) {
 	assertTagCount(t, db, 1) // the tag of bob
 }
 
-func TestShared_adminCanShareOwnTagButNotMakeItPrivateAgain(t *testing.T) {
+func TestShared_adminCanShareOwnTagAndMakeItPrivateAgain(t *testing.T) {
 	db, resolver := users(t)
 	defer db.Close()
 	db.Create(&model.TagDefinition{Key: "project", Color: "#fff", UserID: adminA})
@@ -180,8 +179,19 @@ func TestShared_adminCanShareOwnTagButNotMakeItPrivateAgain(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []*gqlmodel.TagDefinition{{Key: "project", Color: "#000", Shared: true}}, forBob)
 
-	_, err = resolver.UpdateTag(fake.UserWithPerm(adminA, true), "project", nil, "#000", bp(false))
-	require.EqualError(t, err, "the shared tag 'project' cannot be made private again")
+	// bob used the tag, he keeps it as an own tag when the tag becomes private
+	db.User(bob).TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z").Tag("project", "web")
+	tag, err = resolver.UpdateTag(fake.UserWithPerm(adminA, true), "project", nil, "#111", bp(false))
+	require.NoError(t, err)
+	require.Equal(t, &gqlmodel.TagDefinition{Key: "project", Color: "#111", Shared: false, Editable: true}, tag)
+
+	forBob, err = resolver.Tags(fake.UserWithPerm(bob, false))
+	require.NoError(t, err)
+	require.Equal(t, []*gqlmodel.TagDefinition{{Key: "project", Color: "#111", Shared: false, Editable: true, Usages: 1}}, forBob)
+	forAlice, err := resolver.Tags(fake.UserWithPerm(alice, false))
+	require.NoError(t, err)
+	require.Len(t, forAlice, 1) // only her own tag
+	require.Equal(t, "alices", forAlice[0].Key)
 }
 
 func TestShared_cannotRenameToAnExistingSharedKey(t *testing.T) {

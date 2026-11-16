@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {Paper, useTheme} from '@mui/material';
 import {alpha} from '@mui/material/styles';
+import bestContrast from 'get-best-contrast-color';
 import {ExportCsvButton} from '../../common/ExportCsvButton';
 import moment from 'moment';
 import {useApolloClient, useQuery} from '@apollo/client/react';
@@ -82,6 +83,8 @@ export const CalendarPage: React.FC = () => {
     };
 
     const ready = !loading && !tagsResult.error && !tagsResult.loading;
+    const tagColors: Record<string, string> = {};
+    ((tagsResult.data && tagsResult.data.tags) || []).forEach((tag) => (tagColors[tag.key] = tag.color));
     const values: EventInput[] =
         ready && tagsResult.data
             ? timeSpans.map((ts) => {
@@ -92,10 +95,10 @@ export const CalendarPage: React.FC = () => {
                       start: moment(ts.start).toDate(),
                       end: moment(ts.end).toDate(),
                       // translucent, so that overlapping blocks stay readable; the solid color is the stripe at the left
-                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.22),
+                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.38),
                       id: String(ts.id),
                       title: tags.join(' '),
-                      extendedProps: {ts},
+                      extendedProps: {ts, colors: tagColors},
                       textColor: theme.palette.text.primary,
                       borderColor: color,
                   };
@@ -250,6 +253,30 @@ const describeEvent = (event: EventApi): {note: string; summary: string} => {
     return {note, summary: event.title && note ? `${event.title} · ${note}` : event.title || note};
 };
 
+// The tags are shown as small colored labels
+const TagPills: React.FC<{event: EventApi; maxLines?: number}> = ({event, maxLines}) => {
+    const tags: Array<{key: string; value: string}> = (event.extendedProps.ts && event.extendedProps.ts.tags) || [];
+    const colors: Record<string, string> = event.extendedProps.colors || {};
+    if (tags.length === 0) {
+        return null;
+    }
+    return (
+        <span className="pills" style={maxLines ? {maxHeight: `${maxLines * 1.6}em`} : undefined}>
+            {tags.map((tag) => {
+                const color = colors[tag.key] || '#9e9e9e';
+                return (
+                    <span
+                        key={tag.key + ':' + tag.value}
+                        className="pill"
+                        style={{background: color, color: bestContrast(color, ['#fff', '#000'])}}>
+                        {tag.key}:{tag.value}
+                    </span>
+                );
+            })}
+        </span>
+    );
+};
+
 const EventContent: React.FC<{event: EventApi}> = ({event}) => {
     if (!event.start || !event.end) {
         return null;
@@ -258,42 +285,39 @@ const EventContent: React.FC<{event: EventApi}> = ({event}) => {
     const start = moment(event.start);
     const end = moment(event.end);
     const lines = Math.floor(end.diff(start, 'minute') / 15);
-    const {note, summary} = describeEvent(event);
-    const clamp = (text: string, amount: number, className = 'ellipsis') => (
-        <span className={className} title={text} style={{WebkitLineClamp: amount}}>
-            {text}
-        </span>
-    );
-    const single = (
-        <span className="ellipsis-single" title={summary}>
-            {summary}
-        </span>
-    );
-    const date = (
-        <>
+    const {note} = describeEvent(event);
+    const hasTags = !!(event.extendedProps.ts && event.extendedProps.ts.tags && event.extendedProps.ts.tags.length);
+    const time = (
+        <b className="time">
             {start.format('LT')} - {end.format('LT')}
-        </>
+        </b>
     );
 
     if (lines < 2) {
-        return summary ? single : date;
-    }
-    if (lines === 2) {
+        // a single line: the start, the tags and the work content
         return (
-            <>
-                {date}
-                {single}
-            </>
+            <span className="ellipsis-single" title={event.title}>
+                <b className="time">{start.format('LT')}</b> <TagPills event={event} />
+                {note ? <span className="note"> {note}</span> : null}
+            </span>
         );
     }
 
     // the time, the tags and below of them the work content
+    const tagLines = hasTags ? (note ? 1 : lines - 1) : 0;
     return (
         <>
-            {date}
+            {time}
             <br />
-            {event.title ? clamp(event.title, note ? 1 : lines - 1) : null}
-            {note ? clamp(note, event.title ? lines - 2 : lines - 1, 'ellipsis note') : null}
+            {hasTags ? <TagPills event={event} maxLines={tagLines} /> : null}
+            {note ? (
+                <span
+                    className="ellipsis note"
+                    title={note}
+                    style={{WebkitLineClamp: Math.max(1, lines - 1 - (hasTags ? 1 : 0))}}>
+                    {note}
+                </span>
+            ) : null}
         </>
     );
 };

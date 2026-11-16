@@ -48,7 +48,7 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 		return nil, err
 	}
 	var timeSpans []model.TimeSpan
-	err := r.DB.Select("user_id, start_user_time, end_user_time").
+	err := r.DB.Select("id, user_id, start_user_time, end_user_time").
 		Not("end_user_time is NULL").
 		Where("start_user_time < ? AND end_user_time > ?", end, from).
 		Find(&timeSpans).Error
@@ -56,8 +56,23 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 		return nil, err
 	}
 
+	var spanTags []model.TimeSpanTag
+	err = r.DB.Joins("JOIN time_spans ON time_spans.id = time_span_tags.time_span_id").
+		Not("time_spans.end_user_time is NULL").
+		Where("time_spans.start_user_time < ? AND time_spans.end_user_time > ?", end, from).
+		Find(&spanTags).Error
+	if err != nil {
+		return nil, err
+	}
+	tagsOfSpan := map[int][]model.TimeSpanTag{}
+	for _, tag := range spanTags {
+		tagsOfSpan[tag.TimeSpanID] = append(tagsOfSpan[tag.TimeSpanID], tag)
+	}
+
 	perDay := map[string]float64{}
 	perMember := map[int]float64{}
+	perTag := map[[2]string]float64{}
+	perTagMember := map[[2]string]map[int]float64{}
 	for _, span := range timeSpans {
 		if span.EndUserTime == nil {
 			continue
@@ -65,10 +80,18 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 		for day, seconds := range splitByDay(wallClock(span.StartUserTime), wallClock(*span.EndUserTime), from, end) {
 			perDay[day] += seconds
 			perMember[span.UserID] += seconds
+			for _, tag := range tagsOfSpan[span.ID] {
+				id := [2]string{tag.Key, tag.StringValue}
+				perTag[id] += seconds
+				if perTagMember[id] == nil {
+					perTagMember[id] = map[int]float64{}
+				}
+				perTagMember[id][span.UserID] += seconds
+			}
 		}
 	}
 
-	result := &gqlmodel.TeamStats{Days: []*gqlmodel.TeamStatsDay{}, Members: []*gqlmodel.TeamMemberStats{}}
+	result := &gqlmodel.TeamStats{Days: []*gqlmodel.TeamStatsDay{}, Tags: []*gqlmodel.TeamTagStats{}, Members: []*gqlmodel.TeamMemberStats{}}
 	for day := from; day.Before(end); day = day.AddDate(0, 0, 1) {
 		seconds := perDay[day.Format(dayFormat)]
 		result.Days = append(result.Days, &gqlmodel.TeamStatsDay{Day: day.Format(dayFormat), Seconds: seconds})
@@ -80,6 +103,31 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 			Seconds: perMember[user.ID],
 		})
 	}
+	for tag, seconds := range perTag {
+		members := []*gqlmodel.TeamMemberStats{}
+		for _, user := range users {
+			if memberSeconds := perTagMember[tag][user.ID]; memberSeconds > 0 {
+				members = append(members, &gqlmodel.TeamMemberStats{Member: &gqlmodel.TeamMember{ID: user.ID, Name: user.Name}, Seconds: memberSeconds})
+			}
+		}
+		sort.SliceStable(members, func(i, j int) bool {
+			if members[i].Seconds != members[j].Seconds {
+				return members[i].Seconds > members[j].Seconds
+			}
+			return members[i].Member.Name < members[j].Member.Name
+		})
+		result.Tags = append(result.Tags, &gqlmodel.TeamTagStats{Key: tag[0], Value: tag[1], Seconds: seconds, Members: members})
+	}
+	sort.Slice(result.Tags, func(i, j int) bool {
+		a, b := result.Tags[i], result.Tags[j]
+		if a.Seconds != b.Seconds {
+			return a.Seconds > b.Seconds
+		}
+		if a.Key != b.Key {
+			return a.Key < b.Key
+		}
+		return a.Value < b.Value
+	})
 	sort.SliceStable(result.Members, func(i, j int) bool {
 		a, b := result.Members[i], result.Members[j]
 		if a.Seconds != b.Seconds {

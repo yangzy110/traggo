@@ -19,6 +19,8 @@ import {DashboardsPage} from './dashboard/DashboardsPage';
 import {TagPage} from './tag/TagPage';
 import {SettingsPage} from './setting/SettingsPage';
 import {TeamPage} from './timespan/TeamPage';
+import {TeamMemberPage} from './timespan/TeamMemberPage';
+import {StatsPage} from './timespan/StatsPage';
 import {CalendarPage} from './timespan/calendar/CalendarPage';
 
 export const Router = () => {
@@ -43,6 +45,8 @@ export const Router = () => {
                 <Route exact path="/timesheet/list" component={DailyPage} />
                 <Route exact path="/timesheet/calendar" component={CalendarPage} />
                 <Route exact path="/team" component={TeamPage} />
+                <Route exact path="/team/:userId" component={TeamMemberPage} />
+                <Route exact path="/stats" component={StatsPage} />
                 <Route exact path="/user/settings" component={SettingsPage} />
                 <Route exact path="/user/devices" component={DevicesPage} />
                 <Route exact path="/user/tags" component={TagPage} />

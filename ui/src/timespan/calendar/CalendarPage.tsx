@@ -38,6 +38,13 @@ import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
 import {TimeSpansInRange, TimeSpansInRangeVariables} from '../../gql/__generated__/TimeSpansInRange';
 import {ExtendedEventSourceInput} from '@fullcalendar/core/structs/event-source';
+import {useSnackbar} from 'notistack';
+import {InputCursor} from '../../gql/__generated__/globalTypes';
+import {TimeSpansForExport, TimeSpansForExportVariables} from '../../gql/__generated__/TimeSpansForExport';
+import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
+
+// The server returns at most 100 time spans per request, so the export has to page through the range.
+const MAX_EXPORT_PAGES = 200;
 
 const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
@@ -67,6 +74,7 @@ export const CalendarPage: React.FC = () => {
         fetchPolicy: 'cache-and-network',
     });
     const trackersResult = useQuery<Trackers>(gqlTimeSpan.Trackers, {fetchPolicy: 'cache-and-network'});
+    const {enqueueSnackbar} = useSnackbar();
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
     const [startTimer] = useMutation<StartTimer, StartTimerVariables>(gqlTimeSpan.StartTimer, {
         refetchQueries: [{query: gqlTimeSpan.Trackers}],
@@ -107,6 +115,45 @@ export const CalendarPage: React.FC = () => {
             addTimeSpanToCache(cache, data.createTimeSpan);
         },
     });
+
+    // Exports all finished time spans of the range which is currently visible in the calendar.
+    const exportCsv = async () => {
+        const {start, end} = timeSpansResult.variables;
+        const entries: LogEntry[] = [];
+        try {
+            let cursor: InputCursor | null = null;
+            for (let page = 0; page < MAX_EXPORT_PAGES; page++) {
+                const result: {data: TimeSpansForExport} = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
+                    query: gqlTimeSpan.TimeSpansForExport,
+                    variables: {start, end, cursor},
+                    fetchPolicy: 'network-only',
+                });
+                const paged = result.data.timeSpans;
+                paged.timeSpans.forEach((ts) =>
+                    entries.push({member: '', start: ts.start, end: ts.end, tags: ts.tags, note: ts.note})
+                );
+                if (!paged.cursor.hasMore || paged.timeSpans.length === 0) {
+                    break;
+                }
+                cursor = {startId: paged.cursor.startId, offset: paged.cursor.offset, pageSize: paged.cursor.pageSize};
+            }
+        } catch (e) {
+            enqueueSnackbar('导出失败: ' + e.message, {variant: 'error'});
+            return;
+        }
+        if (entries.length === 0) {
+            enqueueSnackbar('当前时间范围内没有记录可导出', {variant: 'info'});
+            return;
+        }
+        entries.sort((a, b) => moment(a.start).diff(moment(b.start)));
+        const from = moment(start).format(DAY_FORMAT);
+        const to = moment(end)
+            .subtract(1, 'millisecond')
+            .format(DAY_FORMAT);
+        exportLog(`traggo-my-log_${from}_${to}.csv`, entries, false);
+    };
+    const exportRef = React.useRef(exportCsv);
+    exportRef.current = exportCsv;
 
     const values: ExtendedEventSourceInput[] = (() => {
         if (
@@ -271,10 +318,16 @@ export const CalendarPage: React.FC = () => {
                     columnHeaderFormat={(s) => toMoment(s.start.marker).format('DD ddd')}
                     nowIndicator={true}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, momentPlugin]}
+                    customButtons={{
+                        export: {
+                            text: '导出 CSV',
+                            click: () => exportRef.current(),
+                        },
+                    }}
                     header={{
                         center: 'title',
                         left: 'prev,next today',
-                        right: 'timeGridWeek,timeGrid5Day,timeGridDay',
+                        right: 'export timeGridWeek,timeGrid5Day,timeGridDay',
                     }}
                 />
             </FullCalendarStyling>

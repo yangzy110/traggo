@@ -134,8 +134,8 @@ export const RemoveTimeSpan = gql`
 `;
 
 export const TeamTimeSpans = gql`
-    query TeamTimeSpans($start: Time!, $end: Time!) {
-        teamTimeSpans(fromInclusive: $start, toInclusive: $end) {
+    query TeamTimeSpans($start: Time!, $end: Time!, $userId: Int) {
+        teamTimeSpans(fromInclusive: $start, toInclusive: $end, userId: $userId) {
             user {
                 id
                 name
@@ -149,6 +149,57 @@ export const TeamTimeSpans = gql`
                     value
                 }
                 note
+            }
+        }
+    }
+`;
+
+export const TimeSpansForExport = gql`
+    query TimeSpansForExport($start: Time!, $end: Time!, $cursor: InputCursor) {
+        timeSpans(fromInclusive: $start, toInclusive: $end, cursor: $cursor) {
+            timeSpans {
+                id
+                start
+                end
+                tags {
+                    key
+                    value
+                }
+                note
+            }
+            cursor {
+                hasMore
+                startId
+                offset
+                pageSize
+            }
+        }
+    }
+`;
+
+export const TeamMembers = gql`
+    query TeamMembers {
+        teamMembers {
+            id
+            name
+        }
+    }
+`;
+
+export const TeamStats = gql`
+    query TeamStats($start: Time!, $end: Time!) {
+        teamStats(fromInclusive: $start, toInclusive: $end) {
+            totalSeconds
+            days {
+                day
+                seconds
+            }
+            members {
+                member {
+                    id
+                    name
+                }
+                seconds
             }
         }
     }

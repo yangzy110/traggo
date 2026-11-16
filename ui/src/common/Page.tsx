@@ -15,6 +15,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import SettingsIcon from '@material-ui/icons/Settings';
 import DevicesIcon from '@material-ui/icons/DevicesOther';
 import TeamIcon from '@material-ui/icons/People';
+import StatsIcon from '@material-ui/icons/ShowChart';
 import LabelIcon from '@material-ui/icons/Label';
 import DashboardManageIcon from '@material-ui/icons/ListAlt';
 import TimeLineIcon from '@material-ui/icons/Timeline';
@@ -156,7 +157,10 @@ export const Page: React.FC = ({children}) => {
                 {drawerLink('/team', '团队日志', <TeamIcon />)}
             </List>
             <Divider />
-            <List subheader={<ListSubheader>统计</ListSubheader>} dense={true}>
+            <List dense={true}>{drawerLink('/stats', '统计', <StatsIcon />)}</List>
+            <Divider />
+            <List subheader={<ListSubheader>其他</ListSubheader>} dense={true}>
+                {drawerLink('/timesheet/list', 'List', <TimeLineIcon />)}
                 {dashboards.map(({id, name}) => (
                     <ListItem key={id} button component={routerLink(`/dashboard/${id}/${encodeURIComponent(name)}`)}>
                         <ListItemIcon>
@@ -165,16 +169,7 @@ export const Page: React.FC = ({children}) => {
                         <ListItemText primary={name} />
                     </ListItem>
                 ))}
-                {dashboards.length === 0 ? (
-                    <ListItem button dense={true} disabled={true}>
-                        <ListItemText primary={'no dashboards added'} />
-                    </ListItem>
-                ) : null}
-                {drawerLink('/dashboards', 'Manage', <DashboardManageIcon />)}
-            </List>
-            <Divider />
-            <List subheader={<ListSubheader>其他</ListSubheader>} dense={true}>
-                {drawerLink('/timesheet/list', 'List', <TimeLineIcon />)}
+                {drawerLink('/dashboards', 'Manage dashboards', <DashboardManageIcon />)}
                 {drawerLink('/user/tags', 'Tags', <LabelIcon />)}
                 {drawerLink('/user/devices', 'Devices', <DevicesIcon />)}
                 {drawerLink('/user/settings', 'Settings', <SettingsIcon />)}
@@ -187,19 +182,14 @@ export const Page: React.FC = ({children}) => {
     const navGroups: NavGroup[] = [
         {name: '我的日志', to: '/timesheet/calendar', paths: ['/timesheet/calendar'], items: []},
         {name: '团队日志', to: '/team', paths: ['/team'], items: []},
-        {
-            name: '统计',
-            paths: ['/dashboard'],
-            items: [
-                ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
-                {label: 'Manage', to: '/dashboards'},
-            ],
-        },
+        {name: '统计', to: '/stats', paths: ['/stats'], items: []},
         {
             name: '其他',
-            paths: ['/timesheet/list', '/user', '/admin'],
+            paths: ['/timesheet/list', '/dashboard', '/user', '/admin'],
             items: [
                 {label: 'List', to: '/timesheet/list'},
+                ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
+                {label: 'Manage dashboards', to: '/dashboards'},
                 {label: 'Tags', to: '/user/tags'},
                 {label: 'Devices', to: '/user/devices'},
                 {label: 'Settings', to: '/user/settings'},
@@ -265,6 +255,12 @@ export const Page: React.FC = ({children}) => {
                             <Switch>
                                 <Route exact path="/team">
                                     团队日志
+                                </Route>
+                                <Route exact path="/team/:userId">
+                                    团队日志 / 成员
+                                </Route>
+                                <Route exact path="/stats">
+                                    统计
                                 </Route>
                                 <Route exact path="/timesheet/list">
                                     Timesheet / List

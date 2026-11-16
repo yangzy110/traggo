@@ -2,13 +2,12 @@ import * as React from 'react';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {useNavigate, useParams} from 'react-router-dom';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import BackIcon from '@mui/icons-material/ArrowBack';
-import DownloadIcon from '@mui/icons-material/GetApp';
+import {ExportCsvButton} from '../common/ExportCsvButton';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamMembers, TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
@@ -89,7 +88,7 @@ const MemberHeader: React.FC<{member?: {name: string}; userId: number; subtitle:
     const navigate = useNavigate();
     return (
         <Box sx={styles.header}>
-            <IconButton aria-label="back" onClick={() => navigate('/team')}>
+            <IconButton aria-label="返回" onClick={() => navigate('/team')}>
                 <BackIcon />
             </IconButton>
             {member ? <MemberAvatar id={userId} name={member.name} /> : null}
@@ -181,9 +180,7 @@ export const TeamMemberPage: React.FC = () => {
                     slotProps={{inputLabel: {shrink: true}}}
                 />
                 <Box sx={styles.grow} />
-                <Button startIcon={<DownloadIcon />} onClick={exportCsv} disabled={items.length === 0}>
-                    导出 CSV
-                </Button>
+                <ExportCsvButton onClick={exportCsv} disabled={items.length === 0} />
             </Box>
 
             <Messages

@@ -57,8 +57,8 @@ export const TagPage = () => {
     }
     const onClickDelete = () => {
         return removeTag({variables: {key: removeTagConfirm}})
-            .then(() => enqueueSnackbar('tag deleted', {variant: 'success'}))
-            .catch(handleError('Delete Tag', enqueueSnackbar));
+            .then(() => enqueueSnackbar('标签已删除', {variant: 'success'}))
+            .catch(handleError('删除标签失败', enqueueSnackbar));
     };
 
     const onClickShare = () => {
@@ -67,8 +67,8 @@ export const TagPage = () => {
             return;
         }
         return updateTag({variables: {key: tag.key, color: tag.color, shared: true}})
-            .then(() => enqueueSnackbar('tag shared with all users', {variant: 'success'}))
-            .catch(handleError('Share Tag', enqueueSnackbar));
+            .then(() => enqueueSnackbar('标签已共享给所有用户', {variant: 'success'}))
+            .catch(handleError('共享标签失败', enqueueSnackbar));
     };
     const removeTagIsShared = !!data.tags.find((t) => t.key === removeTagConfirm && t.shared);
 
@@ -82,8 +82,8 @@ export const TagPage = () => {
                     color: editColor,
                 },
             })
-                .then(() => enqueueSnackbar('tag edited', {variant: 'success'}))
-                .catch(handleError('Edit Tag', enqueueSnackbar));
+                .then(() => enqueueSnackbar('标签已更新', {variant: 'success'}))
+                .catch(handleError('编辑标签失败', enqueueSnackbar));
         };
         const isEdited = editKey === tag.key;
         return (
@@ -106,7 +106,7 @@ export const TagPage = () => {
                         <>
                             {tag.key}
                             {tag.shared ? (
-                                <Chip size="small" variant="outlined" color="primary" label="shared" sx={{ml: 1, height: 22}} />
+                                <Chip size="small" variant="outlined" color="primary" label="公用" sx={{ml: 1, height: 22}} />
                             ) : null}
                         </>
                     )}
@@ -122,29 +122,29 @@ export const TagPage = () => {
                 <TableCell align="right" sx={{whiteSpace: 'nowrap'}}>
                     {isEdited ? (
                         <>
-                            <IconButton onClick={onClickSubmit} title="Save">
+                            <IconButton onClick={onClickSubmit} title="保存">
                                 <DoneIcon />
                             </IconButton>
-                            <IconButton onClick={() => setEditing(['', '', ''])} title="Cancel">
+                            <IconButton onClick={() => setEditing(['', '', ''])} title="取消">
                                 <CloseIcon />
                             </IconButton>
                         </>
                     ) : tag.editable ? (
                         <>
                             {admin && !tag.shared ? (
-                                <IconButton onClick={() => setShareTagConfirm(tag.key)} title="Share with all users">
+                                <IconButton onClick={() => setShareTagConfirm(tag.key)} title="共享给所有用户">
                                     <ShareIcon />
                                 </IconButton>
                             ) : null}
-                            <IconButton onClick={() => setEditing([tag.key, tag.key, tag.color])} title="Edit">
+                            <IconButton onClick={() => setEditing([tag.key, tag.key, tag.color])} title="编辑">
                                 <EditIcon />
                             </IconButton>
-                            <IconButton onClick={() => setRemoveTagConfirm(tag.key)} title="Delete">
+                            <IconButton onClick={() => setRemoveTagConfirm(tag.key)} title="删除">
                                 <DeleteIcon />
                             </IconButton>
                         </>
                     ) : (
-                        <Tooltip title="Shared tag: it can be used by everyone, but only admins can change it">
+                        <Tooltip title="公用标签：所有人可用，但只有管理员可以修改">
                             <LockIcon fontSize="small" color="disabled" sx={{mr: 1.5, verticalAlign: 'middle'}} />
                         </Tooltip>
                     )}
@@ -162,14 +162,14 @@ export const TagPage = () => {
                 onClick={() => setAddActive(true)}
                 fullWidth
                 style={{marginBottom: 10}}>
-                Create Tag
+                创建标签
             </Button>
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Key</TableCell>
-                        <TableCell>Color</TableCell>
-                        <TableCell style={{width: 100}}>Usages</TableCell>
+                        <TableCell>标签</TableCell>
+                        <TableCell>颜色</TableCell>
+                        <TableCell style={{width: 100}}>使用次数</TableCell>
                         <TableCell style={{width: 200}} />
                     </TableRow>
                 </TableHead>
@@ -178,10 +178,10 @@ export const TagPage = () => {
                     {tags}
                     {removeTagConfirm ? (
                         <ConfirmDialog
-                            title={`Delete Tag ${removeTagConfirm}`}
+                            title={`删除标签 ${removeTagConfirm}`}
                             fClose={() => setRemoveTagConfirm('')}
                             fOnSubmit={onClickDelete}>
-                            <b>This operation cannot be undone.</b>{' '}
+                            <b>此操作无法撤销。</b>{' '}
                             {removeTagIsShared
                                 ? 'Deleting the shared tag will remove all references in the time spans of all users.'
                                 : 'Deleting the tag will remove all references in time spans.'}
@@ -189,11 +189,10 @@ export const TagPage = () => {
                     ) : null}
                     {shareTagConfirm ? (
                         <ConfirmDialog
-                            title={`Share Tag ${shareTagConfirm}`}
+                            title={`共享标签 ${shareTagConfirm}`}
                             fClose={() => setShareTagConfirm('')}
                             fOnSubmit={onClickShare}>
-                            All users can use the tag afterwards and only admins can change or delete it.{' '}
-                            <b>A shared tag cannot be made private again.</b>
+                            共享后所有用户都可以使用该标签，只有管理员可以修改或删除。 <b>公用标签无法再改回私有。</b>
                         </ConfirmDialog>
                     ) : null}
                 </TableBody>

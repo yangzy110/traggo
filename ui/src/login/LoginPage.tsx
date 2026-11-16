@@ -25,13 +25,13 @@ export const LoginPage = () => {
             </Box>
             <div style={{position: 'absolute', bottom: 10, display: 'flex'}}>
                 <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
-                    <Link href="https://github.com/traggo/server">Source Code</Link>
+                    <Link href="https://github.com/traggo/server">源代码</Link>
                 </Typography>
                 <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     |
                 </Typography>
                 <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
-                    <Link href="https://github.com/traggo/server/issues">Bug Tracker</Link>
+                    <Link href="https://github.com/traggo/server/issues">问题反馈</Link>
                 </Typography>
                 <Typography variant="subtitle1" component="span" sx={footerLinkSx}>
                     |

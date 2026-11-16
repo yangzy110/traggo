@@ -118,7 +118,7 @@ export const DashboardPage: React.FC = () => {
         return <CenteredSpinner />;
     }
     if (error || !data) {
-        return <span>error</span>;
+        return <span>加载失败</span>;
     }
 
     const dashboards = data.dashboards || [];
@@ -191,7 +191,7 @@ export const DashboardPage: React.FC = () => {
                             }}
                             variant={'outlined'}
                             style={{marginRight: 10}}>
-                            Add Entry
+                            添加条目
                         </Button>
                     ) : null}
                     <Button
@@ -202,7 +202,7 @@ export const DashboardPage: React.FC = () => {
                         variant={'outlined'}
                         color={'primary'}
                         style={{marginRight: 10}}>
-                        {changeMode ? 'Exit Editing' : 'Edit Dashboard'}
+                        {changeMode ? '退出编辑' : '编辑仪表盘'}
                     </Button>
                 </div>
             </div>
@@ -255,7 +255,7 @@ export const DashboardPage: React.FC = () => {
                                 <DashboardEntry ranges={indexedRanges} key="uff" entry={addEntry} />
                             ) : (
                                 <Paper style={{width: '100%', height: '100%'}}>
-                                    <Center>New Entry</Center>
+                                    <Center>新建条目</Center>
                                 </Paper>
                             )}
 

@@ -33,11 +33,11 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
         addDevice({variables: {deviceType, name}})
             .then((result) => {
                 if (result.data && result.data.device) {
-                    enqueueSnackbar('Client created', {variant: 'success'});
+                    enqueueSnackbar('设备已创建', {variant: 'success'});
                     setToken(result.data.device.token);
                 }
             })
-            .catch(handleError('Create Dialog', enqueueSnackbar));
+            .catch(handleError('创建设备失败', enqueueSnackbar));
     };
 
     return (
@@ -52,14 +52,14 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
             fullWidth>
             {token === '' ? (
                 <form onSubmit={submit} noValidate autoComplete="off">
-                    <DialogTitle id="form-dialog-title">Create Device</DialogTitle>
+                    <DialogTitle id="form-dialog-title">创建设备</DialogTitle>
                     <DialogContent>
                         <DialogContentText />
                         <TextField
                             autoFocus
                             margin="dense"
                             id="name"
-                            label="Name"
+                            label="名称"
                             type="text"
                             fullWidth
                             value={name}
@@ -67,7 +67,7 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                         />
                         <TextField
                             select
-                            label="Expires after"
+                            label="过期时间"
                             margin="normal"
                             fullWidth
                             slotProps={{select: {native: true}}}
@@ -80,26 +80,25 @@ export const AddDeviceDialog: React.FC<AddTagDialogProps> = ({close, open, initi
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={close} color="primary">
-                            Cancel
+                            取消
                         </Button>
                         <Button type="submit" onClick={submit} color="primary">
-                            Create Device
+                            创建设备
                         </Button>
                     </DialogActions>
                 </form>
             ) : (
                 <>
-                    <DialogTitle id="form-dialog-title">Device Created</DialogTitle>
+                    <DialogTitle id="form-dialog-title">设备已创建</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            The device has the following authentication token, copy it and save it somewhere because you cannot
-                            obtain the token after closing this dialog
+                            该设备的认证令牌如下，请复制并妥善保存，关闭此对话框后将无法再次查看 。
                             <br /> <b>{token}</b>
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={close} color="primary">
-                            Close
+                            关闭
                         </Button>
                     </DialogActions>
                 </>

@@ -3,7 +3,7 @@ import {FInterval} from './dateformat';
 import Paper from '@mui/material/Paper';
 import {Typography} from '@mui/material';
 import moment from 'moment-timezone';
-import prettyMs from 'pretty-ms';
+import {formatDurationZh} from '../../utils/duration';
 
 // recharts passes `active` and `payload` to the element which is given as `content`
 type ContentProps = Partial<Pick<TooltipContentProps, 'active' | 'payload'>>;
@@ -19,13 +19,13 @@ export const TagTooltip = ({active, payload, dateFormat, total}: ContentProps & 
                 {first && <Typography variant={'subtitle2'}>{start === end ? `${start}` : `${start} - ${end}`}</Typography>}
                 {payload.map((entry) => (
                     <Typography key={String(entry.name)}>
-                        {entry.name}: {prettyMs((entry.payload.data[String(entry.name)] as number) * 1000)}
+                        {entry.name}: {formatDurationZh(entry.payload.data[String(entry.name)] as number)}
                     </Typography>
                 ))}
                 {total ? (
                     <Typography>
-                        Total:
-                        {prettyMs(sum(payload) * 1000)}
+                        合计：
+                        {formatDurationZh(sum(payload))}
                     </Typography>
                 ) : undefined}
             </Paper>

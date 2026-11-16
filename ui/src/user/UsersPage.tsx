@@ -50,7 +50,7 @@ export const UsersPage = () => {
     const onClickDelete = () => {
         if (removeUserConfirmation) {
             removeUser({variables: {id: removeUserConfirmation[0]}}).then(() =>
-                enqueueSnackbar('user deleted', {variant: 'success'})
+                enqueueSnackbar('用户已删除', {variant: 'success'})
             );
         }
     };
@@ -65,7 +65,7 @@ export const UsersPage = () => {
                     admin: editAdmin,
                     pass: editPass || undefined,
                 },
-            }).then(() => enqueueSnackbar('user edited', {variant: 'success'}));
+            }).then(() => enqueueSnackbar('用户已更新', {variant: 'success'}));
         };
         const isCurrent = user.id === data.currentUser!.id;
         const isEdited = editId === user.id;
@@ -114,19 +114,19 @@ export const UsersPage = () => {
                 <TableCell align="right">
                     {isEdited ? (
                         <>
-                            <IconButton onClick={onClickSubmit} title="Save">
+                            <IconButton onClick={onClickSubmit} title="保存">
                                 <DoneIcon />
                             </IconButton>
-                            <IconButton onClick={() => setEditing(NoEdit)} title="Cancel">
+                            <IconButton onClick={() => setEditing(NoEdit)} title="取消">
                                 <CloseIcon />
                             </IconButton>
                         </>
                     ) : (
                         <>
-                            <IconButton onClick={() => setEditing([user.id, user.name, '', user.admin])} title="Edit">
+                            <IconButton onClick={() => setEditing([user.id, user.name, '', user.admin])} title="编辑">
                                 <EditIcon />
                             </IconButton>
-                            <IconButton onClick={() => setRemoveUserConfirmation([user.id, user.name])} title="Delete">
+                            <IconButton onClick={() => setRemoveUserConfirmation([user.id, user.name])} title="删除">
                                 <DeleteIcon />
                             </IconButton>
                         </>
@@ -145,16 +145,16 @@ export const UsersPage = () => {
                 onClick={() => setAddUser(true)}
                 fullWidth
                 style={{marginBottom: 10}}>
-                Create User
+                创建用户
             </Button>
             {addUser && <AddUserDialog open={true} close={() => setAddUser(false)} />}
             <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell>ID</TableCell>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Password</TableCell>
-                        <TableCell>Admin</TableCell>
+                        <TableCell>名称</TableCell>
+                        <TableCell>密码</TableCell>
+                        <TableCell>管理员</TableCell>
                         <TableCell style={{width: 150}} />
                     </TableRow>
                 </TableHead>
@@ -162,11 +162,10 @@ export const UsersPage = () => {
             </Table>
             {removeUserConfirmation ? (
                 <ConfirmDialog
-                    title={`Are you sure you want to delete the user '${removeUserConfirmation[1]}'?`}
+                    title={`确定要删除用户“${removeUserConfirmation[1]}”吗？`}
                     fClose={() => setRemoveUserConfirmation(false)}
                     fOnSubmit={onClickDelete}>
-                    <b>This operation cannot be undone.</b> Deleting the user includes deleting dashboards, time spans, tags and
-                    devices of that user.
+                    <b>此操作无法撤销。</b>删除用户会同时删除该用户的仪表盘、时间记录、标签和 设备。
                 </ConfirmDialog>
             ) : null}
         </Paper>

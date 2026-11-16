@@ -18,7 +18,7 @@ import TeamIcon from '@mui/icons-material/People';
 import StatsIcon from '@mui/icons-material/ShowChart';
 import LabelIcon from '@mui/icons-material/Label';
 import DashboardManageIcon from '@mui/icons-material/ListAlt';
-import TimeLineIcon from '@mui/icons-material/Timeline';
+import LogoutIcon from '@mui/icons-material/Logout';
 import CalendarIcon from '@mui/icons-material/CalendarToday';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -35,6 +35,7 @@ import {useMutation, useQuery} from '@apollo/client/react';
 import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
 import * as gqlDashboard from '../gql/dashboard';
 import type {SxProps, Theme} from '@mui/material/styles';
+import {lastTimesheetView} from '../timespan/TimesheetLayout';
 
 const drawerWidth = 240;
 
@@ -117,13 +118,13 @@ const pageTitles: Array<[path: string, title: string]> = [
     ['/team', '团队日志'],
     ['/team/:userId', '团队日志 / 成员'],
     ['/stats', '统计'],
-    ['/timesheet/list', 'Timesheet / List'],
-    ['/timesheet/calendar', '我的日志'],
-    ['/user/settings', 'User / Settings'],
-    ['/user/devices', 'User / Devices'],
-    ['/user/tags', 'User / Tags'],
-    ['/admin/users', 'Admin / Users'],
-    ['/dashboards', 'Dashboards / Manage'],
+    ['/timesheet/list', '我的日志 / 列表'],
+    ['/timesheet/calendar', '我的日志 / 日历'],
+    ['/user/settings', '设置'],
+    ['/user/devices', '设备'],
+    ['/user/tags', '标签'],
+    ['/admin/users', '用户管理'],
+    ['/dashboards', '管理仪表盘'],
 ];
 
 const pageTitle = (pathname: string, dashboards: Array<{id: number; name: string}>): string => {
@@ -134,7 +135,7 @@ const pageTitle = (pathname: string, dashboards: Array<{id: number; name: string
     const dashboardMatch = matchPath('/dashboard/:id/*', pathname);
     if (dashboardMatch) {
         const dashboard = dashboards.find((db) => '' + db.id === dashboardMatch.params.id);
-        return 'Dashboards / ' + (dashboard ? dashboard.name : '...');
+        return '仪表盘 / ' + (dashboard ? dashboard.name : '...');
     }
     return '';
 };
@@ -157,8 +158,8 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const username = (data && data.user && data.user.name) || 'unknown';
     const admin = data && data.user && data.user.admin;
 
-    const drawerLink = (to: string, label: string, icon: React.ReactElement) => (
-        <ListItemButton component={Link} to={to} selected={location.pathname === to}>
+    const drawerLink = (to: string, label: string, icon: React.ReactElement, selected = location.pathname === to) => (
+        <ListItemButton component={Link} to={to} selected={selected}>
             <ListItemIcon>{icon}</ListItemIcon>
             <ListItemText primary={label} />
         </ListItemButton>
@@ -180,14 +181,17 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
             </Box>
             <Divider />
             <List dense={true}>
-                {drawerLink('/timesheet/calendar', '我的日志', <CalendarIcon />)}
+                {drawerLink(
+                    `/timesheet/${lastTimesheetView()}`,
+                    '我的日志',
+                    <CalendarIcon />,
+                    location.pathname.startsWith('/timesheet')
+                )}
                 {drawerLink('/team', '团队日志', <TeamIcon />)}
+                {drawerLink('/stats', '统计', <StatsIcon />)}
             </List>
             <Divider />
-            <List dense={true}>{drawerLink('/stats', '统计', <StatsIcon />)}</List>
-            <Divider />
-            <List subheader={<ListSubheader>其他</ListSubheader>} dense={true}>
-                {drawerLink('/timesheet/list', 'List', <TimeLineIcon />)}
+            <List subheader={<ListSubheader>仪表盘</ListSubheader>} dense={true}>
                 {dashboards.map(({id, name}) => (
                     <ListItemButton key={id} component={Link} to={`/dashboard/${id}/${encodeURIComponent(name)}`}>
                         <ListItemIcon>
@@ -196,33 +200,44 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                         <ListItemText primary={name} />
                     </ListItemButton>
                 ))}
-                {drawerLink('/dashboards', 'Manage dashboards', <DashboardManageIcon />)}
-                {drawerLink('/user/tags', 'Tags', <LabelIcon />)}
-                {drawerLink('/user/devices', 'Devices', <DevicesIcon />)}
-                {drawerLink('/user/settings', 'Settings', <SettingsIcon />)}
-                {admin ? drawerLink('/admin/users', 'Users', <UsersIcon />) : null}
+                {drawerLink('/dashboards', '管理仪表盘', <DashboardManageIcon />)}
+            </List>
+            <Divider />
+            <List subheader={<ListSubheader>账号</ListSubheader>} dense={true}>
+                {drawerLink('/user/tags', '标签', <LabelIcon />)}
+                {drawerLink('/user/devices', '设备', <DevicesIcon />)}
+                {drawerLink('/user/settings', '设置', <SettingsIcon />)}
+                {admin ? drawerLink('/admin/users', '用户管理', <UsersIcon />) : null}
+                <ListItemButton onClick={() => logout()}>
+                    <ListItemIcon>
+                        <LogoutIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="退出登录" />
+                </ListItemButton>
             </List>
             <Divider />
         </div>
     );
 
     const navGroups: NavGroup[] = [
-        {name: '我的日志', to: '/timesheet/calendar', paths: ['/timesheet/calendar'], items: []},
+        {name: '我的日志', to: `/timesheet/${lastTimesheetView()}`, paths: ['/timesheet'], items: []},
         {name: '团队日志', to: '/team', paths: ['/team'], items: []},
         {name: '统计', to: '/stats', paths: ['/stats'], items: []},
         {
-            name: '其他',
-            paths: ['/timesheet/list', '/dashboard', '/user', '/admin'],
+            name: '仪表盘',
+            paths: ['/dashboard'],
             items: [
-                {label: 'List', to: '/timesheet/list'},
                 ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
-                {label: 'Manage dashboards', to: '/dashboards'},
-                {label: 'Tags', to: '/user/tags'},
-                {label: 'Devices', to: '/user/devices'},
-                {label: 'Settings', to: '/user/settings'},
-                ...(admin ? [{label: 'Users', to: '/admin/users'}] : []),
+                {label: '管理仪表盘', to: '/dashboards'},
             ],
         },
+    ];
+    // the pages of the account are in the menu of the user
+    const userMenuItems = [
+        {label: '标签', to: '/user/tags', icon: <LabelIcon fontSize="small" />},
+        {label: '设备', to: '/user/devices', icon: <DevicesIcon fontSize="small" />},
+        {label: '设置', to: '/user/settings', icon: <SettingsIcon fontSize="small" />},
+        ...(admin ? [{label: '用户管理', to: '/admin/users', icon: <UsersIcon fontSize="small" />}] : []),
     ];
     const activeNavGroup = navGroups.find((group) => group.name === (navMenu && navMenu.name));
     const activeNavItems: Array<{label: string; to: string}> = activeNavGroup ? activeNavGroup.items : [];
@@ -234,7 +249,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                 <Toolbar>
                     <IconButton
                         color="inherit"
-                        aria-label="Open drawer"
+                        aria-label="打开菜单"
                         onClick={() => setMobileOpen(!mobileOpen)}
                         sx={styles.menuButton}>
                         <MenuIcon />
@@ -282,7 +297,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                     </Box>
                     <Box sx={styles.grow} />
                     <Box sx={styles.sectionDesktop}>
-                        <Button color="inherit" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
+                        <Button color="inherit" aria-label="账号菜单" onClick={(e) => setUserMenuOpen(e.currentTarget)}>
                             <AccountCircle />
                             <Box component="span" sx={{display: {xs: 'none', sm: 'inline'}, ml: 1}}>
                                 {username}
@@ -294,15 +309,27 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                             transformOrigin={{vertical: 'top', horizontal: 'right'}}
                             open={!!userMenuOpen}
                             onClose={() => setUserMenuOpen(null)}>
-                            <MenuItem onClick={() => setUserMenuOpen(null)} component={Link} to="/user/settings">
-                                Settings
-                            </MenuItem>
+                            {userMenuItems.map(({label, to, icon}) => (
+                                <MenuItem
+                                    key={to}
+                                    selected={location.pathname === to}
+                                    onClick={() => setUserMenuOpen(null)}
+                                    component={Link}
+                                    to={to}>
+                                    <ListItemIcon>{icon}</ListItemIcon>
+                                    {label}
+                                </MenuItem>
+                            ))}
+                            <Divider />
                             <MenuItem
                                 onClick={() => {
                                     setUserMenuOpen(null);
                                     logout();
                                 }}>
-                                Logout
+                                <ListItemIcon>
+                                    <LogoutIcon fontSize="small" />
+                                </ListItemIcon>
+                                退出登录
                             </MenuItem>
                         </Menu>
                     </Box>

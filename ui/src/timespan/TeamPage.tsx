@@ -9,7 +9,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import PrevIcon from '@mui/icons-material/ChevronLeft';
 import NextIcon from '@mui/icons-material/ChevronRight';
-import DownloadIcon from '@mui/icons-material/GetApp';
+import {ExportCsvButton} from '../common/ExportCsvButton';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {TeamTimeSpans, TeamTimeSpansVariables} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
@@ -100,7 +100,7 @@ export const TeamPage: React.FC = () => {
     return (
         <div>
             <Box sx={styles.controls}>
-                <IconButton aria-label="previous day" onClick={() => shift(-1)} disabled={!validDay}>
+                <IconButton aria-label="前一天" onClick={() => shift(-1)} disabled={!validDay}>
                     <PrevIcon />
                 </IconButton>
                 <TextField
@@ -109,14 +109,12 @@ export const TeamPage: React.FC = () => {
                     onChange={(e) => setDate(e.target.value)}
                     slotProps={{inputLabel: {shrink: true}}}
                 />
-                <IconButton aria-label="next day" onClick={() => shift(1)} disabled={!validDay}>
+                <IconButton aria-label="后一天" onClick={() => shift(1)} disabled={!validDay}>
                     <NextIcon />
                 </IconButton>
                 <Button onClick={() => setDate(moment().format(DAY_FORMAT))}>今天</Button>
                 <Box sx={styles.grow} />
-                <Button startIcon={<DownloadIcon />} onClick={exportCsv} disabled={items.length === 0}>
-                    导出 CSV
-                </Button>
+                <ExportCsvButton onClick={exportCsv} disabled={items.length === 0} />
             </Box>
 
             {error ? <Typography color="error">{error.message}</Typography> : null}

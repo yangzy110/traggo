@@ -141,6 +141,7 @@ let root: ReactRoot | undefined;
 
 beforeEach(async () => {
     schema = createSchema();
+    window.localStorage.clear();
     await clearCache();
     errors.length = 0;
     vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
@@ -181,16 +182,16 @@ const render = async (route: string) => {
 describe('pages', () => {
     const pages: Array<[route: string, expected: string]> = [
         ['/timesheet/calendar', '导出 CSV'],
-        ['/timesheet/list', 'Active Timers'],
+        ['/timesheet/list', '新建记录'],
         ['/team', '导出 CSV'],
         ['/team/3', '成员不存在'],
         ['/stats', '成员工作量'],
-        ['/dashboards', 'Create Dashboard'],
-        ['/dashboard/100/some-name', 'Edit Dashboard'],
-        ['/user/settings', 'Date Locale'],
-        ['/user/devices', 'Create Device'],
-        ['/user/tags', 'Create Tag'],
-        ['/admin/users', 'Create User'],
+        ['/dashboards', '创建仪表盘'],
+        ['/dashboard/100/some-name', '编辑仪表盘'],
+        ['/user/settings', '日期格式'],
+        ['/user/devices', '创建设备'],
+        ['/user/tags', '创建标签'],
+        ['/admin/users', '创建用户'],
         // the user is logged in, the login page redirects to the calendar
         ['/user/login', '导出 CSV'],
         ['/does/not/exist', '导出 CSV'],
@@ -203,6 +204,74 @@ describe('pages', () => {
     });
 });
 
+describe('time span editor', () => {
+    const mount = async (props: {onDelete?: () => void; onConfirm: (...args: unknown[]) => void; onCancel: () => void}) => {
+        const {TimeSpanEditor} = await import('./timespan/TimeSpanEditor');
+        const {ApolloProvider} = await import('./provider/ApolloProvider');
+        const {default: moment} = await import('moment');
+        document.body.innerHTML = '<div id="root"></div>';
+        root = createRoot(document.getElementById('root')!);
+        await act(async () =>
+            root!.render(
+                React.createElement(
+                    ApolloProvider,
+                    null,
+                    React.createElement(TimeSpanEditor, {
+                        anchorEl: document.body,
+                        start: moment('2026-11-16T09:30:00'),
+                        end: moment('2026-11-16T10:45:00'),
+                        initialTags: [],
+                        initialNote: 'work',
+                        ...props,
+                    })
+                )
+            )
+        );
+        await waitFor(() => !!button('确定'), 'the buttons');
+    };
+
+    it('creates: content, tags, confirm and cancel, but no delete', async () => {
+        const onConfirm = vi.fn();
+        const onCancel = vi.fn();
+        await mount({onConfirm, onCancel});
+        expect(document.querySelector('textarea')).not.toBeNull();
+        expect(text()).toContain('标签');
+        expect(button('删除')).toBeUndefined();
+
+        await click(button('取消')!);
+        expect(onCancel).toHaveBeenCalledTimes(1);
+        expect(onConfirm).not.toHaveBeenCalled();
+
+        await click(button('确定')!);
+        await waitFor(() => onConfirm.mock.calls.length === 1, 'the confirmation');
+        expect(onConfirm).toHaveBeenCalledWith(expect.objectContaining({tags: [], note: 'work'}));
+    });
+
+    it('edits: the same fields and additionally delete', async () => {
+        const onDelete = vi.fn();
+        await mount({onDelete, onConfirm: vi.fn(), onCancel: vi.fn()});
+        expect(button('确定')).toBeDefined();
+        expect(button('取消')).toBeDefined();
+        await click(button('删除')!);
+        await waitFor(() => onDelete.mock.calls.length === 1, 'the deletion');
+    });
+});
+
+describe('tag input', () => {
+    // MUI throws if a MenuItem is not placed inside of a MenuList: the page crashed as soon as the input was focused
+    it('shows the suggestions when it is focused', async () => {
+        await render('/timesheet/list');
+        await waitFor(() => !!button('新建记录'), 'the create button');
+        await click(button('新建记录')!);
+        await waitFor(() => !!document.querySelector('input[placeholder="输入标签"]'), 'the tag input');
+        await act(async () => {
+            (document.querySelector('input[placeholder="输入标签"]') as HTMLInputElement).focus();
+        });
+        await waitFor(() => document.querySelectorAll('[role="menuitem"]').length > 0, 'the suggestions');
+        await settle();
+    });
+});
+
 describe('shared tags', () => {
     afterEach(() => {
         tagsShared = false;
@@ -211,9 +280,9 @@ describe('shared tags', () => {
 
     it('can be changed by who is allowed to', async () => {
         await render('/user/tags');
-        await waitFor(() => text().includes('Create Tag'), 'the tags');
-        await waitFor(() => !!document.querySelector('button[title="Edit"]'), 'the edit button');
-        expect(document.querySelector('button[title="Delete"]')).not.toBeNull();
+        await waitFor(() => text().includes('创建标签'), 'the tags');
+        await waitFor(() => !!document.querySelector('button[title="编辑"]'), 'the edit button');
+        expect(document.querySelector('button[title="删除"]')).not.toBeNull();
         await settle();
     });
 
@@ -221,9 +290,9 @@ describe('shared tags', () => {
         tagsShared = true;
         tagsEditable = false;
         await render('/user/tags');
-        await waitFor(() => text().includes('shared'), 'the shared label');
-        expect(document.querySelector('button[title="Edit"]')).toBeNull();
-        expect(document.querySelector('button[title="Delete"]')).toBeNull();
+        await waitFor(() => text().includes('公用'), 'the shared label');
+        expect(document.querySelector('button[title="编辑"]')).toBeNull();
+        expect(document.querySelector('button[title="删除"]')).toBeNull();
         expect(document.querySelectorAll('[data-testid="LockIcon"]').length).toBeGreaterThan(0);
         await settle();
     });
@@ -251,7 +320,7 @@ describe('dashboard entries', () => {
         async (type) => {
             entryType = type;
             await render('/dashboard/100/some-name');
-            await waitFor(() => text().includes('Edit Dashboard'), 'Edit Dashboard');
+            await waitFor(() => text().includes('编辑仪表盘'), '编辑仪表盘');
             await settle();
             expect(text()).not.toContain('error:');
             expect(document.querySelectorAll('.MuiPaper-root').length).toBeGreaterThan(2);
@@ -260,21 +329,32 @@ describe('dashboard entries', () => {
 });
 
 describe('navigation', () => {
-    it('opens the menu and navigates', async () => {
+    it('opens the account menu and navigates', async () => {
         await render('/team');
-        await waitFor(() => !!button('其他'), 'the menu button');
+        await waitFor(() => !!document.querySelector('button[aria-label="账号菜单"]'), 'the account button');
 
-        await click(button('其他')!);
+        await click(document.querySelector('button[aria-label="账号菜单"]')!);
         await waitFor(() => document.querySelectorAll('[role="menuitem"]').length > 0, 'the menu items');
         const items = [...document.querySelectorAll('[role="menuitem"]')];
         expect(items.map((item) => item.textContent)).toEqual(
-            expect.arrayContaining(['List', 'Tags', 'Devices', 'Settings', 'Users'])
+            expect.arrayContaining(['标签', '设备', '设置', '用户管理', '退出登录'])
         );
 
-        const tags = items.find((item) => item.textContent === 'Tags')!;
+        const tags = items.find((item) => item.textContent === '标签')!;
         expect(tags.getAttribute('href')).toBe('#/user/tags');
         await click(tags);
         await waitFor(() => window.location.hash === '#/user/tags', 'the navigation');
+    });
+
+    it('switches between the calendar and the list and remembers the view', async () => {
+        await render('/timesheet/calendar');
+        await waitFor(() => !!button('列表'), 'the view switch');
+        await click(button('列表')!);
+        await waitFor(() => window.location.hash === '#/timesheet/list', 'the list');
+        await waitFor(() => !!button('新建记录'), 'the list page');
+
+        await render('/does/not/exist');
+        await waitFor(() => window.location.hash === '#/timesheet/list', 'the remembered view');
     });
 
     it('opens the log of a member by clicking the avatar', async () => {

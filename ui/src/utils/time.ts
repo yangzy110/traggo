@@ -57,7 +57,7 @@ export const parseRelativeTime = (value: string, divide: 'endOf' | 'startOf', no
                     break;
                 case Type.Value: {
                     if (isNaN(parseInt(currentChar, 10))) {
-                        return failure('Expected number at index ' + currentIndex + ' but was ' + currentChar);
+                        return failure('第 ' + currentIndex + ' 个字符处应为数字，实际为 ' + currentChar);
                     }
                     let valueIndex = currentIndex;
                     while (!isNaN(parseInt(value.charAt(valueIndex + 1), 10)) && valueIndex + 1 < value.length) {
@@ -101,10 +101,10 @@ export const parseRelativeTime = (value: string, divide: 'endOf' | 'startOf', no
             }
         }
         if (expectNext === Type.Unit) {
-            return failure('Expected unit at the end but got nothing');
+            return failure('结尾缺少单位');
         }
         if (expectNext === Type.Value) {
-            return failure('Expected number at the end but got nothing');
+            return failure('结尾缺少数字');
         }
         return success(time);
     }

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {entryTypeLabels, intervalLabels, label} from '../../common/labels';
 import TextField from '@mui/material/TextField';
 import {useQuery} from '@apollo/client/react';
 import {
@@ -59,7 +60,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
     return (
         <>
             <TextField
-                label={'Title'}
+                label="标题"
                 value={entry.title}
                 disabled={disabled}
                 onChange={(e) => {
@@ -70,7 +71,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
             />
             <TextField
                 select
-                label="Type"
+                label="类型"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -82,13 +83,13 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 }}>
                 {Object.values(EntryType).map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(entryTypeLabels, type)}
                     </option>
                 ))}
             </TextField>
             <TextField
                 select
-                label="Interval"
+                label="间隔"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -100,14 +101,14 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 }}>
                 {Object.values(StatsInterval).map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(intervalLabels, type)}
                     </option>
                 ))}
             </TextField>
             <Typography component="div">
                 <Box component="label" sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                    <Box>Range: </Box>
-                    <Box>Global</Box>
+                    <Box>日期范围：</Box>
+                    <Box>全局</Box>
                     <Box>
                         <Switch
                             checked={staticRange}
@@ -127,13 +128,13 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                             }}
                         />
                     </Box>
-                    <Box>Static</Box>
+                    <Box>固定</Box>
                 </Box>
             </Typography>
             {staticRange ? (
                 <>
                     <RelativeDateTimeSelector
-                        label={'From'}
+                        label="从"
                         disabled={disabled}
                         value={range.from}
                         onChange={(startDate) => {
@@ -144,7 +145,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                         type="startOf"
                     />
                     <RelativeDateTimeSelector
-                        label={'To'}
+                        label="到"
                         disabled={disabled}
                         value={range.to}
                         onChange={(endDate) => {
@@ -172,7 +173,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                     }}>
                     {entry.statsSelection.rangeId ? undefined : (
                         <option key={''} value={''}>
-                            Select a date range
+                            选择日期范围
                         </option>
                     )}
                     {Object.keys(ranges).map((key) => (
@@ -199,7 +200,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 </Typography>
             ) : undefined}
             <FormTagSelector
-                label="Tags"
+                label="标签"
                 selectedEntries={tagKeys || []}
                 onSelectedEntriesChanged={(tags) => {
                     entry.statsSelection.tags = tags.map((tag) => tag.tag.key);
@@ -210,7 +211,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
             />
 
             <FormTagSelector
-                label="Exclude"
+                label="排除"
                 selectedEntries={excludeTags || []}
                 onSelectedEntriesChanged={(tags) => {
                     entry.statsSelection.excludeTags = tags.map((tag) => ({
@@ -224,7 +225,7 @@ export const DashboardEntryForm: React.FC<EditPopupProps> = ({entry, onChange: s
                 createTags={false}
             />
             <FormTagSelector
-                label="Include"
+                label="包含"
                 selectedEntries={includeTags || []}
                 onSelectedEntriesChanged={(tags) => {
                     entry.statsSelection.includeTags = tags.map((tag) => ({

@@ -7,6 +7,9 @@ import {expectNever} from '../utils/never';
 
 const setLocale = (locale: DateLocale, spec: LocaleSpecification) => {
     switch (locale) {
+        case DateLocale.Chinese:
+            moment.locale('zh-cn', spec);
+            return;
         case DateLocale.American:
             moment.locale('en', spec);
             return;

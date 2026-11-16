@@ -75,10 +75,11 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                 // events
                 '& .fc-timegrid-event.fc-v-event.fc-event': {
                     borderRadius: '8px',
-                    border: 'none',
+                    borderStyle: 'solid',
+                    borderWidth: '0 0 0 4px',
                     padding: '4px 6px',
                     margin: '0 2px',
-                    boxShadow: '0 1px 2px rgba(15,23,42,.18)',
+                    boxShadow: 'none',
                 },
                 '& .fc .fc-timegrid-event': {
                     minHeight: '1px',
@@ -100,10 +101,27 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     minHeight: '17px',
                     zIndex: '2 !important',
                 },
-                '& .fc .fc-timegrid-event.__running': {
-                    minHeight: '40px',
+                // handles at the top and the bottom edge which are shown on hover: the edges can be dragged
+                '& .fc-timegrid-event .fc-event-resizer': {left: 0, right: 0, height: '10px', cursor: 'ns-resize'},
+                '& .fc-timegrid-event .fc-event-resizer::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '50%',
+                    width: '28px',
+                    height: '3px',
+                    marginLeft: '-14px',
+                    borderRadius: '2px',
+                    background: theme.palette.text.secondary,
+                    opacity: 0,
+                    transition: 'opacity .15s',
                 },
+                '& .fc-timegrid-event .fc-event-resizer-start::after': {top: '3px'},
+                '& .fc-timegrid-event .fc-event-resizer-end::after': {bottom: '3px'},
+                '& .fc-timegrid-event:hover .fc-event-resizer::after': {opacity: 1},
+                '& .fc-daygrid-event': {margin: '1px 2px', cursor: 'pointer', fontSize: '0.75rem'},
+                '& .fc-daygrid-day': {cursor: 'pointer'},
                 '& .fc .fc-event-main': {
+                    overflow: 'hidden',
                     height: '100%',
                     fontSize: '0.8rem',
                     lineHeight: 1.35,
@@ -138,6 +156,7 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
                 },
+                '& .fc .note': {opacity: 0.9, fontSize: '0.75rem'},
                 '& .fc .ellipsis-single': {
                     textOverflow: 'ellipsis',
                     display: 'inline-block',

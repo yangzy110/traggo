@@ -52,7 +52,7 @@ export const DevicesPage = () => {
 
     const devices = data.devices.map((device) => {
         const onClickDelete = () =>
-            removeDevice({variables: {id: device.id}}).then(() => enqueueSnackbar('device deleted', {variant: 'success'}));
+            removeDevice({variables: {id: device.id}}).then(() => enqueueSnackbar('设备已删除', {variant: 'success'}));
         const onClickSubmit = () => {
             setEditing([-1, '', DeviceType.NoExpiry]);
             updateDevice({
@@ -61,7 +61,7 @@ export const DevicesPage = () => {
                     name: editName,
                     deviceType: editDeviceType,
                 },
-            }).then(() => enqueueSnackbar('device edited', {variant: 'success'}));
+            }).then(() => enqueueSnackbar('设备已更新', {variant: 'success'}));
         };
         const isCurrent = device.id === data.currentDevice!.id;
         const isEdited = editId === device.id;
@@ -105,19 +105,19 @@ export const DevicesPage = () => {
                 <TableCell align="right">
                     {isEdited ? (
                         <>
-                            <IconButton onClick={onClickSubmit} title="Save">
+                            <IconButton onClick={onClickSubmit} title="保存">
                                 <DoneIcon />
                             </IconButton>
-                            <IconButton onClick={() => setEditing([-1, '', DeviceType.NoExpiry])} title="Cancel">
+                            <IconButton onClick={() => setEditing([-1, '', DeviceType.NoExpiry])} title="取消">
                                 <CloseIcon />
                             </IconButton>
                         </>
                     ) : (
                         <>
-                            <IconButton onClick={() => setEditing([device.id, device.name, device.type])} title="Edit">
+                            <IconButton onClick={() => setEditing([device.id, device.name, device.type])} title="编辑">
                                 <EditIcon />
                             </IconButton>
-                            <IconButton onClick={onClickDelete} title="Delete">
+                            <IconButton onClick={onClickDelete} title="删除">
                                 <DeleteIcon />
                             </IconButton>
                         </>
@@ -136,16 +136,16 @@ export const DevicesPage = () => {
                 onClick={() => setAddActive(true)}
                 fullWidth
                 style={{marginBottom: 10}}>
-                Create Device
+                创建设备
             </Button>
             <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell>ID</TableCell>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Created</TableCell>
-                        <TableCell>Expires after</TableCell>
-                        <TableCell>Last Active</TableCell>
+                        <TableCell>名称</TableCell>
+                        <TableCell>创建时间</TableCell>
+                        <TableCell>过期时间</TableCell>
+                        <TableCell>最近活跃</TableCell>
                         <TableCell style={{width: 150}} />
                     </TableRow>
                 </TableHead>

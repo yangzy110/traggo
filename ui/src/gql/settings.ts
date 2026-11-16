@@ -25,7 +25,7 @@ export const SetSettings = gql`
 
 const defaultSettings = {
     theme: Theme.MaterialLight,
-    dateLocale: DateLocale.American,
+    dateLocale: DateLocale.Chinese,
     firstDayOfTheWeek: WeekDay.Monday,
     dateTimeInputStyle: DateTimeInputStyle.Fancy,
 } as const;

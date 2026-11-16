@@ -6,6 +6,7 @@ import {useError} from '../utils/errors';
 import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
 import {AddTagDialog} from './AddTagDialog';
 import {TagSelectorEntry, itemLabel, label, addValues} from './tagSelectorEntry';
 import {useSuggest} from './suggest';
@@ -38,6 +39,8 @@ export interface TagSelectorProps {
     createTags?: boolean;
     allowDuplicateKeys?: boolean;
     onlySelectKeys?: boolean;
+    // Close the suggestions after a tag was added. They would cover the elements below of the selector.
+    closeAfterSelect?: boolean;
 }
 
 export const TagSelector: React.FC<TagSelectorProps> = ({
@@ -48,6 +51,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
     createTags = true,
     allowDuplicateKeys = false,
     onlySelectKeys = false,
+    closeAfterSelect = false,
 }) => {
     const [tooltipErrorActive, tooltipError, showTooltipError] = useError(4000);
     const [open, setOpen] = React.useState(false);
@@ -122,6 +126,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
         setSelectedEntries([...selectedEntries, entry]);
         setCurrentValue('');
+        if (closeAfterSelect) {
+            setOpen(false);
+        }
         return;
     };
 
@@ -198,8 +205,11 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                             onFocus={() => setOpen(true)}
                             onKeyDown={onKeyDown}
                             disableUnderline={true}
-                            onChange={(e) => setCurrentValue(e.target.value)}
-                            placeholder="Enter Tags"
+                            onChange={(e) => {
+                                setOpen(true);
+                                setCurrentValue(e.target.value);
+                            }}
+                            placeholder="输入标签"
                             sx={styles.inputInput}
                         />
                     </Box>
@@ -210,15 +220,18 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                         sx={styles.paper}
                         style={{width: (container.current && container.current.clientWidth) || 300}}
                         elevation={4}>
-                        {suggestions.map((entry, index) => (
-                            <Item
-                                key={label(entry)}
-                                entry={entry}
-                                onClick={trySubmit}
-                                selected={index === highlightedIndex}
-                                onlySelectKeys={onlySelectKeys}
-                            />
-                        ))}
+                        {/* MenuItems have to be placed inside of a MenuList */}
+                        <MenuList>
+                            {suggestions.map((entry, index) => (
+                                <Item
+                                    key={label(entry)}
+                                    entry={entry}
+                                    onClick={trySubmit}
+                                    selected={index === highlightedIndex}
+                                    onlySelectKeys={onlySelectKeys}
+                                />
+                            ))}
+                        </MenuList>
                     </Paper>
                 ) : null}
                 {addDialogOpen && (

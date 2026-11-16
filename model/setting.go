@@ -18,6 +18,7 @@ const (
 	ThemeMaterialDark  = "MaterialDark"
 	ThemeMaterialLight = "MaterialLight"
 
+	DateLocaleChinese     = "Chinese"
 	DateLocaleGerman      = "German"
 	DateLocaleAmerican    = "American"
 	DateLocaleAmerican24h = "American24h"

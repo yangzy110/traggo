@@ -43,20 +43,20 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                     onAdded(result.data.createTag);
                 }
             })
-            .catch(handleError('Add Tag', enqueueSnackbar));
+            .catch(handleError('创建标签失败', enqueueSnackbar));
     };
 
     return (
         <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title" fullWidth>
             <form onSubmit={submit} noValidate autoComplete="off">
-                <DialogTitle id="form-dialog-title">Create Tag</DialogTitle>
+                <DialogTitle id="form-dialog-title">创建标签</DialogTitle>
                 <DialogContent>
                     <DialogContentText />
                     <TextField
                         autoFocus
                         margin="dense"
                         id="name"
-                        label="Name"
+                        label="名称"
                         type="text"
                         fullWidth
                         value={name}
@@ -64,7 +64,7 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                     />
                     <FormControl variant="standard" fullWidth margin="dense">
                         <InputLabel htmlFor="color-picker" shrink={true}>
-                            Color
+                            颜色
                         </InputLabel>
                         <div id="color-picker" style={{marginTop: 25}}>
                             <SliderPicker onChange={(c) => setColor(c.hex)} color={color} />
@@ -73,16 +73,16 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                     {admin ? (
                         <FormControlLabel
                             control={<Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} />}
-                            label="Shared tag: usable by all users, only admins can change it"
+                            label="公用标签：所有用户可用，只有管理员可以修改"
                         />
                     ) : null}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={close} color="primary">
-                        Cancel
+                        取消
                     </Button>
                     <Button type="submit" onClick={submit} color="primary">
-                        Create Tag
+                        创建标签
                     </Button>
                 </DialogActions>
             </form>

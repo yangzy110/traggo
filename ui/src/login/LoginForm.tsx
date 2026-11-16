@@ -31,8 +31,8 @@ export const LoginForm = () => {
                 deviceType: remember ? DeviceType.LongExpiry : DeviceType.ShortExpiry,
             },
         })
-            .then(() => enqueueSnackbar('Login successful', {variant: 'success'}))
-            .catch(handleError('Login failed', enqueueSnackbar));
+            .then(() => enqueueSnackbar('登录成功', {variant: 'success'}))
+            .catch(handleError('登录失败', enqueueSnackbar));
     };
     return (
         <form noValidate autoComplete="off" onSubmit={submit}>
@@ -40,7 +40,7 @@ export const LoginForm = () => {
                 required
                 margin="dense"
                 variant="outlined"
-                label="username"
+                label="用户名"
                 autoFocus
                 fullWidth
                 onChange={(e) => setUsername(e.target.value)}
@@ -50,17 +50,17 @@ export const LoginForm = () => {
                 type="password"
                 margin="dense"
                 variant="outlined"
-                label="password"
+                label="密码"
                 fullWidth
                 onChange={(e) => setPassword(e.target.value)}
             />
             <FormControlLabel
                 style={{float: 'right'}}
                 control={<Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)} />}
-                label="Remember Me"
+                label="记住我"
             />
             <Button type="submit" sx={{marginTop: 1}} fullWidth size="large" onClick={submit} variant="contained" color="primary">
-                Login
+                登录
             </Button>
         </form>
     );

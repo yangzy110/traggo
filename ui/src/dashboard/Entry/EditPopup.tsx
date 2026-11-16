@@ -41,7 +41,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({entry, anchorEl, onChange: 
             <Fade fullyVisible={!preview} opacity={0.2}>
                 <ClickAwayListener onClickAway={() => setEdit(null)}>
                     <Paper style={{padding: 10, maxWidth: 500}}>
-                        <Typography variant="h5">Edit</Typography>
+                        <Typography variant="h5">编辑</Typography>
                         <DashboardEntryForm ranges={ranges} entry={entry} onChange={setEdit} disabled={preview} />
                         <div style={{textAlign: 'right', display: 'flex', justifyContent: 'flex-end', paddingTop: 10}}>
                             <Button
@@ -57,7 +57,7 @@ export const EditPopup: React.FC<EditPopupProps> = ({entry, anchorEl, onChange: 
                                 variant={'outlined'}
                                 style={{marginRight: 10}}
                                 onClick={() => setEdit(null)}>
-                                Cancel
+                                取消
                             </Button>
                             <Button
                                 color={'primary'}
@@ -86,9 +86,9 @@ export const EditPopup: React.FC<EditPopupProps> = ({entry, anchorEl, onChange: 
                                         },
                                     })
                                         .then(() => setEdit(null))
-                                        .catch(handleError('Edit Dashboard Entry', enqueueSnackbar));
+                                        .catch(handleError('编辑条目失败', enqueueSnackbar));
                                 }}>
-                                Save
+                                保存
                             </Button>
                         </div>
                     </Paper>

@@ -7,6 +7,7 @@ import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 import {gutters} from '../common/styles';
+import {dateLocaleLabels, inputStyleLabels, label, themeLabels, weekDayLabels} from '../common/labels';
 
 const rootSx: SxProps<MuiTheme> = (theme) => ({
     ...gutters(theme),
@@ -26,7 +27,7 @@ export const SettingsPage: React.FC = () => {
         <Paper elevation={1} sx={rootSx}>
             <TextField
                 select
-                label="Date Locale"
+                label="日期格式"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -41,26 +42,26 @@ export const SettingsPage: React.FC = () => {
                         },
                     })
                         .then(() => {
-                            enqueueSnackbar('date locale changed', {
+                            enqueueSnackbar('日期格式已更改', {
                                 variant: 'success',
                             });
-                            enqueueSnackbar('a reload of the page is required for the new date locale to fully function', {
+                            enqueueSnackbar('请刷新页面以使新的日期格式完全生效', {
                                 variant: 'info',
                                 preventDuplicate: true,
                                 persist: true,
                             });
                         })
-                        .catch(handleError('set date locale', enqueueSnackbar));
+                        .catch(handleError('更改日期格式失败', enqueueSnackbar));
                 }}>
                 {Object.values(DateLocale).map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(dateLocaleLabels, type)}
                     </option>
                 ))}
             </TextField>
             <TextField
                 select
-                label="Theme"
+                label="主题"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -68,21 +69,21 @@ export const SettingsPage: React.FC = () => {
                 onChange={(e) => {
                     setSettings({variables: {settings: {...settings, theme: e.target.value as Theme}}})
                         .then(() =>
-                            enqueueSnackbar('theme changed', {
+                            enqueueSnackbar('主题已更改', {
                                 variant: 'success',
                             })
                         )
-                        .catch(handleError('set theme', enqueueSnackbar));
+                        .catch(handleError('更改主题失败', enqueueSnackbar));
                 }}>
                 {Object.values(Theme).map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(themeLabels, type)}
                     </option>
                 ))}
             </TextField>
             <TextField
                 select
-                label="First day of the week"
+                label="每周第一天"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -97,11 +98,11 @@ export const SettingsPage: React.FC = () => {
                         },
                     })
                         .then(() =>
-                            enqueueSnackbar('first day of the week changed', {
+                            enqueueSnackbar('每周第一天已更改', {
                                 variant: 'success',
                             })
                         )
-                        .catch(handleError('set first day of the week', enqueueSnackbar));
+                        .catch(handleError('更改每周第一天失败', enqueueSnackbar));
                 }}>
                 {[
                     WeekDay.Sunday,
@@ -113,13 +114,13 @@ export const SettingsPage: React.FC = () => {
                     WeekDay.Saturday,
                 ].map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(weekDayLabels, type)}
                     </option>
                 ))}
             </TextField>
             <TextField
                 select
-                label="Datetime input style"
+                label="日期时间输入方式"
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
@@ -134,15 +135,15 @@ export const SettingsPage: React.FC = () => {
                         },
                     })
                         .then(() =>
-                            enqueueSnackbar('datetime input style changed', {
+                            enqueueSnackbar('日期时间输入方式已更改', {
                                 variant: 'success',
                             })
                         )
-                        .catch(handleError('set datetime input style', enqueueSnackbar));
+                        .catch(handleError('更改日期时间输入方式失败', enqueueSnackbar));
                 }}>
                 {[DateTimeInputStyle.Fancy, DateTimeInputStyle.Native].map((type) => (
                     <option key={type} value={type}>
-                        {type}
+                        {label(inputStyleLabels, type)}
                     </option>
                 ))}
             </TextField>

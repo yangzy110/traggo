@@ -48,7 +48,7 @@ export const DashboardsPage = () => {
     const onClickDelete = () => {
         if (removeDashboardConfirm) {
             removeDashboard({variables: {id: removeDashboardConfirm[0]}}).then(() =>
-                enqueueSnackbar('dashboard deleted', {variant: 'success'})
+                enqueueSnackbar('仪表盘已删除', {variant: 'success'})
             );
         }
     };
@@ -61,7 +61,7 @@ export const DashboardsPage = () => {
                     id: editId,
                     name: editName,
                 },
-            }).then(() => enqueueSnackbar('dashboard edited', {variant: 'success'}));
+            }).then(() => enqueueSnackbar('仪表盘已更新', {variant: 'success'}));
         };
         const isEdited = editId === dashboard.id;
         return (
@@ -87,19 +87,19 @@ export const DashboardsPage = () => {
                 <TableCell align="right">
                     {isEdited ? (
                         <>
-                            <IconButton onClick={onClickSubmit} title="Save">
+                            <IconButton onClick={onClickSubmit} title="保存">
                                 <DoneIcon />
                             </IconButton>
-                            <IconButton onClick={() => setEditing(NoEdit)} title="Cancel">
+                            <IconButton onClick={() => setEditing(NoEdit)} title="取消">
                                 <CloseIcon />
                             </IconButton>
                         </>
                     ) : (
                         <>
-                            <IconButton onClick={() => setEditing([dashboard.id, dashboard.name])} title="Edit">
+                            <IconButton onClick={() => setEditing([dashboard.id, dashboard.name])} title="编辑">
                                 <EditIcon />
                             </IconButton>
-                            <IconButton onClick={() => setRemoveDashboardConfirm([dashboard.id, dashboard.name])} title="Delete">
+                            <IconButton onClick={() => setRemoveDashboardConfirm([dashboard.id, dashboard.name])} title="删除">
                                 <DeleteIcon />
                             </IconButton>
                         </>
@@ -118,14 +118,14 @@ export const DashboardsPage = () => {
                 onClick={() => setAddDashboard(true)}
                 fullWidth
                 style={{marginBottom: 10}}>
-                Create Dashboard
+                创建仪表盘
             </Button>
             {addDashboard && <AddDashboardDialog open={true} close={() => setAddDashboard(false)} />}
             <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell>ID</TableCell>
-                        <TableCell>Name</TableCell>
+                        <TableCell>名称</TableCell>
                         <TableCell style={{width: 150}} />
                     </TableRow>
                 </TableHead>
@@ -133,10 +133,10 @@ export const DashboardsPage = () => {
             </Table>
             {removeDashboardConfirm ? (
                 <ConfirmDialog
-                    title={`Delete Dashboard ${removeDashboardConfirm[1]}`}
+                    title={`删除仪表盘 ${removeDashboardConfirm[1]}`}
                     fClose={() => setRemoveDashboardConfirm(false)}
                     fOnSubmit={onClickDelete}>
-                    <b>This operation cannot be undone.</b> Deleting the dashboard will remove all its dashboard entries.
+                    <b>此操作无法撤销。</b>删除仪表盘会同时删除其中的所有条目。
                 </ConfirmDialog>
             ) : null}
         </Paper>

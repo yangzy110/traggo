@@ -92,7 +92,7 @@ enum Theme {
 }
 
 enum DateLocale {
-    American, American24h, German, Australian, British
+    Chinese, American, American24h, German, Australian, British
 }
 
 enum DateTimeInputStyle {

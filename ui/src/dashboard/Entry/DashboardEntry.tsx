@@ -69,7 +69,7 @@ const SpecificDashboardEntry: React.FC<{entry: Dashboards_dashboards_items; rang
     if (firstEntries.length === 0) {
         return (
             <Center>
-                <Typography>no data</Typography>
+                <Typography>暂无数据</Typography>
             </Center>
         );
     }

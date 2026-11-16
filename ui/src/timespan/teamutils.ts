@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import prettyMs from 'pretty-ms';
+import {formatDurationZh} from '../utils/duration';
 import {downloadCsv} from '../utils/csv';
 
 export const DAY_FORMAT = 'YYYY-MM-DD';
@@ -23,8 +23,7 @@ export const clock = (value: string) => moment.parseZone(value).format('HH:mm');
 export const spanSeconds = (start: string, end: string) =>
     Math.max(0, moment.parseZone(end).diff(moment.parseZone(start), 'seconds'));
 
-export const formatDuration = (seconds: number) =>
-    seconds < 60 ? '<1m' : prettyMs(seconds * 1000, {unitCount: 2, secondsDecimalDigits: 0});
+export const formatDuration = (seconds: number) => (seconds < 60 ? '不足1分钟' : formatDurationZh(seconds));
 
 // Returns an error message if the range cannot be queried.
 export const validateRange = (from: string, to: string, maxDays: number): string | null => {

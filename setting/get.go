@@ -15,7 +15,7 @@ func Get(ctx context.Context, db *gorm.DB) (model.UserSetting, error) {
 	user := auth.GetUser(ctx)
 	defaultSettings := model.UserSetting{
 		Theme:              model.ThemeMaterialLight,
-		DateLocale:         model.DateLocaleAmerican,
+		DateLocale:         model.DateLocaleChinese,
 		FirstDayOfTheWeek:  time.Monday.String(),
 		DateTimeInputStyle: model.DateTimeInputFancy,
 	}

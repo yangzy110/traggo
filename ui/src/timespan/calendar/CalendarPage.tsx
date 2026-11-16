@@ -1,145 +1,76 @@
 import * as React from 'react';
 import {Paper, useTheme} from '@mui/material';
+import {alpha} from '@mui/material/styles';
+import {ExportCsvButton} from '../../common/ExportCsvButton';
 import moment from 'moment';
-import {useApolloClient, useMutation, useQuery} from '@apollo/client/react';
-import {
-    TimeSpans_timeSpans_timeSpans,
-    Trackers,
-    Tags,
-    UpdateTimeSpan,
-    UpdateTimeSpanVariables,
-    AddTimeSpan,
-    AddTimeSpanVariables,
-    StopTimer,
-    StopTimerVariables,
-    StartTimer,
-    StartTimerVariables,
-    TimeSpansInRange,
-    TimeSpansInRangeVariables,
-    InputCursor,
-    TimeSpansForExport,
-    TimeSpansForExportVariables,
-} from '../../gql/types';
-import * as gqlTimeSpan from '../../gql/timeSpan';
+import {useApolloClient, useQuery} from '@apollo/client/react';
+import {Tags} from '../../gql/types';
 import * as gqlTag from '../../gql/tags';
 import FullCalendar from '@fullcalendar/react';
 import {calculateColor, ColorMode} from '../colorutils';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import zhCnLocale from '@fullcalendar/core/locales/zh-cn';
 import type {CalendarOptions, EventApi, EventInput} from '@fullcalendar/core';
-import Popper from '@mui/material/Popper';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
-import {TimeSpan} from '../TimeSpan';
+import type {PopperProps} from '@mui/material/Popper';
 import {toTagSelectorEntry} from '../../tag/tagSelectorEntry';
+import {EDITOR_CLASS, TimeSpanEditor} from '../TimeSpanEditor';
+import {TimesheetLayout} from '../TimesheetLayout';
+import {useTimeSpanMutations} from '../useTimeSpanMutations';
 import {FullCalendarStyling} from './FullCalendarStyling';
-import {useInterval} from '../../utils/hooks';
-import {
-    addTimeSpanInRangeToCache,
-    addTimeSpanToCache,
-    removeFromTimeSpanInRangeCache,
-    removeFromTrackersCache,
-} from '../../gql/utils';
-import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
 import {useSnackbar} from 'notistack';
 import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
-import {handleError} from '../../utils/errors';
-
-// The server returns at most 100 time spans per request, so the export has to page through the range.
-const MAX_EXPORT_PAGES = 200;
+import {fetchAllTimeSpans, TimeSpanItem} from '../fetchTimeSpans';
 
 const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
 };
 
-const StartTimerId = '-1';
+// The editor is shown below the end of a selection (to create a time span) or below an event (to change a time span).
+type Editor =
+    | {mode: 'create'; anchor: PopperProps['anchorEl']; start: Date; end: Date; unselect: () => void}
+    | {mode: 'edit'; anchor: PopperProps['anchorEl']; ts: TimeSpanItem};
 
 export const CalendarPage: React.FC = () => {
     const apollo = useApolloClient();
     const theme = useTheme();
-    const timeSpansResult = useQuery<TimeSpansInRange, TimeSpansInRangeVariables>(gqlTimeSpan.TimeSpansInRange, {
-        variables: {
-            start: moment().startOf('week').format(),
-            end: moment().endOf('week').format(),
-        },
-        fetchPolicy: 'cache-and-network',
-    });
-    const trackersResult = useQuery<Trackers>(gqlTimeSpan.Trackers, {fetchPolicy: 'cache-and-network'});
     const {enqueueSnackbar} = useSnackbar();
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
-    const [startTimer] = useMutation<StartTimer, StartTimerVariables>(gqlTimeSpan.StartTimer, {
-        refetchQueries: [{query: gqlTimeSpan.Trackers}],
-    });
-    const [updateTimeSpanMutation] = useMutation<UpdateTimeSpan, UpdateTimeSpanVariables>(gqlTimeSpan.UpdateTimeSpan);
-    const [currentDate, setCurrentDate] = React.useState(moment());
-    const [stopTimer] = useMutation<StopTimer, StopTimerVariables>(gqlTimeSpan.StopTimer, {
-        update: (cache, {data}) => {
-            if (!data || !data.stopTimeSpan) {
-                return;
-            }
-            removeFromTrackersCache(cache, data);
-            addTimeSpanInRangeToCache(cache, data.stopTimeSpan, timeSpansResult.variables);
-        },
-    });
-    useInterval(
-        () => {
-            setCurrentDate(moment());
-        },
-        60000,
-        true
-    );
-    const [ignore, setIgnore] = React.useState<boolean>(false);
-    const [selected, setSelected] = React.useState<{selected: HTMLElement | null; data: TimeSpans_timeSpans_timeSpans | null}>({
-        selected: null,
-        data: null,
-    });
-    const [addTimeSpan] = useMutation<AddTimeSpan, AddTimeSpanVariables>(gqlTimeSpan.AddTimeSpan, {
-        update: (cache, {data}) => {
-            if (!data || !data.createTimeSpan) {
-                return;
-            }
-            addTimeSpanInRangeToCache(cache, data.createTimeSpan, timeSpansResult.variables);
-            addTimeSpanToCache(cache, data.createTimeSpan);
-        },
-    });
+    const [range, setRange] = React.useState(() => ({
+        start: moment().startOf('week').format(),
+        end: moment().endOf('week').format(),
+    }));
+    const [timeSpans, setTimeSpans] = React.useState<TimeSpanItem[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [reload, setReload] = React.useState(0);
+    const [view, setView] = React.useState('timeGridWeek');
+    const [editor, setEditor] = React.useState<Editor | null>(null);
+    const mutations = useTimeSpanMutations(() => setReload((n) => n + 1));
 
-    // Exports all finished time spans of the range which is currently visible in the calendar.
-    const fetchExportPage = async (
-        start: string,
-        end: string,
-        cursor: InputCursor | null
-    ): Promise<TimeSpansForExport['timeSpans']> => {
-        const result = await apollo.query<TimeSpansForExport, TimeSpansForExportVariables>({
-            query: gqlTimeSpan.TimeSpansForExport,
-            variables: {start, end, cursor},
-            fetchPolicy: 'network-only',
-        });
-        if (!result.data) {
-            throw result.error || new Error('no data received');
-        }
-        return result.data.timeSpans;
-    };
+    React.useEffect(() => {
+        let cancelled = false;
+        setLoading(true);
+        fetchAllTimeSpans(apollo, range.start, range.end)
+            .then((items) => !cancelled && setTimeSpans(items))
+            .catch((e) => enqueueSnackbar('加载失败: ' + (e instanceof Error ? e.message : String(e)), {variant: 'error'}))
+            .finally(() => !cancelled && setLoading(false));
+        return () => {
+            cancelled = true;
+        };
+    }, [apollo, range.start, range.end, reload, enqueueSnackbar]);
 
+    // Exports all time spans of the range which is currently visible in the calendar.
     const exportCsv = async () => {
-        const {start, end} = timeSpansResult.variables;
-        const entries: LogEntry[] = [];
-        try {
-            let cursor: InputCursor | null = null;
-            for (let page = 0; page < MAX_EXPORT_PAGES; page++) {
-                const paged = await fetchExportPage(start, end, cursor);
-                paged.timeSpans.forEach((ts) =>
-                    entries.push({member: '', start: ts.start, end: ts.end, tags: ts.tags, note: ts.note})
-                );
-                if (!paged.cursor.hasMore || paged.timeSpans.length === 0) {
-                    break;
-                }
-                cursor = {startId: paged.cursor.startId, offset: paged.cursor.offset, pageSize: paged.cursor.pageSize};
-            }
-        } catch (e) {
-            enqueueSnackbar('导出失败: ' + (e instanceof Error ? e.message : String(e)), {variant: 'error'});
-            return;
-        }
+        const {start, end} = range;
+        const entries: LogEntry[] = timeSpans.map((ts) => ({
+            member: '',
+            start: ts.start,
+            end: ts.end,
+            tags: ts.tags,
+            note: ts.note,
+        }));
         if (entries.length === 0) {
             enqueueSnackbar('当前时间范围内没有记录可导出', {variant: 'info'});
             return;
@@ -149,316 +80,230 @@ export const CalendarPage: React.FC = () => {
         const to = moment(end).subtract(1, 'millisecond').format(DAY_FORMAT);
         exportLog(`traggo-my-log_${from}_${to}.csv`, entries, false);
     };
-    const exportRef = React.useRef(exportCsv);
-    exportRef.current = exportCsv;
 
-    const values: EventInput[] = (() => {
-        if (
-            timeSpansResult.error ||
-            timeSpansResult.loading ||
-            !timeSpansResult.data ||
-            timeSpansResult.data.timeSpans === null ||
-            trackersResult.error ||
-            trackersResult.loading ||
-            !trackersResult.data ||
-            trackersResult.data.timers === null ||
-            tagsResult.error ||
-            tagsResult.loading ||
-            !tagsResult.data ||
-            tagsResult.data.tags === null
-        ) {
-            return [];
-        }
-        return timeSpansResult.data.timeSpans.timeSpans
-            .concat(trackersResult.data.timers)
-            .sort((a, b) => a.start.toString().localeCompare(b.start.toString()))
-            .map((ts) => {
-                const colorKey = ts
-                    .tags!.map((t) => t.key + ':' + t.value)
-                    .sort((a, b) => a.localeCompare(b))
-                    .join(' ');
-                const color = calculateColor(colorKey, ColorMode.Bold, theme.palette.mode);
-                const borderColor = calculateColor(colorKey, ColorMode.None, theme.palette.mode);
-                return {
-                    start: moment(ts.start).toDate(),
-                    end: moment(ts.end || currentDate).toDate(),
-                    editable: !!ts.end,
-                    classNames: ts.end ? [] : ['__running'],
-                    backgroundColor: color,
-                    startEditable: true,
-                    id: String(ts.id),
-                    title: ts.tags!.map((t) => t.key + ':' + t.value).join(' '),
-                    extendedProps: {ts},
-                    textColor: theme.palette.getContrastText(color),
-                    borderColor,
-                };
-            });
-    })();
+    const ready = !loading && !tagsResult.error && !tagsResult.loading;
+    const values: EventInput[] =
+        ready && tagsResult.data
+            ? timeSpans.map((ts) => {
+                  const tags = (ts.tags || []).map((t) => t.key + ':' + t.value);
+                  const colorKey = [...tags].sort((a, b) => a.localeCompare(b)).join(' ');
+                  const color = calculateColor(colorKey, ColorMode.Soft, theme.palette.mode);
+                  return {
+                      start: moment(ts.start).toDate(),
+                      end: moment(ts.end).toDate(),
+                      // translucent, so that overlapping blocks stay readable; the solid color is the stripe at the left
+                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.4 : 0.22),
+                      id: String(ts.id),
+                      title: tags.join(' '),
+                      extendedProps: {ts},
+                      textColor: theme.palette.text.primary,
+                      borderColor: color,
+                  };
+              })
+            : [];
 
-    const onDrop: CalendarOptions['eventDrop'] = (data) => {
-        updateTimeSpanMutation({
-            variables: {
-                oldStart: moment(data.oldEvent.start!).format(),
-                start: moment(data.event.start!).format(),
-                end: moment(data.event.end!).format(),
-                id: parseInt(data.event.id, 10),
-                tags: stripTypename(data.event.extendedProps.ts.tags),
-                note: data.event.extendedProps.ts.note,
-            },
-        });
-    };
-    const onResize: CalendarOptions['eventResize'] = (data) => {
-        updateTimeSpanMutation({
-            variables: {
-                oldStart: moment(data.oldEvent.start!).format(),
-                start: moment(data.event.start!).format(),
-                end: moment(data.event.end!).format(),
-                id: parseInt(data.event.id, 10),
-                tags: stripTypename(data.event.extendedProps.ts.tags),
-                note: data.event.extendedProps.ts.note,
-            },
+    // dragging or resizing an event changes the time, the tags and the work content are kept
+    const onChangeTime = (data: {event: EventApi; oldEvent: EventApi}) => {
+        const ts: TimeSpanItem = data.event.extendedProps.ts;
+        mutations.update(ts.id, moment(data.oldEvent.start!).format(), {
+            start: data.event.start!,
+            end: data.event.end!,
+            tags: toTagSelectorEntry(tagsResult.data!.tags!, stripTypename(ts.tags || [])),
+            note: ts.note,
         });
     };
     const onSelect: CalendarOptions['select'] = (data) => {
-        const calendar = data.view.calendar;
-        addTimeSpan({
-            variables: {
-                start: moment(data.start).format(),
-                end: moment(data.end).format(),
-                tags: [],
-                note: '',
-            },
-        })
-            .catch(handleError('Add Time Span', enqueueSnackbar))
-            // The selection (a mirror of the new time span) stays visible otherwise and covers the new time span, which
-            // could then not be dragged or resized.
-            .finally(() => calendar.unselect());
+        // the editor is shown where the selection was ended
+        const x = data.jsEvent ? data.jsEvent.clientX : window.innerWidth / 2;
+        const y = data.jsEvent ? data.jsEvent.clientY : window.innerHeight / 2;
+        setEditor({
+            mode: 'create',
+            anchor: {getBoundingClientRect: () => new DOMRect(x, y, 0, 0)},
+            start: data.start,
+            end: data.end,
+            unselect: () => data.view.calendar.unselect(),
+        });
     };
     const onClick: CalendarOptions['eventClick'] = (data) => {
         data.jsEvent.preventDefault();
-        if (data.event.id === StartTimerId) {
-            startTimer({variables: {start: moment().format(), tags: [], note: ''}}).then(() => {
-                setCurrentDate(moment());
-            });
-            return;
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setSelected({data: data.event.extendedProps.ts, selected: data.jsEvent.target as any});
+        setEditor({mode: 'edit', anchor: data.el, ts: data.event.extendedProps.ts});
     };
-    if (trackersResult.data && !(trackersResult.data.timers || []).length) {
-        const startTimerEvent: EventInput = {
-            start: currentDate.toDate(),
-            end: moment(currentDate).add(15, 'minute').toDate(),
-            classNames: ['__start'],
-            editable: false,
-            id: StartTimerId,
-        };
-        values.push(startTimerEvent);
-    }
+
+    const closeEditor = () => {
+        if (editor && editor.mode === 'create') {
+            editor.unselect();
+        }
+        setEditor(null);
+    };
 
     return (
-        // All four edges are set, therefore the size does not depend on the content. The left and right edge match the
-        // padding of the page, the top edge is below the app bar.
-        <Paper
-            sx={{
-                position: 'absolute',
-                top: '80px',
-                bottom: '10px',
-                left: {xs: '8px', md: '24px'},
-                right: {xs: '8px', md: '24px'},
-                padding: '10px',
-            }}>
-            <FullCalendarStyling>
-                <FullCalendar
-                    // a week does not fit on a phone
-                    initialView={window.matchMedia('(max-width: 600px)').matches ? 'timeGridDay' : 'timeGridWeek'}
-                    rerenderDelay={30}
-                    datesSet={(x) => {
-                        const range = {
-                            start: moment(x.view.currentStart).format(),
-                            end: moment(x.view.currentEnd).format(),
-                        };
-                        if (
-                            !moment(timeSpansResult.variables.start).isSame(range.start) ||
-                            !moment(timeSpansResult.variables.end).isSame(range.end)
-                        ) {
-                            timeSpansResult.refetch(range);
+        <TimesheetLayout view="calendar" actions={<ExportCsvButton onClick={exportCsv} disabled={timeSpans.length === 0} />}>
+            <Paper sx={{flex: 1, minHeight: 0, padding: '10px'}}>
+                <FullCalendarStyling>
+                    <FullCalendar
+                        locales={[zhCnLocale]}
+                        locale="zh-cn"
+                        initialView="timeGridWeek"
+                        rerenderDelay={30}
+                        datesSet={(x) => {
+                            setView(x.view.type);
+                            const next = {
+                                start: moment(x.view.currentStart).format(),
+                                end: moment(x.view.currentEnd).format(),
+                            };
+                            setRange((old) =>
+                                moment(old.start).isSame(next.start) && moment(old.end).isSame(next.end) ? old : next
+                            );
+                        }}
+                        // in the month only the overview is shown, the details are edited in the week
+                        dateClick={(info) =>
+                            info.view.type === 'dayGridMonth' && info.view.calendar.changeView('timeGridWeek', info.date)
                         }
-                    }}
-                    views={{
-                        timeGrid5Day: {
-                            type: 'timeGrid',
-                            duration: {days: 7},
-                            buttonText: '5 day',
-                            hiddenDays: [0, 6],
-                        },
-                    }}
-                    editable={true}
-                    events={values}
-                    allDaySlot={false}
-                    selectable={true}
-                    selectMirror={true}
-                    handleWindowResize={true}
-                    height="100%"
-                    selectMinDistance={20}
-                    now={currentDate.toDate()}
-                    defaultTimedEventDuration={{minute: 15}}
-                    eventContent={(arg) => (
-                        <EventContent
-                            event={arg.event}
-                            stop={() => {
-                                stopTimer({variables: {id: arg.event.extendedProps.ts.id, end: moment().format()}});
-                            }}
-                        />
-                    )}
-                    slotLabelInterval={{minute: 60}}
-                    slotDuration={{minute: 15}}
-                    scrollTime={{hour: 6, minute: 30}}
-                    select={onSelect}
-                    firstDay={moment.localeData().firstDayOfWeek()}
-                    eventResize={onResize}
-                    eventClick={onClick}
-                    eventDrop={onDrop}
-                    slotLabelFormat={(s) => toMoment(s.date.marker).format('LT')}
-                    dayHeaderFormat={(s) => toMoment(s.date.marker).format('DD ddd')}
-                    nowIndicator={true}
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    customButtons={{
-                        export: {
-                            text: '导出 CSV',
-                            click: () => exportRef.current(),
-                        },
-                    }}
-                    headerToolbar={{
-                        center: 'title',
-                        left: 'prev,next today',
-                        right: 'export timeGridWeek,timeGrid5Day,timeGridDay',
-                    }}
-                />
-            </FullCalendarStyling>
-            {!!selected.selected && (
-                <Popper open={true} anchorEl={selected.selected} placement="bottom-start" style={{zIndex: 1200, maxWidth: 700}}>
-                    <ClickAwayListener
-                        onClickAway={() => {
-                            if (ignore) {
-                                return;
+                        dayMaxEvents={4}
+                        eventDisplay="block"
+                        editable={view !== 'dayGridMonth'}
+                        // both edges can be dragged: the top edge changes the start, the bottom edge the end
+                        eventResizableFromStart={true}
+                        snapDuration={{minutes: 5}}
+                        events={values}
+                        allDaySlot={false}
+                        selectable={view !== 'dayGridMonth'}
+                        selectMirror={true}
+                        unselectCancel={`.${EDITOR_CLASS}`}
+                        handleWindowResize={true}
+                        height="100%"
+                        selectMinDistance={20}
+                        defaultTimedEventDuration={{minute: 15}}
+                        eventContent={(arg) =>
+                            arg.view.type === 'dayGridMonth' ? (
+                                <MonthEventContent event={arg.event} />
+                            ) : (
+                                <EventContent event={arg.event} />
+                            )
+                        }
+                        slotLabelInterval={{minute: 60}}
+                        slotDuration={{minute: 15}}
+                        scrollTime={{hour: 6, minute: 30}}
+                        select={onSelect}
+                        firstDay={moment.localeData().firstDayOfWeek()}
+                        eventResize={onChangeTime}
+                        eventClick={onClick}
+                        eventDrop={onChangeTime}
+                        slotLabelFormat={(s) => toMoment(s.date.marker).format('LT')}
+                        dayHeaderContent={(arg) => moment(arg.date).format(arg.view.type === 'dayGridMonth' ? 'ddd' : 'DD ddd')}
+                        nowIndicator={true}
+                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                        headerToolbar={{
+                            center: 'title',
+                            left: 'prev,next today',
+                            right: 'timeGridWeek,dayGridMonth',
+                        }}
+                    />
+                </FullCalendarStyling>
+            </Paper>
+            {editor && editor.mode === 'create' ? (
+                <TimeSpanEditor
+                    key="create"
+                    anchorEl={editor.anchor}
+                    start={moment(editor.start)}
+                    end={moment(editor.end)}
+                    initialTags={[]}
+                    initialNote=""
+                    onConfirm={(result) =>
+                        mutations.create({...result, start: editor.start, end: editor.end}).then((ok) => {
+                            if (ok) {
+                                editor.unselect();
+                                setEditor(null);
                             }
-                            setSelected({selected: null, data: null});
-                        }}>
-                        <div>
-                            <TimeSpan
-                                elevation={10}
-                                id={selected.data!.id}
-                                key={selected.data!.id}
-                                rangeChange={(range) => {
-                                    setSelected({
-                                        ...selected,
-                                        data: {...selected.data!, start: range.from.format(), end: range.to && range.to.format()},
-                                    });
-                                }}
-                                deleted={() => {
-                                    removeFromTimeSpanInRangeCache(apollo.cache, selected.data!.id, timeSpansResult.variables);
-                                    setSelected({selected: null, data: null});
-                                }}
-                                continued={() => setCurrentDate(moment())}
-                                range={{
-                                    from: moment(selected.data!.start),
-                                    to: selected.data!.end ? moment(selected.data!.end) : undefined,
-                                }}
-                                initialTags={toTagSelectorEntry(
-                                    tagsResult.data!.tags!,
-                                    selected.data!.tags!.map((tag) => ({key: tag.key, value: tag.value}))
-                                )}
-                                note={selected.data!.note}
-                                dateSelectorOpen={setIgnore}
-                                stopped={() => {
-                                    setSelected({
-                                        ...selected,
-                                        data: {...selected.data!, end: currentDate.toDate()},
-                                    });
-                                }}
-                            />
-                        </div>
-                    </ClickAwayListener>
-                </Popper>
-            )}
-        </Paper>
+                        })
+                    }
+                    onCancel={closeEditor}
+                />
+            ) : null}
+            {editor && editor.mode === 'edit' && tagsResult.data && tagsResult.data.tags ? (
+                <TimeSpanEditor
+                    key={editor.ts.id}
+                    anchorEl={editor.anchor}
+                    start={moment(editor.ts.start)}
+                    end={moment(editor.ts.end)}
+                    initialTags={toTagSelectorEntry(
+                        tagsResult.data.tags,
+                        (editor.ts.tags || []).map((tag) => ({key: tag.key, value: tag.value}))
+                    )}
+                    initialNote={editor.ts.note}
+                    onConfirm={(result) =>
+                        mutations
+                            .update(editor.ts.id, editor.ts.start, {...result, start: editor.ts.start, end: editor.ts.end})
+                            .then((ok) => ok && setEditor(null))
+                    }
+                    onDelete={() => mutations.remove(editor.ts.id).then((ok) => ok && setEditor(null))}
+                    onCancel={closeEditor}
+                />
+            ) : null}
+        </TimesheetLayout>
     );
 };
 
-const EventContent: React.FC<{event: EventApi; stop: () => void}> = ({event, stop}) => {
+// The work content and a summary of the tags and the work content, which is used if there is only a single line.
+const describeEvent = (event: EventApi): {note: string; summary: string} => {
+    const note: string = (event.extendedProps.ts && event.extendedProps.ts.note) || '';
+    return {note, summary: event.title && note ? `${event.title} · ${note}` : event.title || note};
+};
+
+const EventContent: React.FC<{event: EventApi}> = ({event}) => {
     if (!event.start || !event.end) {
         return null;
-    }
-
-    if (event.id === StartTimerId) {
-        return <>START</>;
     }
 
     const start = moment(event.start);
     const end = moment(event.end);
     const lines = Math.floor(end.diff(start, 'minute') / 15);
-    const hasEnd = !event.extendedProps.ts || !!event.extendedProps.ts.end;
-
-    const stopButton = hasEnd ? null : (
-        <div className="stop">
-            <a
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    stop();
-                }}>
-                STOP {timeRunningCalendar(start, end)}
-            </a>
-        </div>
-    );
-    const clamp = (amount: number) => (
-        <span className="ellipsis" title={event.title} style={{WebkitLineClamp: amount}}>
-            {event.title}
+    const {note, summary} = describeEvent(event);
+    const clamp = (text: string, amount: number, className = 'ellipsis') => (
+        <span className={className} title={text} style={{WebkitLineClamp: amount}}>
+            {text}
         </span>
     );
     const single = (
-        <span className="ellipsis-single" title={event.title}>
-            {event.title}
+        <span className="ellipsis-single" title={summary}>
+            {summary}
         </span>
     );
-
     const date = (
         <>
-            {start.format('LT')} - {hasEnd ? end.format('LT') : 'now'}{' '}
-            {hasEnd ? <span style={{float: 'right'}}>{timeRunningCalendar(start, end)}</span> : null}
+            {start.format('LT')} - {end.format('LT')}
         </>
     );
+
     if (lines < 2) {
-        return (
-            <>
-                {event.title ? single : date}
-                {stopButton}
-            </>
-        );
+        return summary ? single : date;
     }
     if (lines === 2) {
-        return hasEnd ? (
+        return (
             <>
                 {date}
                 {single}
-                {stopButton}
-            </>
-        ) : (
-            <>
-                {clamp(2)}
-                {stopButton}
             </>
         );
     }
 
+    // the time, the tags and below of them the work content
     return (
         <>
             {date}
             <br />
-            {clamp(lines - 1)}
-            {stopButton}
+            {event.title ? clamp(event.title, note ? 1 : lines - 1) : null}
+            {note ? clamp(note, event.title ? lines - 2 : lines - 1, 'ellipsis note') : null}
         </>
+    );
+};
+
+const MonthEventContent: React.FC<{event: EventApi}> = ({event}) => {
+    const {summary} = describeEvent(event);
+    const text = `${moment(event.start!).format('HH:mm')} ${summary}`;
+    return (
+        <span className="ellipsis-single" title={text} style={{padding: '0 4px'}}>
+            {text}
+        </span>
     );
 };

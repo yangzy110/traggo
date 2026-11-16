@@ -31,22 +31,22 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
         e.preventDefault();
         addUser({variables: {name, pass, admin}})
             .then(() => {
-                enqueueSnackbar('User created', {variant: 'success'});
+                enqueueSnackbar('用户已创建', {variant: 'success'});
                 close();
             })
-            .catch(handleError('Create User', enqueueSnackbar));
+            .catch(handleError('创建用户失败', enqueueSnackbar));
     };
 
     return (
         <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title" fullWidth>
             <form onSubmit={submit} noValidate autoComplete="off">
-                <DialogTitle id="form-dialog-title">Create User</DialogTitle>
+                <DialogTitle id="form-dialog-title">创建用户</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
                         margin="dense"
                         id="name"
-                        label="Name"
+                        label="名称"
                         type="text"
                         fullWidth
                         value={name}
@@ -54,7 +54,7 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                     />
                     <TextField
                         margin="dense"
-                        label="Password"
+                        label="密码"
                         type="password"
                         fullWidth
                         value={pass}
@@ -62,15 +62,15 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                     />
                     <FormControlLabel
                         control={<Checkbox checked={admin} onChange={(e) => setAdmin(e.target.checked)} />}
-                        label="Admin"
+                        label="管理员"
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={close} color="primary">
-                        Cancel
+                        取消
                     </Button>
                     <Button type="submit" onClick={submit} color="primary">
-                        Create User
+                        创建用户
                     </Button>
                 </DialogActions>
             </form>

@@ -24,8 +24,8 @@ export const EditGlass: React.FC<EditGlassProps> = ({doEdit, doDelete}) => {
             }}>
             {confirm ? (
                 <div>
-                    <Typography>Confirm Deletion</Typography>
-                    <Button onClick={() => askConfirmation(false)}>Cancel</Button>
+                    <Typography>确认删除</Typography>
+                    <Button onClick={() => askConfirmation(false)}>取消</Button>
                     <Button color={'primary'} onClick={doDelete}>
                         Yeah, Delete
                     </Button>
@@ -55,7 +55,7 @@ export const EditGlass: React.FC<EditGlassProps> = ({doEdit, doDelete}) => {
                                     drag here
                                 </Typography>
                                 <Typography variant={'body1'} style={{textAlign: 'center'}}>
-                                    resize on corner
+                                    拖动右下角调整大小
                                 </Typography>
                             </div>
                         </Center>

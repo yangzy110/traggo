@@ -2,15 +2,16 @@ import * as React from 'react';
 import type {ErrorLike} from '@apollo/client';
 import {CombinedGraphQLErrors} from '@apollo/client/errors';
 import type {ProviderContext} from 'notistack';
+import {translateServerError} from './serverErrors';
 
 export const handleError = (prefix: string, enqueue: ProviderContext['enqueueSnackbar']): ((error: ErrorLike) => void) => {
     return (error) => {
         if (CombinedGraphQLErrors.is(error)) {
             error.errors.forEach((gqlError) => {
-                enqueue(`${prefix}: ${gqlError.message}`, {variant: 'warning'});
+                enqueue(`${prefix}: ${translateServerError(gqlError.message)}`, {variant: 'warning'});
             });
         } else {
-            enqueue(`${prefix}: ${error.message}`, {variant: 'warning'});
+            enqueue(`${prefix}: ${translateServerError(error.message)}`, {variant: 'warning'});
         }
     };
 };

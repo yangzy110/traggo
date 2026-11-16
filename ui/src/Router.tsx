@@ -1,3 +1,4 @@
+import {translateServerError} from './utils/serverErrors';
 import * as React from 'react';
 import {useQuery} from '@apollo/client/react';
 import {CurrentUser} from './gql/types';
@@ -12,7 +13,8 @@ import Box from '@mui/material/Box';
 import {DefaultPaper} from './common/DefaultPaper';
 import {Page} from './common/Page';
 import {Navigate, Outlet, Route, Routes} from 'react-router-dom';
-import {DailyPage} from './timespan/DailyPage';
+import {ListPage} from './timespan/ListPage';
+import {lastTimesheetView} from './timespan/TimesheetLayout';
 import {DevicesPage} from './devices/DevicesPage';
 import {UsersPage} from './user/UsersPage';
 import {DashboardPage} from './dashboard/DashboardPage';
@@ -47,7 +49,7 @@ export const Router = () => {
                     }>
                     <Route path="/dashboards" element={<DashboardsPage />} />
                     <Route path="/dashboard/:id/*" element={<DashboardPage />} />
-                    <Route path="/timesheet/list" element={<DailyPage />} />
+                    <Route path="/timesheet/list" element={<ListPage />} />
                     <Route path="/timesheet/calendar" element={<CalendarPage />} />
                     <Route path="/team" element={<TeamPage />} />
                     <Route path="/team/:userId" element={<TeamMemberPage />} />
@@ -56,7 +58,7 @@ export const Router = () => {
                     <Route path="/user/devices" element={<DevicesPage />} />
                     <Route path="/user/tags" element={<TagPage />} />
                     {admin ? <Route path="/admin/users" element={<UsersPage />} /> : null}
-                    <Route path="/" element={<Navigate to="/timesheet/calendar" replace />} />
+                    <Route path="/" element={<Navigate to={`/timesheet/${lastTimesheetView()}`} replace />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
             ) : (
@@ -72,15 +74,15 @@ const Error: React.FC<{error: ErrorLike; refetch: () => void}> = ({error, refetc
             <Box>
                 <DefaultPaper>
                     <Typography variant="h3" component="h1" gutterBottom={true}>
-                        Error
+                        出错了
                     </Typography>
                     <Typography component="p">
                         {CombinedGraphQLErrors.is(error)
-                            ? error.errors.map((gqlError) => gqlError.message).join(', ')
-                            : error.name + ': ' + error.message}
+                            ? error.errors.map((gqlError) => translateServerError(gqlError.message)).join(', ')
+                            : error.name + ': ' + translateServerError(error.message)}
                     </Typography>
                     <Button style={{marginTop: 10}} size="large" variant="outlined" onClick={() => refetch()}>
-                        Retry
+                        重试
                     </Button>
                 </DefaultPaper>
             </Box>

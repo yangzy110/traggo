@@ -1,20 +1,5 @@
 import * as React from 'react';
 
-// Calls the callback every `intervalMs` while `active` is true. The latest callback is always used.
-export const useInterval = (callback: () => void, intervalMs: number, active = true) => {
-    const saved = React.useRef(callback);
-    React.useEffect(() => {
-        saved.current = callback;
-    });
-    React.useEffect(() => {
-        if (!active) {
-            return;
-        }
-        const handle = setInterval(() => saved.current(), intervalMs);
-        return () => clearInterval(handle);
-    }, [intervalMs, active]);
-};
-
 // `start` (re)starts the timer, `stop` cancels it. The latest callback is always used.
 export const useTimeout = (callback: () => void, delayMs: number) => {
     const saved = React.useRef(callback);

@@ -25,10 +25,10 @@ export const ConfirmDialog: React.FC<React.PropsWithChildren<Props>> = ({childre
             </DialogContent>
             <DialogActions>
                 <Button onClick={fClose} className="cancel">
-                    No
+                    否
                 </Button>
                 <Button onClick={submitAndClose} autoFocus color="primary" variant="contained" className="confirm">
-                    Yes
+                    是
                 </Button>
             </DialogActions>
         </Dialog>

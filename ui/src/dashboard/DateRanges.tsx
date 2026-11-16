@@ -165,11 +165,11 @@ export const DateRanges: React.FC<Props> = ({changeMode, dashboard, ranges, setR
                                                 if (used.length === 0) {
                                                     removeRange({variables: {rangeId: range.id}});
                                                 } else {
-                                                    alert('Range is used by ' + used.map((entry) => entry.title).join(', '));
+                                                    alert('该日期范围正在被使用：' + used.map((entry) => entry.title).join(', '));
                                                 }
                                                 setOpenMenu(null);
                                             }}>
-                                            Delete
+                                            删除
                                         </MenuItem>
                                         <MenuItem
                                             onClick={() => {

@@ -1,44 +1,5 @@
 import {gql} from '@apollo/client';
 
-export const Trackers = gql`
-    query Trackers {
-        timers {
-            id
-            start
-            end
-            tags {
-                key
-                value
-            }
-            oldStart
-            note
-        }
-    }
-`;
-
-export const TimeSpansInRange = gql`
-    query TimeSpansInRange($start: Time!, $end: Time!) {
-        timeSpans(fromInclusive: $start, toInclusive: $end) {
-            timeSpans {
-                id
-                start
-                end
-                tags {
-                    key
-                    value
-                }
-                oldStart
-                note
-            }
-            cursor {
-                startId
-                offset
-                pageSize
-            }
-        }
-    }
-`;
-
 export const TimeSpans = gql`
     query TimeSpans($cursor: InputCursor) {
         timeSpans(cursor: $cursor) @connection(key: "AllTimeSpans") {
@@ -58,38 +19,6 @@ export const TimeSpans = gql`
                 offset
                 pageSize
             }
-        }
-    }
-`;
-
-export const StartTimer = gql`
-    mutation StartTimer($start: Time!, $tags: [InputTimeSpanTag!], $note: String!) {
-        createTimeSpan(start: $start, tags: $tags, note: $note) {
-            id
-            start
-            end
-            tags {
-                key
-                value
-            }
-            oldStart
-            note
-        }
-    }
-`;
-
-export const StopTimer = gql`
-    mutation StopTimer($id: Int!, $end: Time!) {
-        stopTimeSpan(id: $id, end: $end) {
-            id
-            start
-            end
-            tags {
-                key
-                value
-            }
-            oldStart
-            note
         }
     }
 `;
@@ -158,8 +87,9 @@ export const TeamTimeSpans = gql`
     }
 `;
 
-export const TimeSpansForExport = gql`
-    query TimeSpansForExport($start: Time!, $end: Time!, $cursor: InputCursor) {
+// The time spans of a range, the server returns at most 100 per request (see fetchAllTimeSpans).
+export const TimeSpansInRange = gql`
+    query TimeSpansInRange($start: Time!, $end: Time!, $cursor: InputCursor) {
         timeSpans(fromInclusive: $start, toInclusive: $end, cursor: $cursor) {
             timeSpans {
                 id

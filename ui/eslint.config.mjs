@@ -38,7 +38,7 @@ export default [
     },
     {
         // tools and type declarations of modules require default exports
-        files: ['*.config.{ts,mjs}', 'codegen.ts', '**/*.d.ts'],
+        files: ['*.config.{ts,mts,mjs}', 'codegen.ts', '**/*.d.ts'],
         languageOptions: {globals: {...globals.node}},
         rules: {'no-restricted-exports': 'off'},
     },

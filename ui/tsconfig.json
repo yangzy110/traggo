@@ -21,5 +21,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src", "vite.config.ts", "codegen.ts"]
+  "include": ["src", "vite.config.mts", "codegen.ts"]
 }

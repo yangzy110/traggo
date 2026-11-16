@@ -44,6 +44,7 @@ import {timeRunningCalendar} from '../timeutils';
 import {stripTypename} from '../../utils/strip';
 import {useSnackbar} from 'notistack';
 import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
+import {handleError} from '../../utils/errors';
 
 // The server returns at most 100 time spans per request, so the export has to page through the range.
 const MAX_EXPORT_PAGES = 200;
@@ -219,6 +220,7 @@ export const CalendarPage: React.FC = () => {
         });
     };
     const onSelect: CalendarOptions['select'] = (data) => {
+        const calendar = data.view.calendar;
         addTimeSpan({
             variables: {
                 start: moment(data.start).format(),
@@ -226,7 +228,11 @@ export const CalendarPage: React.FC = () => {
                 tags: [],
                 note: '',
             },
-        });
+        })
+            .catch(handleError('Add Time Span', enqueueSnackbar))
+            // The selection (a mirror of the new time span) stays visible otherwise and covers the new time span, which
+            // could then not be dragged or resized.
+            .finally(() => calendar.unselect());
     };
     const onClick: CalendarOptions['eventClick'] = (data) => {
         data.jsEvent.preventDefault();

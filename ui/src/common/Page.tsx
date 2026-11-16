@@ -29,7 +29,7 @@ import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
 import Button from '@mui/material/Button';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import {Link, Route, Routes, useLocation, useNavigate, useParams} from 'react-router-dom';
+import {Link, matchPath, useLocation, useNavigate} from 'react-router-dom';
 import MenuItem from '@mui/material/MenuItem';
 import {useMutation, useQuery} from '@apollo/client/react';
 import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
@@ -111,10 +111,30 @@ const styles = {
     },
 } satisfies Record<string, SxProps<Theme>>;
 
-const DashboardTitle: React.FC<{dashboards: Array<{id: number; name: string}>}> = ({dashboards}) => {
-    const {id} = useParams<{id: string}>();
-    const dashboard = dashboards.find((db) => '' + db.id === id);
-    return <>{'Dashboards / ' + (dashboard ? dashboard.name : '...')}</>;
+const pageTitles: Array<[path: string, title: string]> = [
+    ['/team', '团队日志'],
+    ['/team/:userId', '团队日志 / 成员'],
+    ['/stats', '统计'],
+    ['/timesheet/list', 'Timesheet / List'],
+    ['/timesheet/calendar', '我的日志'],
+    ['/user/settings', 'User / Settings'],
+    ['/user/devices', 'User / Devices'],
+    ['/user/tags', 'User / Tags'],
+    ['/admin/users', 'Admin / Users'],
+    ['/dashboards', 'Dashboards / Manage'],
+];
+
+const pageTitle = (pathname: string, dashboards: Array<{id: number; name: string}>): string => {
+    const known = pageTitles.find(([path]) => matchPath(path, pathname));
+    if (known) {
+        return known[1];
+    }
+    const dashboardMatch = matchPath('/dashboard/:id/*', pathname);
+    if (dashboardMatch) {
+        const dashboard = dashboards.find((db) => '' + db.id === dashboardMatch.params.id);
+        return 'Dashboards / ' + (dashboard ? dashboard.name : '...');
+    }
+    return '';
 };
 
 export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
@@ -255,19 +275,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                     </Box>
                     <Box sx={styles.mobileOnly}>
                         <Typography variant="h6" color="inherit" noWrap>
-                            <Routes>
-                                <Route path="/team" element="团队日志" />
-                                <Route path="/team/:userId" element="团队日志 / 成员" />
-                                <Route path="/stats" element="统计" />
-                                <Route path="/timesheet/list" element="Timesheet / List" />
-                                <Route path="/timesheet/calendar" element="我的日志" />
-                                <Route path="/user/settings" element="User / Settings" />
-                                <Route path="/user/devices" element="User / Devices" />
-                                <Route path="/user/tags" element="User / Tags" />
-                                <Route path="/admin/users" element="Admin / Users" />
-                                <Route path="/dashboards" element="Dashboards / Manage" />
-                                <Route path="/dashboard/:id/*" element={<DashboardTitle dashboards={dashboards} />} />
-                            </Routes>
+                            {pageTitle(location.pathname, dashboards)}
                         </Typography>
                     </Box>
                     <Box sx={styles.grow} />

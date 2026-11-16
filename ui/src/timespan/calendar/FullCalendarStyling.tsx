@@ -225,7 +225,7 @@ const useStyle = makeStyles((theme) => {
             '& .fc .__start:hover': {
                 background: theme.palette.primary.light,
             },
-            // tslint:disable-next-line:no-any important breaks it
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- important breaks it
         } as any,
     };
 });

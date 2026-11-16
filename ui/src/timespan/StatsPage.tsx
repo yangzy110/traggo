@@ -77,11 +77,7 @@ const hours = (seconds: number) => Math.round((seconds / 3600) * 100) / 100;
 export const StatsPage: React.FC = () => {
     const classes = useStyles();
     const theme = useTheme();
-    const [from, setFrom] = React.useState(
-        moment()
-            .subtract(6, 'day')
-            .format(DAY_FORMAT)
-    );
+    const [from, setFrom] = React.useState(moment().subtract(6, 'day').format(DAY_FORMAT));
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
     const rangeError = validateRange(from, to, MAX_STATS_DAYS);
 

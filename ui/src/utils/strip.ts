@@ -4,7 +4,7 @@ export const stripTypename = <T>(value: T): T => {
     }
 
     if (Array.isArray(value)) {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (value as any).map((x: any) => stripTypename(x));
     }
 

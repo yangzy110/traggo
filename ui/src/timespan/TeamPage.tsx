@@ -89,13 +89,7 @@ export const TeamPage: React.FC = () => {
         fetchPolicy: 'cache-and-network',
     });
 
-    const shift = (days: number) =>
-        setDate(
-            day
-                .clone()
-                .add(days, 'day')
-                .format(DAY_FORMAT)
-        );
+    const shift = (days: number) => setDate(day.clone().add(days, 'day').format(DAY_FORMAT));
     const items = (validDay && data && data.teamTimeSpans) || [];
     const members = groupByMember(items);
 

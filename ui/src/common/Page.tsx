@@ -106,7 +106,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const routerLink = (to: string): any => {
     return React.forwardRef<HTMLAnchorElement>((props, ref) => <Link innerRef={ref} to={to} {...props} />);
 };

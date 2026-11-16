@@ -73,11 +73,7 @@ export const TeamMemberPage: React.FC<Props> = ({match}) => {
     const unknownMember = !!membersResult.data && !member;
     const colors = useTagColors();
 
-    const [from, setFrom] = React.useState(
-        moment()
-            .subtract(6, 'day')
-            .format(DAY_FORMAT)
-    );
+    const [from, setFrom] = React.useState(moment().subtract(6, 'day').format(DAY_FORMAT));
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
     const rangeError = validateRange(from, to, MAX_LOG_DAYS);
 

@@ -75,7 +75,7 @@ export const parseRelativeTime = (value: string, divide: 'endOf' | 'startOf', no
                         );
                     }
 
-                    // tslint:disable-next-line:no-nested-switch
+                    // (nested switch)
                     switch (lastOperation) {
                         case Operation.Divide:
                             time = time[divide](currentChar);

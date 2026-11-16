@@ -40,14 +40,12 @@ export const DashboardEntry: React.FC<DashboardEntryProps> = React.forwardRef<{}
     );
 });
 
-// tslint:disable-next-line:cyclomatic-complexity mccabe-complexity
+// eslint-disable-next-line complexity
 const SpecificDashboardEntry: React.FC<{entry: Dashboards_dashboards_items; range: Range}> = ({entry, range}) => {
     const interval = entry.statsSelection.interval;
     const stats = useQuery<Stats2, Stats2Variables>(gqlStats.Stats2, {
         variables: {
-            now: moment()
-                .startOf('hour')
-                .format(),
+            now: moment().startOf('hour').format(),
             stats: {
                 range,
                 interval,

@@ -19,7 +19,7 @@ export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) =
                     isAnimationActive={false}
                     dataKey="timeSpendInSeconds"
                     nameKey={(entry) => {
-                        // tslint:disable-next-line:no-any
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         return (entry.key + ':' + entry.value) as any;
                     }}
                     data={entries}

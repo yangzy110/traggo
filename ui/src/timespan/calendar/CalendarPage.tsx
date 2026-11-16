@@ -52,7 +52,7 @@ const toMoment = (date: Date): moment.Moment => {
 
 declare global {
     interface Window {
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         __TRAGGO_CALENDAR: any;
     }
 }
@@ -64,12 +64,8 @@ export const CalendarPage: React.FC = () => {
     const theme = useTheme();
     const timeSpansResult = useQuery<TimeSpansInRange, TimeSpansInRangeVariables>(gqlTimeSpan.TimeSpansInRange, {
         variables: {
-            start: moment()
-                .startOf('week')
-                .format(),
-            end: moment()
-                .endOf('week')
-                .format(),
+            start: moment().startOf('week').format(),
+            end: moment().endOf('week').format(),
         },
         fetchPolicy: 'cache-and-network',
     });
@@ -147,9 +143,7 @@ export const CalendarPage: React.FC = () => {
         }
         entries.sort((a, b) => moment(a.start).diff(moment(b.start)));
         const from = moment(start).format(DAY_FORMAT);
-        const to = moment(end)
-            .subtract(1, 'millisecond')
-            .format(DAY_FORMAT);
+        const to = moment(end).subtract(1, 'millisecond').format(DAY_FORMAT);
         exportLog(`traggo-my-log_${from}_${to}.csv`, entries, false);
     };
     const exportRef = React.useRef(exportCsv);
@@ -242,15 +236,13 @@ export const CalendarPage: React.FC = () => {
             return;
         }
 
-        // tslint:disable-next-line:no-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setSelected({data: data.event.extendedProps.ts, selected: data.jsEvent.target as any});
     };
     if (trackersResult.data && !(trackersResult.data.timers || []).length) {
         const startTimerEvent: ExtendedEventSourceInput = {
             start: currentDate.toDate(),
-            end: moment(currentDate)
-                .add(15, 'minute')
-                .toDate(),
+            end: moment(currentDate).add(15, 'minute').toDate(),
             className: '__start',
             editable: false,
             id: StartTimerId,

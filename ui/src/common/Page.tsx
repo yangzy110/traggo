@@ -14,6 +14,7 @@ import DashboardIcon from '@material-ui/icons/Dashboard';
 import MenuIcon from '@material-ui/icons/Menu';
 import SettingsIcon from '@material-ui/icons/Settings';
 import DevicesIcon from '@material-ui/icons/DevicesOther';
+import TeamIcon from '@material-ui/icons/People';
 import LabelIcon from '@material-ui/icons/Label';
 import DashboardManageIcon from '@material-ui/icons/ListAlt';
 import TimeLineIcon from '@material-ui/icons/Timeline';
@@ -35,9 +36,16 @@ import {CurrentUser} from '../gql/__generated__/CurrentUser';
 import * as gqlDashboard from '../gql/dashboard';
 import {Dashboards} from '../gql/__generated__/Dashboards';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Route, RouteChildrenProps, Switch, useLocation} from 'react-router';
+import {Route, RouteChildrenProps, Switch, useHistory, useLocation} from 'react-router';
 
 const drawerWidth = 240;
+
+interface NavGroup {
+    name: string;
+    to?: string;
+    paths: string[];
+    items: Array<{label: string; to: string}>;
+}
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -105,6 +113,7 @@ const routerLink = (to: string): any => {
 export const Page: React.FC = ({children}) => {
     const classes = useStyles();
     const location = useLocation();
+    const history = useHistory();
     const {data} = useQuery<CurrentUser>(gqlUser.CurrentUser);
 
     const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -119,6 +128,13 @@ export const Page: React.FC = ({children}) => {
 
     const username = (data && data.user && data.user.name) || 'unknown';
     const admin = data && data.user && data.user.admin;
+
+    const drawerLink = (to: string, label: string, icon: React.ReactNode) => (
+        <ListItem button component={routerLink(to)} selected={location.pathname === to}>
+            <ListItemIcon>{icon}</ListItemIcon>
+            <ListItemText primary={label} />
+        </ListItem>
+    );
 
     const drawer = (
         <div>
@@ -135,7 +151,12 @@ export const Page: React.FC = ({children}) => {
                 </HrefLink>
             </div>
             <Divider />
-            <List subheader={<ListSubheader>Dashboards</ListSubheader>} dense={true}>
+            <List dense={true}>
+                {drawerLink('/timesheet/calendar', '我的日志', <CalendarIcon />)}
+                {drawerLink('/team', '团队日志', <TeamIcon />)}
+            </List>
+            <Divider />
+            <List subheader={<ListSubheader>统计</ListSubheader>} dense={true}>
                 {dashboards.map(({id, name}) => (
                     <ListItem key={id} button component={routerLink(`/dashboard/${id}/${encodeURIComponent(name)}`)}>
                         <ListItemIcon>
@@ -149,87 +170,42 @@ export const Page: React.FC = ({children}) => {
                         <ListItemText primary={'no dashboards added'} />
                     </ListItem>
                 ) : null}
-                <ListItem button component={routerLink(`/dashboards`)}>
-                    <ListItemIcon>
-                        <DashboardManageIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={'Manage'} />
-                </ListItem>
+                {drawerLink('/dashboards', 'Manage', <DashboardManageIcon />)}
             </List>
             <Divider />
-            <List subheader={<ListSubheader>Timesheet</ListSubheader>} dense={true}>
-                <ListItem button component={routerLink('/timesheet/list')}>
-                    <ListItemIcon>
-                        <TimeLineIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="List" />
-                </ListItem>
-                <ListItem button component={routerLink('/timesheet/calendar')}>
-                    <ListItemIcon>
-                        <CalendarIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Calendar" />
-                </ListItem>
+            <List subheader={<ListSubheader>其他</ListSubheader>} dense={true}>
+                {drawerLink('/timesheet/list', 'List', <TimeLineIcon />)}
+                {drawerLink('/user/tags', 'Tags', <LabelIcon />)}
+                {drawerLink('/user/devices', 'Devices', <DevicesIcon />)}
+                {drawerLink('/user/settings', 'Settings', <SettingsIcon />)}
+                {admin ? drawerLink('/admin/users', 'Users', <UsersIcon />) : null}
             </List>
-            <Divider />
-            <List subheader={<ListSubheader>User</ListSubheader>} dense={true}>
-                <ListItem button component={routerLink('/user/tags')}>
-                    <ListItemIcon>
-                        <LabelIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Tags" />
-                </ListItem>
-                <ListItem button component={routerLink('/user/devices')}>
-                    <ListItemIcon>
-                        <DevicesIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Devices" />
-                </ListItem>
-                <ListItem button component={routerLink('/user/settings')}>
-                    <ListItemIcon>
-                        <SettingsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Settings" />
-                </ListItem>
-            </List>
-            {admin ? (
-                <>
-                    <Divider />
-                    <List subheader={<ListSubheader>Admin</ListSubheader>} dense={true}>
-                        <ListItem button component={routerLink('/admin/users')}>
-                            <ListItemIcon>
-                                <UsersIcon />
-                            </ListItemIcon>
-                            <ListItemText primary="Users" />
-                        </ListItem>
-                    </List>
-                </>
-            ) : null}
             <Divider />
         </div>
     );
 
-    const navGroups: Array<{name: string; items: Array<{label: string; to: string}>}> = [
+    const navGroups: NavGroup[] = [
+        {name: '我的日志', to: '/timesheet/calendar', paths: ['/timesheet/calendar'], items: []},
+        {name: '团队日志', to: '/team', paths: ['/team'], items: []},
         {
-            name: 'Dashboards',
+            name: '统计',
+            paths: ['/dashboard'],
             items: [
                 ...dashboards.map(({id, name}) => ({label: name, to: `/dashboard/${id}/${encodeURIComponent(name)}`})),
                 {label: 'Manage', to: '/dashboards'},
             ],
         },
         {
-            name: 'Timesheet',
-            items: [{label: 'List', to: '/timesheet/list'}, {label: 'Calendar', to: '/timesheet/calendar'}],
-        },
-        {
-            name: 'User',
+            name: '其他',
+            paths: ['/timesheet/list', '/user', '/admin'],
             items: [
+                {label: 'List', to: '/timesheet/list'},
                 {label: 'Tags', to: '/user/tags'},
                 {label: 'Devices', to: '/user/devices'},
                 {label: 'Settings', to: '/user/settings'},
+                ...(admin ? [{label: 'Users', to: '/admin/users'}] : []),
             ],
         },
-        ...(admin ? [{name: 'Admin', items: [{label: 'Users', to: '/admin/users'}]}] : []),
     ];
     const activeNavGroup = navGroups.find((group) => group.name === (navMenu && navMenu.name));
     const activeNavItems: Array<{label: string; to: string}> = activeNavGroup ? activeNavGroup.items : [];
@@ -252,17 +228,17 @@ export const Page: React.FC = ({children}) => {
                         </Typography>
                     </Link>
                     <Hidden smDown implementation="js">
-                        {navGroups.map(({name, items}) => (
+                        {navGroups.map(({name, to, paths}) => (
                             <Button
                                 key={name}
                                 color="inherit"
                                 className={
                                     classes.navButton +
-                                    (items.some(({to}) => location.pathname.startsWith(to.split('/').slice(0, 3).join('/')))
+                                    (paths.some((path) => location.pathname.startsWith(path))
                                         ? ' ' + classes.navButtonActive
                                         : '')
                                 }
-                                onClick={(e) => setNavMenu({name, anchor: e.currentTarget})}>
+                                onClick={(e) => (to ? history.push(to) : setNavMenu({name, anchor: e.currentTarget}))}>
                                 {name}
                             </Button>
                         ))}
@@ -273,53 +249,54 @@ export const Page: React.FC = ({children}) => {
                             transformOrigin={{vertical: 'top', horizontal: 'left'}}
                             open={!!navMenu}
                             onClose={() => setNavMenu(null)}>
-                            {activeNavItems.map(
-                                ({label, to}) => (
-                                    <MenuItem
-                                        key={to}
-                                        selected={location.pathname === to}
-                                        onClick={() => setNavMenu(null)}
-                                        component={routerLink(to)}>
-                                        {label}
-                                    </MenuItem>
-                                )
-                            )}
+                            {activeNavItems.map(({label, to}) => (
+                                <MenuItem
+                                    key={to}
+                                    selected={location.pathname === to}
+                                    onClick={() => setNavMenu(null)}
+                                    component={routerLink(to)}>
+                                    {label}
+                                </MenuItem>
+                            ))}
                         </Menu>
                     </Hidden>
                     <Hidden mdUp implementation="js">
-                    <Typography variant="h6" color="inherit" noWrap>
-                        <Switch>
-                            <Route exact path="/timesheet/list">
-                                Timesheet / List
-                            </Route>
-                            <Route exact path="/timesheet/calendar">
-                                Timesheet / Calendar
-                            </Route>
-                            <Route exact path="/user/settings">
-                                User / Settings
-                            </Route>
-                            <Route exact path="/user/devices">
-                                User / Devices
-                            </Route>
-                            <Route exact path="/user/tags">
-                                User / Tags
-                            </Route>
-                            <Route exact path="/admin/users">
-                                Admin / Users
-                            </Route>
-                            <Route exact path="/dashboards">
-                                Dashboards / Manage
-                            </Route>
-                            <Route exact path="/dashboard/:id/:name">
-                                {(props: RouteChildrenProps<{id: string}>) => {
-                                    const db = dashboards.find(
-                                        (dashboard) => dashboard.id === parseInt(props.match!.params.id, 10)
-                                    );
-                                    return 'Dashboards / ' + (db ? db.name : '...');
-                                }}
-                            </Route>
-                        </Switch>
-                    </Typography>
+                        <Typography variant="h6" color="inherit" noWrap>
+                            <Switch>
+                                <Route exact path="/team">
+                                    团队日志
+                                </Route>
+                                <Route exact path="/timesheet/list">
+                                    Timesheet / List
+                                </Route>
+                                <Route exact path="/timesheet/calendar">
+                                    我的日志
+                                </Route>
+                                <Route exact path="/user/settings">
+                                    User / Settings
+                                </Route>
+                                <Route exact path="/user/devices">
+                                    User / Devices
+                                </Route>
+                                <Route exact path="/user/tags">
+                                    User / Tags
+                                </Route>
+                                <Route exact path="/admin/users">
+                                    Admin / Users
+                                </Route>
+                                <Route exact path="/dashboards">
+                                    Dashboards / Manage
+                                </Route>
+                                <Route exact path="/dashboard/:id/:name">
+                                    {(props: RouteChildrenProps<{id: string}>) => {
+                                        const db = dashboards.find(
+                                            (dashboard) => dashboard.id === parseInt(props.match!.params.id, 10)
+                                        );
+                                        return 'Dashboards / ' + (db ? db.name : '...');
+                                    }}
+                                </Route>
+                            </Switch>
+                        </Typography>
                     </Hidden>
                     <div className={classes.grow} />
                     <div className={classes.sectionDesktop}>

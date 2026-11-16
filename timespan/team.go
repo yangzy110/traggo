@@ -14,7 +14,8 @@ const maxTeamRange = 31 * 24 * time.Hour
 
 // TeamTimeSpans returns the finished time spans of all users inside the given range.
 // Every user is allowed to see the time spans of every other user. Running timers are excluded.
-func (r *ResolverForTimeSpan) TeamTimeSpans(ctx context.Context, fromInclusive model.Time, toInclusive model.Time) ([]*gqlmodel.TeamMemberTimeSpan, error) {
+// When userID is set, only the time spans of this user are returned.
+func (r *ResolverForTimeSpan) TeamTimeSpans(ctx context.Context, fromInclusive model.Time, toInclusive model.Time, userID *int) ([]*gqlmodel.TeamMemberTimeSpan, error) {
 	if fromInclusive.Time().After(toInclusive.Time()) {
 		return nil, errors.New("fromInclusive must be before toInclusive")
 	}
@@ -22,13 +23,16 @@ func (r *ResolverForTimeSpan) TeamTimeSpans(ctx context.Context, fromInclusive m
 		return nil, errors.New("the requested range must not be longer than 31 days")
 	}
 
-	var timeSpans []model.TimeSpan
-	err := r.DB.Preload("Tags").
+	call := r.DB.Preload("Tags").
 		Not("end_user_time is NULL").
 		Where("start_user_time <= ? AND end_user_time >= ?", toInclusive.OmitTimeZone(), fromInclusive.OmitTimeZone()).
-		Order("start_user_time ASC").
-		Find(&timeSpans).Error
-	if err != nil {
+		Order("start_user_time ASC")
+	if userID != nil {
+		call = call.Where("user_id = ?", *userID)
+	}
+
+	var timeSpans []model.TimeSpan
+	if err := call.Find(&timeSpans).Error; err != nil {
 		return nil, err
 	}
 
@@ -41,14 +45,14 @@ func (r *ResolverForTimeSpan) TeamTimeSpans(ctx context.Context, fromInclusive m
 		ids = append(ids, id)
 	}
 
-	users := map[int]*gqlmodel.User{}
+	users := map[int]*gqlmodel.TeamMember{}
 	if len(ids) > 0 {
 		var dbUsers []model.User
 		if err := r.DB.Where("id IN (?)", ids).Find(&dbUsers).Error; err != nil {
 			return nil, err
 		}
 		for _, user := range dbUsers {
-			users[user.ID] = &gqlmodel.User{ID: user.ID, Name: user.Name, Admin: user.Admin}
+			users[user.ID] = &gqlmodel.TeamMember{ID: user.ID, Name: user.Name}
 		}
 	}
 

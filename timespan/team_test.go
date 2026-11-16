@@ -20,7 +20,7 @@ func TestTeamTimeSpans_seesTimeSpansOfAllUsers(t *testing.T) {
 
 	resolver := ResolverForTimeSpan{DB: db.DB}
 	// the calling user is a third one, who has no time spans himself
-	result, err := resolver.TeamTimeSpans(fake.User(3), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"))
+	result, err := resolver.TeamTimeSpans(fake.User(3), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"), nil)
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 
@@ -47,7 +47,7 @@ func TestTeamTimeSpans_excludesRunningAndOutOfRange(t *testing.T) {
 	inside := user.TimeSpan("2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z")
 
 	resolver := ResolverForTimeSpan{DB: db.DB}
-	result, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"))
+	result, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"), nil)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	require.Equal(t, inside.TimeSpan.ID, result[0].TimeSpan.ID)
@@ -58,7 +58,7 @@ func TestTeamTimeSpans_empty(t *testing.T) {
 	defer db.Close()
 
 	resolver := ResolverForTimeSpan{DB: db.DB}
-	result, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"))
+	result, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"), nil)
 	require.NoError(t, err)
 	require.NotNil(t, result)
 	require.Empty(t, result)
@@ -69,9 +69,30 @@ func TestTeamTimeSpans_invalidRange(t *testing.T) {
 	defer db.Close()
 	resolver := ResolverForTimeSpan{DB: db.DB}
 
-	_, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-11T00:00:00Z"), test.ModelTime("2019-06-10T00:00:00Z"))
+	_, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-11T00:00:00Z"), test.ModelTime("2019-06-10T00:00:00Z"), nil)
 	require.EqualError(t, err, "fromInclusive must be before toInclusive")
 
-	_, err = resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-01-01T00:00:00Z"), test.ModelTime("2019-03-01T00:00:00Z"))
+	_, err = resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-01-01T00:00:00Z"), test.ModelTime("2019-03-01T00:00:00Z"), nil)
 	require.EqualError(t, err, "the requested range must not be longer than 31 days")
+}
+
+func TestTeamTimeSpans_filterByUser(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+
+	db.User(1).TimeSpan("2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z")
+	bob := db.User(2).TimeSpan("2019-06-10T11:00:00Z", "2019-06-10T12:00:00Z")
+
+	resolver := ResolverForTimeSpan{DB: db.DB}
+	userID := 2
+	result, err := resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"), &userID)
+	require.NoError(t, err)
+	require.Len(t, result, 1)
+	require.Equal(t, bob.TimeSpan.ID, result[0].TimeSpan.ID)
+	require.Equal(t, 2, result[0].User.ID)
+
+	unknown := 99
+	result, err = resolver.TeamTimeSpans(fake.User(1), test.ModelTime("2019-06-10T00:00:00Z"), test.ModelTime("2019-06-10T23:59:59Z"), &unknown)
+	require.NoError(t, err)
+	require.Empty(t, result)
 }

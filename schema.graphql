@@ -57,7 +57,9 @@ type RootQuery {
     devices: [Device!] @hasRole(role: USER)
     timeSpans(fromInclusive: Time, toInclusive: Time, cursor: InputCursor): PagedTimeSpans! @hasRole(role: USER)
     timers: [TimeSpan!] @hasRole(role: USER)
-    teamTimeSpans(fromInclusive: Time!, toInclusive: Time!): [TeamMemberTimeSpan!]! @hasRole(role: USER)
+    teamTimeSpans(fromInclusive: Time!, toInclusive: Time!, userId: Int): [TeamMemberTimeSpan!]! @hasRole(role: USER)
+    teamMembers: [TeamMember!]! @hasRole(role: USER)
+    teamStats(fromInclusive: Time!, toInclusive: Time!): TeamStats! @hasRole(role: USER)
     stats(ranges: [Range!], tags: [String!], excludeTags: [InputTimeSpanTag!], requireTags: [InputTimeSpanTag!]): [RangedStatisticsEntries!] @hasRole(role: USER)
     stats2(now: Time!, stats: InputStatsSelection!): [RangedStatisticsEntries!] @hasRole(role: USER)
     version: Version!
@@ -165,9 +167,33 @@ type TimeSpan {
     note: String!
 }
 
+# The part of a user which is visible to every other user.
+type TeamMember {
+    id: Int!
+    name: String!
+}
+
 type TeamMemberTimeSpan {
-    user: User!
+    user: TeamMember!
     timeSpan: TimeSpan!
+}
+
+type TeamStatsDay {
+    # Format: YYYY-MM-DD
+    day: String!
+    seconds: Float!
+}
+
+type TeamMemberStats {
+    member: TeamMember!
+    seconds: Float!
+}
+
+type TeamStats {
+    totalSeconds: Float!
+    days: [TeamStatsDay!]!
+    # Contains every member, also those without any tracked time.
+    members: [TeamMemberStats!]!
 }
 
 type PagedTimeSpans {

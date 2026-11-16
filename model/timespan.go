@@ -8,11 +8,13 @@ type TimeSpan struct {
 	StartUTC      time.Time
 	EndUTC        *time.Time
 	StartUserTime time.Time
-	EndUserTime   *time.Time
-	OffsetUTC     int
-	UserID        int `gorm:"type:int REFERENCES users(id) ON DELETE CASCADE"`
-	Tags          []TimeSpanTag
-	Note          string
+	// EndUserTime is indexed because range queries (f.ex. the team log) filter on `end_user_time >= from`,
+	// which is selective for recent ranges, while `start_user_time <= to` matches nearly all rows.
+	EndUserTime *time.Time `gorm:"index"`
+	OffsetUTC   int
+	UserID      int `gorm:"type:int REFERENCES users(id) ON DELETE CASCADE"`
+	Tags        []TimeSpanTag
+	Note        string
 }
 
 // TimeSpanTag is a tag for a time range

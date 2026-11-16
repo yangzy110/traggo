@@ -38,6 +38,11 @@ func (r *ResolverForTag) RemoveTag(ctx context.Context, key string) (*gqlmodel.T
 		return nil, err
 	}
 
+	if err := tx.Where("user_id = ? AND key = ?", tag.UserID, tag.Key).Delete(new(model.TagValue)).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
 	if err := tx.
 		Where("time_span_id in ?", timeSpansOf(tx, tag)).
 		Where(&model.TimeSpanTag{Key: tag.Key}).

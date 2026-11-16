@@ -24,8 +24,9 @@ import IconButton from '@mui/material/IconButton';
 import {useSnackbar} from 'notistack';
 import {TextField} from '@mui/material';
 import Button from '@mui/material/Button';
-import {Tags, RemoveTag, RemoveTagVariables, UpdateTag, UpdateTagVariables, CurrentUser} from '../gql/types';
+import {DefinedTagValues, Tags, RemoveTag, RemoveTagVariables, UpdateTag, UpdateTagVariables, CurrentUser} from '../gql/types';
 import {AddTagDialog} from './AddTagDialog';
+import {TagValues} from './TagValues';
 import {SliderPicker} from 'react-color';
 import {TagChip} from '../common/TagChip';
 import {handleError} from '../utils/errors';
@@ -44,6 +45,7 @@ const rootSx: SxProps<MuiTheme> = (theme) => ({
 
 export const TagPage = () => {
     const {data, loading} = useQuery<Tags>(gqlTag.Tags);
+    const definedValues = useQuery<DefinedTagValues>(gqlTag.DefinedTagValues);
     const {data: currentUser} = useQuery<CurrentUser>(gqlUser.CurrentUser);
     const admin = !!(currentUser && currentUser.user && currentUser.user.admin);
     const [removeTagConfirm, setRemoveTagConfirm] = React.useState('');
@@ -122,6 +124,15 @@ export const TagPage = () => {
                             ) : null}
                         </>
                     )}
+                    {isEdited ? null : (
+                        <TagValues
+                            tagKey={tag.key}
+                            editable={tag.editable}
+                            values={((definedValues.data && definedValues.data.definedTagValues) || [])
+                                .filter((v) => v.key === tag.key)
+                                .map((v) => v.value)}
+                        />
+                    )}
                 </TableCell>
                 <TableCell style={{minWidth: 128}}>
                     {isEdited ? (
@@ -190,7 +201,7 @@ export const TagPage = () => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>标签</TableCell>
+                        <TableCell>标签与可选值</TableCell>
                         <TableCell>颜色</TableCell>
                         <TableCell style={{width: 100}}>使用次数</TableCell>
                         <TableCell style={{width: 200}} />

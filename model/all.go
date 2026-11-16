@@ -4,6 +4,7 @@ package model
 func All() []interface{} {
 	return []interface{}{
 		new(TagDefinition),
+		new(TagValue),
 		new(User),
 		new(Device),
 		new(TimeSpan),

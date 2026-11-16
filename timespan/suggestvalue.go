@@ -5,6 +5,7 @@ import (
 
 	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
+	"github.com/traggo/server/tag"
 
 	"github.com/traggo/server/model"
 )
@@ -38,8 +39,20 @@ func (r *ResolverForTimeSpan) UsedTagValues(ctx context.Context) ([]*gqlmodel.Us
 		Limit(1000).
 		Find(&tags)
 	result := []*gqlmodel.UsedTagValue{}
+	seen := map[[2]string]bool{}
 	for _, tag := range tags {
+		seen[[2]string{tag.Key, tag.StringValue}] = true
 		result = append(result, &gqlmodel.UsedTagValue{Key: tag.Key, Value: tag.StringValue})
+	}
+	// the values which are defined for the tags can be chosen before they were used
+	defined, err := tag.DefinedValues(r.DB, auth.GetUser(ctx).ID)
+	if err != nil {
+		return nil, err
+	}
+	for _, value := range defined {
+		if !seen[[2]string{value.Key, value.Value}] {
+			result = append(result, &gqlmodel.UsedTagValue{Key: value.Key, Value: value.Value})
+		}
 	}
 	return result, find.Error
 }

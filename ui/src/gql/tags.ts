@@ -61,3 +61,28 @@ export const UsedTagValues = gql`
         }
     }
 `;
+
+export const DefinedTagValues = gql`
+    query DefinedTagValues {
+        definedTagValues {
+            key
+            value
+        }
+    }
+`;
+
+export const AddTagValue = gql`
+    mutation AddTagValue($key: String!, $value: String!) {
+        addTagValue(key: $key, value: $value) {
+            key
+        }
+    }
+`;
+
+export const RemoveTagValue = gql`
+    mutation RemoveTagValue($key: String!, $value: String!) {
+        removeTagValue(key: $key, value: $value) {
+            key
+        }
+    }
+`;

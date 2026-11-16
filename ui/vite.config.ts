@@ -19,5 +19,7 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         include: ['src/**/*.test.ts'],
+        // the render tests wait for the (generated) graphql responses
+        testTimeout: 60000,
     },
 });

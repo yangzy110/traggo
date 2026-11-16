@@ -231,8 +231,8 @@ export const Page: React.FC = ({children}) => {
         },
         ...(admin ? [{name: 'Admin', items: [{label: 'Users', to: '/admin/users'}]}] : []),
     ];
-    const activeNavItems: Array<{label: string; to: string}> =
-        navGroups.find((group) => group.name === (navMenu && navMenu.name))?.items || [];
+    const activeNavGroup = navGroups.find((group) => group.name === (navMenu && navMenu.name));
+    const activeNavItems: Array<{label: string; to: string}> = activeNavGroup ? activeNavGroup.items : [];
 
     return (
         <div className={classes.root}>

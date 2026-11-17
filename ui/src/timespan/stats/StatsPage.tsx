@@ -14,11 +14,11 @@ import {TeamStatsView} from './TeamStatsView';
 
 type View = 'mine' | 'team';
 
-// Everybody sees the own hours and how they are divided between the projects. Admins can switch to the statistics of the team.
+// Everybody can see the own statistics and the statistics of the team. Admins start on the team view, everybody else on their own.
 export const StatsPage: React.FC = () => {
     const [from, setFrom] = React.useState(moment().subtract(6, 'day').format(DAY_FORMAT));
     const [to, setTo] = React.useState(moment().format(DAY_FORMAT));
-    const [adminView, setAdminView] = React.useState<View>('team');
+    const [selectedView, setSelectedView] = React.useState<View | null>(null);
     const rangeError = validateRange(from, to, MAX_STATS_DAYS);
     const {data: userData} = useQuery<CurrentUser>(gqlUser.CurrentUser);
 
@@ -26,16 +26,14 @@ export const StatsPage: React.FC = () => {
         return <CenteredSpinner />;
     }
     const admin = userData.user.admin;
-    const view: View = admin ? adminView : 'mine';
+    const view: View = selectedView ?? (admin ? 'team' : 'mine');
 
     return (
         <div>
-            {admin ? (
-                <Tabs value={view} onChange={(_, value: View) => setAdminView(value)} sx={{marginBottom: 1}}>
-                    <Tab value="team" label="团队统计" />
-                    <Tab value="mine" label="我的统计" />
-                </Tabs>
-            ) : null}
+            <Tabs value={view} onChange={(_, value: View) => setSelectedView(value)} sx={{marginBottom: 1}}>
+                {admin ? <Tab value="team" label="团队统计" /> : <Tab value="mine" label="我的统计" />}
+                {admin ? <Tab value="mine" label="我的统计" /> : <Tab value="team" label="团队统计" />}
+            </Tabs>
             <StatsRangeControls
                 from={from}
                 to={to}

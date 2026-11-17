@@ -14,7 +14,7 @@ import {WorkTimeChart} from './WorkTimeChart';
 import {TagWorkload} from './TagWorkload';
 import {MemberWorkload} from './MemberWorkload';
 
-// The statistics of the whole team, they are meant for admins.
+// The statistics of the whole team, they are visible for every user.
 export const TeamStatsView: React.FC<{from: string; to: string}> = ({from, to}) => {
     const {data, loading, error} = useQuery<TeamStatistics, TeamStatisticsVariables>(gqlTimeSpan.TeamStats, {
         variables: {

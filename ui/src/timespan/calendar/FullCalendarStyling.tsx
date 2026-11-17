@@ -162,6 +162,9 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                 '& .fc .note': {opacity: 0.95, fontSize: '0.95rem'},
                 '& .fc .time': {fontWeight: 700},
                 '& .fc .pills': {display: 'flex', flexWrap: 'wrap', gap: '3px', overflow: 'hidden', margin: '2px 0'},
+                '& .fc .tag-row': {display: 'flex', alignItems: 'flex-start', gap: '6px', minWidth: 0},
+                '& .fc .tag-row .pills': {flexWrap: 'nowrap', flexShrink: 0, maxWidth: '65%', margin: '1px 0'},
+                '& .fc .tag-row .note': {flex: 1, minWidth: 0, wordBreak: 'break-word'},
                 '& .fc .ellipsis-single .pills': {display: 'inline-flex', flexWrap: 'nowrap', verticalAlign: 'middle'},
                 '& .fc .pill': {
                     borderRadius: '10px',

@@ -31,13 +31,23 @@ const styles = {
         flexGrow: 1,
     },
     member: (theme) => ({
-        marginBottom: theme.spacing(2),
+        marginBottom: theme.spacing(2.5),
         padding: theme.spacing(2),
+        borderRadius: '16px',
+        boxShadow: theme.shadows[1],
     }),
     memberHeader: (theme) => ({
         display: 'flex',
         alignItems: 'center',
         marginBottom: theme.spacing(1),
+        paddingBottom: theme.spacing(1.5),
+        borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+    total: (theme) => ({
+        padding: theme.spacing(0.5, 1.5),
+        borderRadius: '999px',
+        fontWeight: 600,
+        backgroundColor: theme.palette.action.selected,
     }),
     avatarButton: (theme) => ({
         padding: 0,
@@ -129,12 +139,19 @@ export const TeamPage: React.FC = () => {
                             title={`查看 ${member.name} 的日志`}
                             aria-label={`查看 ${member.name} 的日志`}
                             onClick={() => navigate(memberLogPath(member.id))}>
-                            <MemberAvatar id={member.id} name={member.name} />
+                            <MemberAvatar id={member.id} name={member.name} size={44} />
                         </IconButton>
-                        <Typography variant="h6" sx={styles.memberName}>
-                            {member.name}
+                        <Box sx={styles.memberName}>
+                            <Typography variant="h6" sx={{lineHeight: 1.2}}>
+                                {member.name}
+                            </Typography>
+                            <Typography variant="caption" color="textSecondary">
+                                {member.entries.length} 条记录
+                            </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={styles.total}>
+                            共 {formatDuration(member.seconds)}
                         </Typography>
-                        <Typography color="textSecondary">共 {formatDuration(member.seconds)}</Typography>
                     </Box>
                     {member.entries.map(({timeSpan, tagColors}) => (
                         <TeamEntry key={timeSpan.id} timeSpan={timeSpan} tagColors={tagColors} />

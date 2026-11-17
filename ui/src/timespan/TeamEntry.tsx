@@ -18,36 +18,57 @@ interface TeamEntryProps {
     tagColors: Array<{key: string; color: string}>;
 }
 
+// One row of the log: an accent in the color of the first tag, the time, and the tags and the work content in one line.
 export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
     const colors: Record<string, string> = {};
     tagColors.forEach((tag) => (colors[tag.key] = tag.color));
+    const tags = timeSpan.tags || [];
+    const accent = (tags[0] && colors[tags[0].key]) || DEFAULT_TAG_COLOR;
     return (
         <Box
             sx={(theme) => ({
                 display: 'flex',
-                alignItems: 'flex-start',
-                padding: theme.spacing(1, 0),
-                borderTop: `1px solid ${theme.palette.divider}`,
+                alignItems: 'center',
+                gap: theme.spacing(1.5),
+                padding: theme.spacing(0.75, 1.5),
+                marginTop: theme.spacing(0.75),
+                borderRadius: '10px',
+                borderLeft: `4px solid ${accent}`,
+                backgroundColor: `color-mix(in srgb, ${accent} 6%, transparent)`,
+                transition: 'background-color 0.15s',
+                '&:hover': {backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`},
             })}>
-            <Typography sx={{minWidth: 120, marginRight: 2, fontVariantNumeric: 'tabular-nums'}}>
-                {clock(timeSpan.start)} - {timeSpan.end ? clock(timeSpan.end) : ''}
-                <br />
-                <Typography variant="caption" color="textSecondary">
-                    {timeSpan.end ? formatDuration(spanSeconds(timeSpan.start, timeSpan.end)) : ''}
-                </Typography>
+            <Typography
+                variant="body2"
+                sx={{minWidth: 104, fontWeight: 600, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap'}}>
+                {clock(timeSpan.start)} - {timeSpan.end ? clock(timeSpan.end) : '…'}
             </Typography>
-            <div>
-                <div>
-                    {(timeSpan.tags || []).map((tag) => (
-                        <TagChip key={tagLabel(tag)} label={tagLabel(tag)} color={colors[tag.key] || DEFAULT_TAG_COLOR} />
-                    ))}
-                </div>
+            <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'wrap', flexGrow: 1, minWidth: 0}}>
+                {tags.map((tag) => (
+                    <TagChip key={tagLabel(tag)} label={tagLabel(tag)} color={colors[tag.key] || DEFAULT_TAG_COLOR} />
+                ))}
                 {timeSpan.note ? (
-                    <Typography variant="body2" sx={{whiteSpace: 'pre-wrap', wordBreak: 'break-word'}}>
+                    <Typography
+                        variant="body2"
+                        sx={{marginLeft: 0.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', minWidth: 0}}>
                         {timeSpan.note}
                     </Typography>
                 ) : null}
-            </div>
+            </Box>
+            {timeSpan.end ? (
+                <Typography
+                    variant="caption"
+                    color="textSecondary"
+                    sx={(theme) => ({
+                        flexShrink: 0,
+                        padding: theme.spacing(0.25, 1),
+                        borderRadius: '999px',
+                        backgroundColor: theme.palette.action.hover,
+                        fontVariantNumeric: 'tabular-nums',
+                    })}>
+                    {formatDuration(spanSeconds(timeSpan.start, timeSpan.end))}
+                </Typography>
+            ) : null}
         </Box>
     );
 };

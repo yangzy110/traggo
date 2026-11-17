@@ -7,9 +7,11 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import {Checkbox} from '@mui/material';
+import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import {AddTag, AddTagVariables, CurrentUser, Tags} from '../gql/types';
 import {pickTagColor} from '../common/tagColors';
+import {TagColorGrid} from '../common/TagColorGrid';
 import * as gqlTags from '../gql/tags';
 import * as gqlUser from '../gql/user';
 import {TagSelectorEntry} from './tagSelectorEntry';
@@ -33,10 +35,11 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
     const admin = !!(currentUser && currentUser.user && currentUser.user.admin);
 
     const [addTag] = useMutation<AddTag, AddTagVariables>(gqlTags.AddTag, {refetchQueries: [{query: gqlTags.Tags}]});
+    // until the user chooses one, the first color which is not used yet is selected
+    const [chosen, setChosen] = React.useState<string | null>(null);
+    const color = chosen || pickTagColor(((tagData && tagData.tags) || []).map((tag) => tag.color));
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        // the system assigns a color, it can be changed in the list of the tags
-        const color = pickTagColor(((tagData && tagData.tags) || []).map((tag) => tag.color));
         addTag({variables: {name, color, shared: admin && shared}})
             .then((result) => {
                 close();
@@ -63,6 +66,10 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
+                    <Typography variant="caption" color="textSecondary" component="div" sx={{marginTop: 1}}>
+                        颜色
+                    </Typography>
+                    <TagColorGrid value={color} onChange={setChosen} />
                     {admin ? (
                         <FormControlLabel
                             control={<Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} />}

@@ -50,13 +50,23 @@ const styles = {
         flexGrow: 1,
     },
     day: (theme) => ({
-        marginBottom: theme.spacing(2),
+        marginBottom: theme.spacing(2.5),
         padding: theme.spacing(2),
+        borderRadius: '16px',
+        boxShadow: theme.shadows[1],
     }),
     dayHeader: (theme) => ({
         display: 'flex',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: theme.spacing(1),
+        paddingBottom: theme.spacing(1.5),
+        borderBottom: `1px solid ${theme.palette.divider}`,
+    }),
+    total: (theme) => ({
+        padding: theme.spacing(0.5, 1.5),
+        borderRadius: '999px',
+        fontWeight: 600,
+        backgroundColor: theme.palette.action.selected,
     }),
 } satisfies Record<string, SxProps<MuiTheme>>;
 
@@ -91,7 +101,7 @@ const MemberHeader: React.FC<{member?: {name: string}; userId: number; subtitle:
             <IconButton aria-label="返回" onClick={() => navigate('/team')}>
                 <BackIcon />
             </IconButton>
-            {member ? <MemberAvatar id={userId} name={member.name} /> : null}
+            {member ? <MemberAvatar id={userId} name={member.name} size={44} /> : null}
             <Typography variant="h5" sx={styles.title}>
                 {member ? `${member.name} 的日志` : ''}
             </Typography>
@@ -120,7 +130,9 @@ const DayCard: React.FC<{group: DayGroup}> = ({group: {day, entries, seconds}}) 
     <Paper sx={styles.day}>
         <Box sx={styles.dayHeader}>
             <Typography variant="h6">{moment(day, DAY_FORMAT).format('YYYY-MM-DD ddd')}</Typography>
-            <Typography color="textSecondary">共 {formatDuration(seconds)}</Typography>
+            <Typography variant="body2" sx={styles.total}>
+                共 {formatDuration(seconds)}
+            </Typography>
         </Box>
         {entries.map(({timeSpan, tagColors}) => (
             <TeamEntry key={timeSpan.id} timeSpan={timeSpan} tagColors={tagColors} />

@@ -388,21 +388,18 @@ const EventContent: React.FC<{event: EventApi}> = ({event}) => {
         );
     }
 
-    // the time, the tags and below of them the work content
-    const tagLines = hasTags ? (note ? 1 : lines - 1) : 0;
+    // the time, below of it the tags and the work content in the same row
     return (
         <>
             {time}
-            <br />
-            {hasTags ? <TagPills event={event} maxLines={tagLines} /> : null}
-            {note ? (
-                <span
-                    className="ellipsis note"
-                    title={note}
-                    style={{WebkitLineClamp: Math.max(1, lines - 1 - (hasTags ? 1 : 0))}}>
-                    {note}
-                </span>
-            ) : null}
+            <div className="tag-row">
+                {hasTags ? <TagPills event={event} /> : null}
+                {note ? (
+                    <span className="ellipsis note" title={note} style={{WebkitLineClamp: Math.max(1, lines - 1)}}>
+                        {note}
+                    </span>
+                ) : null}
+            </div>
         </>
     );
 };

@@ -48,7 +48,7 @@ func (a span) same(b span) bool {
 // splitTag splits "name" or the older "name:value" into the key and the value.
 func splitTag(label string) (string, string) {
 	parts := strings.SplitN(strings.TrimSpace(label), ":", 2)
-	key := strings.ToLower(strings.TrimSpace(parts[0]))
+	key := strings.TrimSpace(parts[0])
 	if len(parts) == 2 {
 		return key, strings.TrimSpace(parts[1])
 	}

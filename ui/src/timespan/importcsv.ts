@@ -144,7 +144,7 @@ export interface UpdateEntry {
     tags: string[];
 }
 
-export const tagKey = (label: string): string => label.split(':')[0].trim().toLowerCase();
+export const tagKey = (label: string): string => label.split(':')[0].trim();
 
 // Work contents are joined, the content of the other one is not added again if it is the same or part of it already.
 export const mergeNote = (base: string, other: string): string => {

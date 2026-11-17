@@ -12,8 +12,7 @@ export const useSuggest = (
     allowDuplicateKeys = false,
     createTags = true
 ): TagSelectorEntry[] => {
-    const [tagKeySomeCase, tagValue] = inputValue.split(':');
-    const tagKey = tagKeySomeCase.toLowerCase();
+    const [tagKey, tagValue] = inputValue.split(':');
 
     const exactMatch = ((tagResult.data && tagResult.data.tags) || []).find((tag) => tag.key === tagKey);
 

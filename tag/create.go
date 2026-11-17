@@ -26,7 +26,7 @@ func (r *ResolverForTag) CreateTag(ctx context.Context, key string, color string
 	isShared := shared != nil && *shared
 
 	definition := &model.TagDefinition{
-		Key:    strings.ToLower(key),
+		Key:    key,
 		Color:  color,
 		UserID: user.ID,
 		Shared: isShared,

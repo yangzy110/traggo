@@ -59,7 +59,7 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 		if strings.Contains(*newKey, " ") {
 			return nil, fmt.Errorf("tag must not contain spaces")
 		}
-		finalKey = strings.ToLower(*newKey)
+		finalKey = *newKey
 	}
 	renamed := finalKey != tag.Key
 	if renamed || makeShared {

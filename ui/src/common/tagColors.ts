@@ -1,17 +1,21 @@
-// Fresh, friendly colors which work as tinted labels in the light and in the dark theme.
+// The 16 colors (4 x 4) a tag can have, custom colors are not supported. They work as tinted labels in the light and in the dark theme.
 export const TAG_PALETTE = [
     '#6366f1',
     '#38bdf8',
     '#2dd4bf',
     '#4ade80',
+    '#a3e635',
     '#fbbf24',
     '#fb923c',
+    '#ef4444',
     '#fb7185',
     '#f472b6',
     '#c084fc',
+    '#8b5cf6',
     '#22d3ee',
-    '#a3e635',
-    '#818cf8',
+    '#3b82f6',
+    '#94a3b8',
+    '#a8856b',
 ];
 
 // The first color of the palette which is not used yet, if all are used the palette starts again.

@@ -47,17 +47,18 @@ func TestGQL_CreateTag_fails_tagAlreadyExists(t *testing.T) {
 	assertTagCount(t, db, 1)
 }
 
-func TestGQL_CreateTag_fails_tagAlreadyExists_caseInsensitive(t *testing.T) {
+func TestGQL_CreateTag_succeeds_sameKeyWithOtherCase(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
 	db.User(5)
 	db.Create(&model.TagDefinition{Key: "tag", Color: "#fff", UserID: 5})
 
 	resolver := ResolverForTag{DB: db.DB}
-	_, err := resolver.CreateTag(fake.User(5), "Tag", "#fff", nil)
+	created, err := resolver.CreateTag(fake.User(5), "Tag", "#fff", nil)
 
-	require.EqualError(t, err, "tag with key 'tag' does already exist")
-	assertTagCount(t, db, 1)
+	require.NoError(t, err)
+	require.Equal(t, "Tag", created.Key)
+	assertTagCount(t, db, 2)
 }
 
 func TestGQL_CreateTag_succeeds_existingTagForOtherUser(t *testing.T) {

@@ -29,6 +29,9 @@ export const SettingsPage: React.FC = () => {
     const [setSettings] = useMutation<SetSettings, SetSettingsVariables>(SetSettingsGQL, {
         refetchQueries: [{query: SettingsGQL}],
     });
+    // without a chosen default tag the first tag is used, so it is shown as the selected one
+    const chosenDefaultTag = usableTags.find((tag) => tag.key === settings.defaultTag);
+    const shownDefaultTag = chosenDefaultTag ? chosenDefaultTag.key : usableTags.length > 0 ? usableTags[0].key : '';
     return (
         <Paper elevation={1} sx={rootSx}>
             <TextField
@@ -71,15 +74,16 @@ export const SettingsPage: React.FC = () => {
                 label="默认标签"
                 margin="normal"
                 fullWidth
-                helperText="新建记录时会自动选中这个标签。没有设置时使用第一个标签。"
+                helperText="新建记录时会自动选中这个标签。还没有设置过时，默认是第一个标签。"
                 slotProps={{select: {native: true}}}
-                value={usableTags.some((tag) => tag.key === settings.defaultTag) ? settings.defaultTag : ''}
+                disabled={usableTags.length === 0}
+                value={shownDefaultTag}
                 onChange={(e) => {
                     setSettings({variables: {settings: {...settings, defaultTag: e.target.value}}})
                         .then(() => enqueueSnackbar('默认标签已更改', {variant: 'success'}))
                         .catch(handleError('更改默认标签失败', enqueueSnackbar));
                 }}>
-                <option value="">第一个标签{usableTags.length > 0 ? `（${usableTags[0].key}）` : ''}</option>
+                {usableTags.length === 0 ? <option value="">暂无标签</option> : null}
                 {usableTags.map((tag) => (
                     <option key={tag.key} value={tag.key}>
                         {tag.key}

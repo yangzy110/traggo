@@ -74,4 +74,5 @@ export const exportLog = (filename: string, entries: LogEntry[]) => {
 
 const safeFilePart = (value: string) => value.replace(/[^\w一-龥-]+/g, '_');
 
-export const memberFileName = (name: string, from: string, to: string) => `traggo-${safeFilePart(name)}_${from}_${to}.csv`;
+// f.ex. "小王的工作记录_2026-11-10_2026-11-16.csv"
+export const memberFileName = (name: string, from: string, to: string) => `${safeFilePart(name) || '我'}的工作记录_${from}_${to}.csv`;

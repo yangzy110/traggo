@@ -104,7 +104,7 @@ export const TeamPage: React.FC = () => {
 
     const exportCsv = () => {
         const entries: LogEntry[] = items.map(({user, timeSpan}) => ({...timeSpan, member: user.name}));
-        exportLog(`traggo-team_${date}.csv`, entries);
+        exportLog(`团队的工作记录_${date}.csv`, entries);
     };
 
     return (

@@ -12,7 +12,7 @@ import {useApolloClient} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {ExportCsvButton} from '../common/ExportCsvButton';
 import {useCurrentUserName} from '../gql/useCurrentUserName';
-import {DAY_FORMAT, exportLog, LogEntry, MAX_STATS_DAYS, validateRange} from './team/teamutils';
+import {DAY_FORMAT, exportLog, LogEntry, MAX_STATS_DAYS, memberFileName, validateRange} from './team/teamutils';
 import {fetchAllTimeSpans} from './fetchTimeSpans';
 
 const defaultFrom = () => moment().subtract(6, 'day').format(DAY_FORMAT);
@@ -42,7 +42,7 @@ export const ExportRangeButton: React.FC = () => {
             const entries: LogEntry[] = items
                 .map((ts) => ({member: username, start: ts.start, end: ts.end, tags: ts.tags, note: ts.note}))
                 .sort((a, b) => moment(a.start).diff(moment(b.start)));
-            exportLog(`traggo-my-log_${from}_${to}.csv`, entries);
+            exportLog(memberFileName(username, from, to), entries);
             setOpen(false);
         } catch (e) {
             enqueueSnackbar('导出失败: ' + (e instanceof Error ? e.message : String(e)), {variant: 'error'});

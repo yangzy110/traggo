@@ -74,7 +74,6 @@ export const ImportBody: React.FC<ImportBodyProps> = ({
                 <Chip size="small" variant="outlined" label={`已存在 ${duplicates}`} onClick={() => onTab('ready')} />
             ) : null}
             {problems > 0 ? <Chip size="small" color="warning" label={`有问题 ${problems}（不会被导入）`} /> : null}
-            {state.handled.length > 0 ? <Chip size="small" variant="outlined" label={`已处理 ${state.handled.length}`} /> : null}
         </Box>
         <Tabs value={tab} onChange={(_, value) => onTab(value)} sx={{marginBottom: 2}}>
             {TAB_ORDER.map((name) => (

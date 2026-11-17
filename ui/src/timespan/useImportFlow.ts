@@ -32,15 +32,6 @@ const toInput = (row: WorkRow): InputImportRow => ({
     tags: row.tags,
 });
 
-// Everything the user can undo: the working set together with the result of the last check.
-interface Snapshot {
-    state: ImportState;
-    createTags: string[];
-    results: RowResult[];
-    tabs: Map<number, TabName>;
-    dirty: boolean;
-}
-
 type Step = 'pick' | 'review' | 'done';
 
 // The state and the actions of the import.
@@ -63,7 +54,8 @@ export const useImportFlow = (onImported: () => void) => {
     const [dirty, setDirty] = React.useState(false);
     const [busy, setBusy] = React.useState(false);
     const [tab, setTab] = React.useState<TabName>('ready');
-    const [history, setHistory] = React.useState<Snapshot[]>([]);
+    // the user changed something since the file was read
+    const [touched, setTouched] = React.useState(false);
     const [confirmClose, setConfirmClose] = React.useState(false);
     const [done, setDone] = React.useState({imported: 0, updated: 0});
 
@@ -79,8 +71,6 @@ export const useImportFlow = (onImported: () => void) => {
     const importable = counts.ready - duplicates;
     const problems = counts.time + counts.content + counts.tags;
 
-    const snapshot = (): Snapshot => ({state, createTags, results, tabs, dirty});
-
     const reset = () => {
         setStep('pick');
         setError('');
@@ -89,7 +79,7 @@ export const useImportFlow = (onImported: () => void) => {
         setTabs(new Map());
         setCreateTags([]);
         setDirty(false);
-        setHistory([]);
+        setTouched(false);
     };
 
     const runCheck = async (next: ImportState, create: string[]) => {
@@ -146,21 +136,10 @@ export const useImportFlow = (onImported: () => void) => {
 
     // a change of the user, it is checked when the user submits it
     const change = (next: ImportState, create = createTags) => {
-        setHistory((all) => [...all, snapshot()]);
+        setTouched(true);
         setState(next);
         setCreateTags(create);
         setDirty(true);
-    };
-    const undo = () => {
-        const last = history[history.length - 1];
-        if (last) {
-            setState(last.state);
-            setCreateTags(last.createTags);
-            setResults(last.results);
-            setTabs(last.tabs);
-            setDirty(last.dirty);
-            setHistory(history.slice(0, -1));
-        }
     };
     const changeRow = (line: number, patch: Partial<WorkRow>) =>
         change({...state, rows: state.rows.map((row) => (row.line === line ? {...row, ...patch} : row))});
@@ -209,6 +188,8 @@ export const useImportFlow = (onImported: () => void) => {
                 },
             });
             const result = response.data && response.data.importTimeSpans;
+            // tags may have been created, and the usage of the tags changed
+            await client.refetchQueries({include: ['Tags']});
             setDone({imported: result ? result.imported : 0, updated: result ? result.updated : 0});
             setStep('done');
             onImported();
@@ -220,7 +201,7 @@ export const useImportFlow = (onImported: () => void) => {
     };
 
     // work which would be lost
-    const hasWork = step === 'review' && (dirty || history.length > 0);
+    const hasWork = step === 'review' && touched;
     const close = () => (hasWork ? setConfirmClose(true) : setOpen(false));
     const left = problems + state.handled.filter((h) => h.text.startsWith('保留')).length;
 
@@ -237,7 +218,6 @@ export const useImportFlow = (onImported: () => void) => {
         busy,
         tab,
         setTab,
-        history,
         confirmClose,
         setConfirmClose,
         done,
@@ -254,7 +234,6 @@ export const useImportFlow = (onImported: () => void) => {
         reset,
         onFile,
         change,
-        undo,
         changeRow,
         changeRowsOfTab,
         resolve,

@@ -15,8 +15,6 @@ import (
 // MaxImportRows is the maximum amount of rows of one import.
 const MaxImportRows = 1500
 
-const defaultImportedTagColor = "#8b93f8"
-
 // span is a finished time span, as it is compared during an import.
 type span struct {
 	// id of an existing time span, 0 for rows of the import
@@ -346,12 +344,25 @@ func (r *ResolverForTimeSpan) ImportTimeSpans(ctx context.Context, rows []*gqlmo
 	}
 
 	tx := r.DB.Begin()
+	var usedColors []string
+	if len(plan.create) > 0 {
+		var definitions []model.TagDefinition
+		if err := tx.Where("user_id = ? OR shared = ?", user.ID, true).Find(&definitions).Error; err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		for _, definition := range definitions {
+			usedColors = append(usedColors, definition.Color)
+		}
+	}
 	for _, name := range plan.create {
 		exists := !tx.Where("key = ? AND (user_id = ? OR shared = ?)", name, user.ID, true).Find(new(model.TagDefinition)).RecordNotFound()
 		if exists {
 			continue
 		}
-		if err := tx.Create(&model.TagDefinition{Key: name, Color: defaultImportedTagColor, UserID: user.ID, Shared: true}).Error; err != nil {
+		color := model.PickTagColor(usedColors)
+		usedColors = append(usedColors, color)
+		if err := tx.Create(&model.TagDefinition{Key: name, Color: color, UserID: user.ID, Shared: true}).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}

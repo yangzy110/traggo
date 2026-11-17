@@ -348,16 +348,6 @@ export const ReadyPanel: React.FC<{
                     将更新 {state.updates.length} 条已有记录的内容和标签。
                 </Alert>
             ) : null}
-            {state.handled.length > 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{marginBottom: 1.5}}>
-                    已处理 {state.handled.length} 行：
-                    {state.handled
-                        .slice(0, 6)
-                        .map((h) => `第 ${h.line} 行（${h.text}）`)
-                        .join('；')}
-                    {state.handled.length > 6 ? '……' : ''}
-                </Typography>
-            ) : null}
             <Typography variant="subtitle2" sx={{marginBottom: 0.5}}>
                 可导入（{ok.length}）
             </Typography>

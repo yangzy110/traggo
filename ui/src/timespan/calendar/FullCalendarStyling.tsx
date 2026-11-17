@@ -21,14 +21,17 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
 
                 '& .fc': {fontFamily: 'inherit'},
                 '& .fc-col-header-cell-cushion': {
-                    fontWeight: 600,
-                    fontSize: '0.8rem',
-                    color: theme.palette.text.secondary,
-                    padding: '10px 4px',
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    color: theme.palette.text.primary,
+                    padding: '12px 4px',
                 },
                 '& .fc-day-today .fc-col-header-cell-cushion': {color: primary.main},
+                // taller rows, the larger text of the blocks has to fit into a quarter of an hour
+                '& .fc .fc-timegrid-slot': {height: '2.2rem'},
                 '& .fc-timegrid-slot-label-cushion': {
-                    fontSize: '0.75rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
                     color: theme.palette.text.secondary,
                 },
                 '& .fc-toolbar': {
@@ -118,13 +121,13 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                 '& .fc-timegrid-event .fc-event-resizer-start::after': {top: '3px'},
                 '& .fc-timegrid-event .fc-event-resizer-end::after': {bottom: '3px'},
                 '& .fc-timegrid-event:hover .fc-event-resizer::after': {opacity: 1},
-                '& .fc-daygrid-event': {margin: '1px 2px', cursor: 'pointer', fontSize: '0.75rem'},
+                '& .fc-daygrid-event': {margin: '1px 2px', cursor: 'pointer', fontSize: '0.9rem'},
                 '& .fc-daygrid-day': {cursor: 'pointer'},
                 '& .fc .fc-event-main': {
                     overflow: 'hidden',
                     height: '100%',
-                    fontSize: '0.8rem',
-                    lineHeight: 1.35,
+                    fontSize: '1rem',
+                    lineHeight: 1.3,
                 },
                 '& .fc .fc-event-main .stop': {
                     background: 'rgba(0,0,0,.28) !important',
@@ -156,14 +159,15 @@ export const FullCalendarStyling: React.FC<React.PropsWithChildren> = ({children
                     WebkitBoxOrient: 'vertical',
                     overflow: 'hidden',
                 },
-                '& .fc .note': {opacity: 0.9, fontSize: '0.75rem'},
+                '& .fc .note': {opacity: 0.95, fontSize: '0.95rem'},
                 '& .fc .time': {fontWeight: 700},
                 '& .fc .pills': {display: 'flex', flexWrap: 'wrap', gap: '3px', overflow: 'hidden', margin: '2px 0'},
                 '& .fc .ellipsis-single .pills': {display: 'inline-flex', flexWrap: 'nowrap', verticalAlign: 'middle'},
                 '& .fc .pill': {
                     borderRadius: '10px',
                     padding: '0 6px',
-                    fontSize: '0.68rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
                     lineHeight: 1.5,
                     whiteSpace: 'nowrap',
                 },

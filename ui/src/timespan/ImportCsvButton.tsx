@@ -7,7 +7,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import UndoIcon from '@mui/icons-material/Undo';
 import UploadIcon from '@mui/icons-material/Upload';
 import {changeTag} from './importstate';
 import {ImportBody} from './ImportBody';
@@ -30,7 +29,6 @@ export const ImportCsvButton: React.FC<{onImported: () => void}> = ({onImported}
         busy,
         tab,
         setTab,
-        history,
         confirmClose,
         setConfirmClose,
         done,
@@ -47,7 +45,6 @@ export const ImportCsvButton: React.FC<{onImported: () => void}> = ({onImported}
         reset,
         onFile,
         change,
-        undo,
         changeRow,
         changeRowsOfTab,
         resolve,
@@ -118,11 +115,9 @@ export const ImportCsvButton: React.FC<{onImported: () => void}> = ({onImported}
                     step={step}
                     busy={busy}
                     dirty={dirty}
-                    canUndo={history.length > 0}
                     hasProblems={problems > 0}
                     canImport={importable > 0 || state.updates.length > 0}
                     label={`导入 ${importable} 条${state.updates.length ? `，更新 ${state.updates.length} 条` : ''}`}
-                    onUndo={undo}
                     onDownloadLeft={downloadLeft}
                     onClose={step === 'done' ? () => setOpen(false) : close}
                     onCheck={() => runCheck(state, createTags)}
@@ -154,11 +149,9 @@ const ImportActions: React.FC<{
     step: 'pick' | 'review' | 'done';
     busy: boolean;
     dirty: boolean;
-    canUndo: boolean;
     hasProblems: boolean;
     canImport: boolean;
     label: string;
-    onUndo: () => void;
     onDownloadLeft: () => void;
     onClose: () => void;
     onCheck: () => void;
@@ -167,9 +160,6 @@ const ImportActions: React.FC<{
     <DialogActions>
         {p.step === 'review' ? (
             <>
-                <Button startIcon={<UndoIcon />} disabled={p.busy || !p.canUndo} onClick={p.onUndo}>
-                    撤销上一步
-                </Button>
                 {p.hasProblems ? <Button onClick={p.onDownloadLeft}>下载有问题的行</Button> : null}
                 <span style={{flexGrow: 1}} />
             </>

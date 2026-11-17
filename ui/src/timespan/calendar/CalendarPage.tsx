@@ -7,11 +7,10 @@ import NextIcon from '@mui/icons-material/ChevronRight';
 import {alpha} from '@mui/material/styles';
 import {tagStyle} from '../../common/tagStyle';
 import {ImportCsvButton} from '../ImportCsvButton';
-import {ExportCsvButton} from '../../common/ExportCsvButton';
+import {ExportRangeButton} from '../ExportRangeButton';
 import moment from 'moment';
 import {useApolloClient, useQuery} from '@apollo/client/react';
 import {Tags} from '../../gql/types';
-import {useCurrentUserName} from '../../gql/useCurrentUserName';
 import * as gqlTag from '../../gql/tags';
 import FullCalendar from '@fullcalendar/react';
 import {calculateColor, ColorMode} from '../colorutils';
@@ -28,7 +27,6 @@ import {useTimeSpanMutations} from '../useTimeSpanMutations';
 import {FullCalendarStyling} from './FullCalendarStyling';
 import {stripTypename} from '../../utils/strip';
 import {useSnackbar} from 'notistack';
-import {DAY_FORMAT, exportLog, LogEntry} from '../teamutils';
 import {fetchAllTimeSpans, TimeSpanItem} from '../fetchTimeSpans';
 
 const toMoment = (date: Date): moment.Moment => {
@@ -37,6 +35,9 @@ const toMoment = (date: Date): moment.Moment => {
 
 // FullCalendar compares its options on every render and redraws (and scrolls back to the start time) if one of them is a new
 // object. Everything which does not depend on the state is therefore defined once.
+const NO_WEEKEND = [0, 6];
+const ALL_DAYS: number[] = [];
+const WEEKEND_KEY = 'traggo.calendar.weekend';
 const PLUGINS = [dayGridPlugin, timeGridPlugin, interactionPlugin];
 const LOCALES = [zhCnLocale];
 const SNAP = {minutes: 15};
@@ -64,7 +65,6 @@ export const CalendarPage: React.FC = () => {
     const theme = useTheme();
     const {enqueueSnackbar} = useSnackbar();
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
-    const username = useCurrentUserName();
     const [range, setRange] = React.useState(() => ({
         start: moment().startOf('week').format(),
         end: moment().endOf('week').format(),
@@ -78,6 +78,13 @@ export const CalendarPage: React.FC = () => {
     const api = () => (calendarRef.current ? calendarRef.current.getApi() : undefined);
     const [editor, setEditor] = React.useState<Editor | null>(null);
     const firstDay = moment.localeData().firstDayOfWeek();
+    // the weekend is folded by default, the choice is remembered
+    const [showWeekend, setShowWeekend] = React.useState(() => window.localStorage.getItem(WEEKEND_KEY) === 'true');
+    const toggleWeekend = () => {
+        window.localStorage.setItem(WEEKEND_KEY, String(!showWeekend));
+        setShowWeekend(!showWeekend);
+    };
+    const weekendCount = timeSpans.filter((ts) => [0, 6].includes(moment(ts.start).day())).length;
     const mutations = useTimeSpanMutations(() => setReload((n) => n + 1));
 
     React.useEffect(() => {
@@ -91,26 +98,6 @@ export const CalendarPage: React.FC = () => {
             cancelled = true;
         };
     }, [apollo, range.start, range.end, reload, enqueueSnackbar]);
-
-    // Exports all time spans of the range which is currently visible in the calendar.
-    const exportCsv = async () => {
-        const {start, end} = range;
-        const entries: LogEntry[] = timeSpans.map((ts) => ({
-            member: username,
-            start: ts.start,
-            end: ts.end,
-            tags: ts.tags,
-            note: ts.note,
-        }));
-        if (entries.length === 0) {
-            enqueueSnackbar('当前时间范围内没有记录可导出', {variant: 'info'});
-            return;
-        }
-        entries.sort((a, b) => moment(a.start).diff(moment(b.start)));
-        const from = moment(start).format(DAY_FORMAT);
-        const to = moment(end).subtract(1, 'millisecond').format(DAY_FORMAT);
-        exportLog(`traggo-my-log_${from}_${to}.csv`, entries);
-    };
 
     const ready = !loading && !tagsResult.error && !tagsResult.loading;
     const tagDefinitions = tagsResult.data && tagsResult.data.tags;
@@ -218,8 +205,17 @@ export const CalendarPage: React.FC = () => {
                         <ToggleButton value="timeGridWeek">周</ToggleButton>
                         <ToggleButton value="dayGridMonth">月</ToggleButton>
                     </ToggleButtonGroup>
+                    <ToggleButton
+                        value="weekend"
+                        size="small"
+                        selected={showWeekend}
+                        aria-label="周末"
+                        onChange={toggleWeekend}
+                        sx={{whiteSpace: 'nowrap', borderRadius: '8px', textTransform: 'none'}}>
+                        {showWeekend ? '隐藏周末' : `显示周末${weekendCount > 0 ? `（${weekendCount}）` : ''}`}
+                    </ToggleButton>
                     <ImportCsvButton onImported={() => setReload((n) => n + 1)} />
-                    <ExportCsvButton onClick={exportCsv} disabled={timeSpans.length === 0} />
+                    <ExportRangeButton />
                 </>
             }>
             <Paper sx={{flex: 1, minHeight: 0, padding: '10px'}}>
@@ -256,6 +252,7 @@ export const CalendarPage: React.FC = () => {
                         scrollTime={SCROLL_TIME}
                         select={onSelect}
                         firstDay={firstDay}
+                        hiddenDays={showWeekend ? ALL_DAYS : NO_WEEKEND}
                         eventResize={onChangeTime}
                         eventClick={onClick}
                         eventDrop={onChangeTime}

@@ -6,11 +6,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import {SliderPicker} from 'react-color';
-import {Checkbox, InputLabel} from '@mui/material';
+import {Checkbox} from '@mui/material';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import FormControl from '@mui/material/FormControl';
-import {AddTag, AddTagVariables, CurrentUser} from '../gql/types';
+import {AddTag, AddTagVariables, CurrentUser, Tags} from '../gql/types';
+import {pickTagColor} from '../common/tagColors';
 import * as gqlTags from '../gql/tags';
 import * as gqlUser from '../gql/user';
 import {TagSelectorEntry} from './tagSelectorEntry';
@@ -27,15 +26,17 @@ interface AddTagDialogProps {
 
 export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialName, onAdded = () => {}}) => {
     const [name, setName] = React.useState(initialName);
-    const [color, setColor] = React.useState('#e6b3b3');
     const [shared, setShared] = React.useState(true);
     const {enqueueSnackbar} = useSnackbar();
+    const {data: tagData} = useQuery<Tags>(gqlTags.Tags);
     const {data: currentUser} = useQuery<CurrentUser>(gqlUser.CurrentUser);
     const admin = !!(currentUser && currentUser.user && currentUser.user.admin);
 
     const [addTag] = useMutation<AddTag, AddTagVariables>(gqlTags.AddTag, {refetchQueries: [{query: gqlTags.Tags}]});
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        // the system assigns a color, it can be changed in the list of the tags
+        const color = pickTagColor(((tagData && tagData.tags) || []).map((tag) => tag.color));
         addTag({variables: {name, color, shared: admin && shared}})
             .then((result) => {
                 close();
@@ -62,14 +63,6 @@ export const AddTagDialog: React.FC<AddTagDialogProps> = ({close, open, initialN
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
-                    <FormControl variant="standard" fullWidth margin="dense">
-                        <InputLabel htmlFor="color-picker" shrink={true}>
-                            颜色
-                        </InputLabel>
-                        <div id="color-picker" style={{marginTop: 25}}>
-                            <SliderPicker onChange={(c) => setColor(c.hex)} color={color} />
-                        </div>
-                    </FormControl>
                     {admin ? (
                         <FormControlLabel
                             control={<Checkbox checked={shared} onChange={(e) => setShared(e.target.checked)} />}

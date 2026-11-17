@@ -32,6 +32,7 @@ export const AddTag = gql`
         createTag(key: $name, color: $color, shared: $shared) {
             color
             key
+            archived
         }
     }
 `;

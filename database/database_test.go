@@ -58,21 +58,23 @@ func TestPanicsOnMkdirError(t *testing.T) {
 	})
 }
 
-func TestExistingTagsAreNotSharedAfterTheMigration(t *testing.T) {
+func TestPrivateTagsAreMergedAfterTheMigration(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "old.db")
-	// the schema as it was before the shared tags existed
+	// the schema as it was with private and shared tags
 	old, err := gorm.Open("sqlite3", path)
 	assert.NoError(t, err)
-	assert.NoError(t, old.Exec("CREATE TABLE tag_definitions (key text, user_id int, color text)").Error)
-	assert.NoError(t, old.Exec("INSERT INTO tag_definitions (key, user_id, color) VALUES ('project', 1, '#fff')").Error)
+	assert.NoError(t, old.Exec("CREATE TABLE tag_definitions (key text, user_id int, color text, shared bool not null default false)").Error)
+	assert.NoError(t, old.Exec("INSERT INTO tag_definitions (key, user_id, color, shared) VALUES ('project', 1, '#111', 0), ('project', 2, '#222', 1), ('project', 3, '#333', 0), ('own', 3, '#444', 0)").Error)
 	old.Close()
 
 	db, err := New("sqlite3", path)
 	assert.NoError(t, err)
 	defer db.Close()
 
-	var tag model.TagDefinition
-	assert.NoError(t, db.Where("shared = ?", false).Find(&tag).Error)
-	assert.Equal(t, "project", tag.Key)
-	assert.False(t, tag.Shared)
+	var tags []model.TagDefinition
+	assert.NoError(t, db.Order("key").Find(&tags).Error)
+	assert.Equal(t, []model.TagDefinition{
+		{Key: "own", UserID: 3, Color: "#444"},
+		{Key: "project", UserID: 2, Color: "#222"},
+	}, tags)
 }

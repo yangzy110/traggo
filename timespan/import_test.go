@@ -27,7 +27,7 @@ func setup(t *testing.T) (*test.Database, ResolverForTimeSpan, *test.TimeSpanWit
 	db.User(5)
 	db.User(9)
 	db.Create(&model.TagDefinition{Key: "work", Color: "#fff", UserID: 5})
-	db.Create(&model.TagDefinition{Key: "shared", Color: "#fff", UserID: 9, Shared: true})
+	db.Create(&model.TagDefinition{Key: "shared", Color: "#fff", UserID: 9})
 	existing := db.User(5).TimeSpan("2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z").Tag("work", "")
 	db.Model(new(model.TimeSpan)).Where("id = ?", existing.TimeSpan.ID).Update("note", "meeting")
 	return db, ResolverForTimeSpan{DB: db.DB}, existing
@@ -38,27 +38,28 @@ func TestImport_classifiesTheRows(t *testing.T) {
 	defer db.Close()
 
 	result, err := resolver.CheckImport(fake.UserWithPerm(5, false), []*gqlmodel.InputImportRow{
-		row(2, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "meeting", "work"),  // the same
-		row(3, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "other", "work"),    // same time, other content
-		row(4, "2019-06-10T09:30:00Z", "2019-06-10T10:30:00Z", "other", "work"),    // overlaps partly
-		row(5, "2019-06-10T10:00:00Z", "2019-06-10T11:00:00Z", "ok", "WORK"),       // touches, the case does not matter
-		row(6, "2019-06-10T10:00:00Z", "2019-06-10T11:00:00Z", "ok", "work"),       // twice in the file
-		row(7, "2019-06-10T10:30:00Z", "2019-06-10T11:30:00Z", "file", "work"),     // conflicts with the row above
-		row(8, "2019-06-10T12:00:00Z", "2019-06-10T11:00:00Z", "", "work"),         // end before start
-		row(9, "2019-06-10T13:00:00Z", "2019-06-10T14:00:00Z", "", "unknown", "x"), // tags do not exist
-		row(10, "2019-06-10T15:00:00Z", "2019-06-10T16:00:00Z", "", "shared"),      // shared tags can be used
-		row(11, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "", "unknown"),     // content problems come before tag problems
+		row(2, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "meeting", "work"),     // the same
+		row(3, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "other", "work"),       // same time, other content
+		row(4, "2019-06-10T09:30:00Z", "2019-06-10T10:30:00Z", "other", "work"),       // overlaps partly
+		row(5, "2019-06-10T10:00:00Z", "2019-06-10T11:00:00Z", "ok", "work"),          // touches
+		row(6, "2019-06-10T10:00:00Z", "2019-06-10T11:00:00Z", "ok", "work"),          // twice in the file
+		row(7, "2019-06-10T10:30:00Z", "2019-06-10T11:30:00Z", "file", "work"),        // conflicts with the row above
+		row(8, "2019-06-10T12:00:00Z", "2019-06-10T11:00:00Z", "", "work"),            // end before start
+		row(9, "2019-06-10T13:00:00Z", "2019-06-10T14:00:00Z", "", "unknown"),         // tag does not exist
+		row(10, "2019-06-10T15:00:00Z", "2019-06-10T16:00:00Z", "", "shared"),         // shared tags can be used
+		row(11, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "", "unknown"),        // content problems come before tag problems
+		row(12, "2019-06-10T17:00:00Z", "2019-06-10T18:00:00Z", "", "work", "shared"), // a time span has only one tag
 	}, nil, nil)
 
 	require.NoError(t, err)
 	require.Equal(t, []gqlmodel.ImportStatus{
 		gqlmodel.ImportStatusDuplicate, gqlmodel.ImportStatusConflict, gqlmodel.ImportStatusConflict, gqlmodel.ImportStatusOk,
 		gqlmodel.ImportStatusDuplicate, gqlmodel.ImportStatusConflict, gqlmodel.ImportStatusError, gqlmodel.ImportStatusMissingTags,
-		gqlmodel.ImportStatusOk, gqlmodel.ImportStatusConflict,
+		gqlmodel.ImportStatusOk, gqlmodel.ImportStatusConflict, gqlmodel.ImportStatusError,
 	}, statuses(result))
 	require.Equal(t, 2, result.Imported)
-	require.Equal(t, []string{"unknown", "x"}, result.MissingTags)
-	require.Equal(t, []string{"unknown", "x"}, result.Rows[7].MissingTags)
+	require.Equal(t, []string{"unknown"}, result.MissingTags)
+	require.Equal(t, []string{"unknown"}, result.Rows[7].MissingTags)
 	assertTimeSpanCount(t, db, 1) // nothing is written by the check
 
 	same := result.Rows[1].Conflict
@@ -83,8 +84,8 @@ func TestImport_writesTheOkRowsAndCreatesTheChosenTagsForAdmins(t *testing.T) {
 	db, resolver, _ := setup(t)
 	defer db.Close()
 	rows := []*gqlmodel.InputImportRow{
-		row(2, "2019-06-10T11:00:00Z", "2019-06-10T12:00:00Z", "a", "new", "other"),
-		row(3, "2019-06-10T11:30:00Z", "2019-06-10T12:30:00Z", "b", "new"),
+		row(2, "2019-06-10T11:00:00Z", "2019-06-10T12:00:00Z", "a", "new"),
+		row(3, "2019-06-10T11:30:00Z", "2019-06-10T12:30:00Z", "b", "other"),
 	}
 
 	// users who are no admins cannot create tags
@@ -94,7 +95,7 @@ func TestImport_writesTheOkRowsAndCreatesTheChosenTagsForAdmins(t *testing.T) {
 	assertTimeSpanCount(t, db, 1)
 
 	// only the chosen tags are created, and only if a row uses them
-	result, err = resolver.ImportTimeSpans(fake.UserWithPerm(5, true), rows, []string{"other"}, nil)
+	result, err = resolver.ImportTimeSpans(fake.UserWithPerm(5, true), rows, []string{"unused"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, 0, result.Imported)
 	require.Equal(t, gqlmodel.ImportStatusMissingTags, result.Rows[0].Status)
@@ -110,7 +111,7 @@ func TestImport_writesTheOkRowsAndCreatesTheChosenTagsForAdmins(t *testing.T) {
 	assertTimeSpanCount(t, db, 2)
 	var tags []model.TagDefinition
 	db.Find(&tags)
-	require.Len(t, tags, 4)
+	require.Len(t, tags, 3)
 
 	// importing the same file again changes nothing
 	again, err := resolver.ImportTimeSpans(fake.UserWithPerm(5, true), rows, nil, nil)
@@ -128,7 +129,7 @@ func TestImport_updatesExistingTimeSpans(t *testing.T) {
 
 	// the row that was merged is not in the file anymore, the time span is not in the range of the other rows
 	rows := []*gqlmodel.InputImportRow{row(4, "2019-06-11T09:00:00Z", "2019-06-11T10:00:00Z", "later", "work")}
-	updates := []*gqlmodel.InputImportUpdate{{ID: id, Note: "meeting; other", Tags: []string{"work", "shared"}}}
+	updates := []*gqlmodel.InputImportUpdate{{ID: id, Note: "meeting; other", Tags: []string{"shared"}}}
 
 	checked, err := resolver.CheckImport(user, rows, nil, updates)
 	require.NoError(t, err)
@@ -142,11 +143,11 @@ func TestImport_updatesExistingTimeSpans(t *testing.T) {
 	var span model.TimeSpan
 	db.Preload("Tags").First(&span, id)
 	require.Equal(t, "meeting; other", span.Note)
-	require.Len(t, span.Tags, 2)
+	require.Len(t, span.Tags, 1)
 	require.Equal(t, gqlmodel.ImportStatusOk, result.Rows[0].Status)
 
 	// the changed time span is compared with its new content: this row is the same now
-	again, err := resolver.CheckImport(user, []*gqlmodel.InputImportRow{row(2, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "meeting; other", "work", "shared")}, nil, nil)
+	again, err := resolver.CheckImport(user, []*gqlmodel.InputImportRow{row(2, "2019-06-10T09:00:00Z", "2019-06-10T10:00:00Z", "meeting; other", "shared")}, nil, nil)
 	require.NoError(t, err)
 	require.Equal(t, gqlmodel.ImportStatusDuplicate, again.Rows[0].Status)
 

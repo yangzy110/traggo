@@ -171,6 +171,7 @@ export const ListPage: React.FC = () => {
                     start={moment(newEnd).subtract(1, 'hour')}
                     end={newEnd}
                     initialTags={[]}
+                    preselectDefaultTag
                     initialNote=""
                     onConfirm={(result) => mutations.create(result).then((ok) => ok && close())}
                     onCancel={close}

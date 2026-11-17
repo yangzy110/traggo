@@ -21,7 +21,6 @@ const schemaPath = resolve(process.cwd(), '../schema.graphql');
 
 let counter = 10;
 let entryType = 'LineChart';
-let tagsShared = false;
 let tagsEditable = true;
 let dashboardCount = 0;
 
@@ -41,7 +40,7 @@ const createSchema = () => {
             Boolean: () => true,
             // the dashboards of every response have the ids 100 and 101
             Dashboard: () => ({id: [100, 101][dashboardCount++ % 2]}),
-            TagDefinition: () => ({color: '#336699', key: 'key' + ++counter, shared: tagsShared, editable: tagsEditable, archived: false}),
+            TagDefinition: () => ({color: '#336699', key: 'key' + ++counter, editable: tagsEditable, archived: false}),
             // the tag of the picker
             RootQuery: () => ({tags: [{key: 'project'}]}),
             StatsSelection: () => ({rangeId: null}),
@@ -272,28 +271,18 @@ describe('tag picker', () => {
     });
 });
 
-describe('shared tags', () => {
+describe('tags', () => {
     afterEach(() => {
-        tagsShared = false;
         tagsEditable = true;
     });
 
-    it('can be changed by who is allowed to', async () => {
+    it('can be changed by admins in a dialog', async () => {
         await render('/user/tags');
         await waitFor(() => text().includes('创建标签'), 'the tags');
         await waitFor(() => !!document.querySelector('button[title="编辑"]'), 'the edit button');
         expect(document.querySelector('button[title="删除"]')).not.toBeNull();
-        await settle();
-    });
-
-    it('are locked for users who are not allowed to change them', async () => {
-        tagsShared = true;
-        tagsEditable = false;
-        await render('/user/tags');
-        await waitFor(() => text().includes('公用'), 'the shared label');
-        expect(document.querySelector('button[title="编辑"]')).toBeNull();
-        expect(document.querySelector('button[title="删除"]')).toBeNull();
-        expect(document.querySelectorAll('[data-testid="LockIcon"]').length).toBeGreaterThan(0);
+        await click(document.querySelector('button[title="编辑"]')!);
+        await waitFor(() => text().includes('编辑标签'), 'the edit dialog');
         await settle();
     });
 });

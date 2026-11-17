@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import {AddTagDialog} from './AddTagDialog';
+import {TagDialog} from './TagDialog';
 import {TagSelectorEntry, itemLabel, label, addValues} from './tagSelectorEntry';
 import {useSuggest} from './suggest';
 import Paper from '@mui/material/Paper';
@@ -235,7 +235,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                     </Paper>
                 ) : null}
                 {addDialogOpen && (
-                    <AddTagDialog
+                    <TagDialog
                         onAdded={(tag) => {
                             const valuePart = currentValue.split(':')[1] || '';
                             trySubmit({tag, value: valuePart});

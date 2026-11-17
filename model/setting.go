@@ -9,6 +9,8 @@ type UserSetting struct {
 	DateLocale         string
 	FirstDayOfTheWeek  string
 	DateTimeInputStyle string
+	// DefaultTag is the tag which is preselected for new time spans, empty means the first tag.
+	DefaultTag string
 }
 
 // Settings constants

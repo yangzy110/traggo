@@ -10,25 +10,38 @@ import {useMutation} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import {Checkbox} from '@mui/material';
-import {CreateUser, CreateUserVariables} from '../gql/types';
+import {CreateUser, CreateUserVariables, UpdateUser, UpdateUserVariables} from '../gql/types';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
-interface AddTagDialogProps {
+interface UserDialogProps {
+    // The user who is edited, without it a new user is created.
+    user?: {id: number; name: string; admin: boolean};
     open: boolean;
     close: () => void;
 }
 
-export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
-    const [name, setName] = React.useState('');
+// Creates a user, or edits the name, the password and the role of an existing user. It works like the dialog of the tags.
+export const UserDialog: React.FC<UserDialogProps> = ({close, open, user}) => {
+    const editing = !!user;
+    const [name, setName] = React.useState(user ? user.name : '');
     const [pass, setPass] = React.useState('');
-    const [admin, setAdmin] = React.useState(false);
+    const [admin, setAdmin] = React.useState(user ? user.admin : false);
     const {enqueueSnackbar} = useSnackbar();
 
-    const [addUser] = useMutation<CreateUser, CreateUserVariables>(gqlUser.CreateUser, {
-        refetchQueries: [{query: gqlUser.Users}],
-    });
+    const refetch = {refetchQueries: [{query: gqlUser.Users}, {query: gqlUser.CurrentUser}]};
+    const [addUser] = useMutation<CreateUser, CreateUserVariables>(gqlUser.CreateUser, refetch);
+    const [updateUser] = useMutation<UpdateUser, UpdateUserVariables>(gqlUser.UpdateUser, refetch);
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (user) {
+            updateUser({variables: {id: user.id, name, admin, pass: pass || undefined}})
+                .then(() => {
+                    enqueueSnackbar('用户已更新', {variant: 'success'});
+                    close();
+                })
+                .catch(handleError('编辑用户失败', enqueueSnackbar));
+            return;
+        }
         addUser({variables: {name, pass, admin}})
             .then(() => {
                 enqueueSnackbar('用户已创建', {variant: 'success'});
@@ -40,7 +53,7 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
     return (
         <Dialog open={open} onClose={close} aria-labelledby="form-dialog-title" fullWidth>
             <form onSubmit={submit} noValidate autoComplete="off">
-                <DialogTitle id="form-dialog-title">创建用户</DialogTitle>
+                <DialogTitle id="form-dialog-title">{editing ? '编辑用户' : '创建用户'}</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -58,6 +71,7 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                         type="password"
                         fullWidth
                         value={pass}
+                        placeholder={editing ? '不修改则留空' : undefined}
                         onChange={(e) => setPass(e.target.value)}
                     />
                     <FormControlLabel
@@ -69,8 +83,8 @@ export const AddUserDialog: React.FC<AddTagDialogProps> = ({close, open}) => {
                     <Button onClick={close} color="primary">
                         取消
                     </Button>
-                    <Button type="submit" onClick={submit} color="primary">
-                        创建用户
+                    <Button type="submit" color="primary">
+                        {editing ? '保存' : '创建用户'}
                     </Button>
                 </DialogActions>
             </form>

@@ -10,16 +10,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import DoneIcon from '@mui/icons-material/Done';
-import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 import {useSnackbar} from 'notistack';
-import {TextField} from '@mui/material';
-import {Users, RemoveUser, RemoveUserVariables, UpdateUser, UpdateUserVariables} from '../gql/types';
-import Checkbox from '@mui/material/Checkbox';
+import {Users, RemoveUser, RemoveUserVariables} from '../gql/types';
 import Button from '@mui/material/Button';
-import {AddUserDialog} from './AddUserDialog';
+import {UserDialog} from './UserDialog';
 import {ConfirmDialog} from '../common/ConfirmDialog';
+import {handleError} from '../utils/errors';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 import {gutters} from '../common/styles';
 
@@ -32,105 +29,41 @@ const rootSx: SxProps<MuiTheme> = (theme) => ({
     margin: '0 auto',
 });
 
-const NoEdit = [-1, '', '', false] as const;
+type EditedUser = {id: number; name: string; admin: boolean};
 
 export const UsersPage = () => {
     const {data, loading} = useQuery<Users>(gqlUser.Users);
-    const [addUser, setAddUser] = React.useState(false);
+    // the user who is edited, the dialog is also used to create a user
+    const [dialog, setDialog] = React.useState<false | 'new' | EditedUser>(false);
     const refetch = {refetchQueries: [{query: gqlUser.Users}, {query: gqlUser.CurrentUser}]};
     const {enqueueSnackbar} = useSnackbar();
     const [removeUserConfirmation, setRemoveUserConfirmation] = React.useState<false | [number, string]>(false);
     const [removeUser] = useMutation<RemoveUser, RemoveUserVariables>(gqlUser.RemoveUser, refetch);
-    const [[editId, editName, editPass, editAdmin], setEditing] =
-        React.useState<Readonly<[number, string, string, boolean]>>(NoEdit);
-    const [updateUser] = useMutation<UpdateUser, UpdateUserVariables>(gqlUser.UpdateUser, refetch);
     if (loading || !data || !data.currentUser || !data.users) {
         return <CenteredSpinner />;
     }
     const onClickDelete = () => {
         if (removeUserConfirmation) {
-            removeUser({variables: {id: removeUserConfirmation[0]}}).then(() =>
-                enqueueSnackbar('用户已删除', {variant: 'success'})
-            );
+            removeUser({variables: {id: removeUserConfirmation[0]}})
+                .then(() => enqueueSnackbar('用户已删除', {variant: 'success'}))
+                .catch(handleError('删除用户失败', enqueueSnackbar));
         }
     };
 
     const users = data.users.map((user) => {
-        const onClickSubmit = () => {
-            setEditing(NoEdit);
-            updateUser({
-                variables: {
-                    id: editId,
-                    name: editName,
-                    admin: editAdmin,
-                    pass: editPass || undefined,
-                },
-            }).then(() => enqueueSnackbar('用户已更新', {variant: 'success'}));
-        };
         const isCurrent = user.id === data.currentUser!.id;
-        const isEdited = editId === user.id;
         return (
             <TableRow selected={isCurrent} key={user.id}>
                 <TableCell>{user.id}</TableCell>
-                <TableCell>
-                    {isEdited ? (
-                        <TextField
-                            variant="standard"
-                            value={editName}
-                            onChange={(e) => setEditing([editId, e.target.value, '', editAdmin])}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    onClickSubmit();
-                                }
-                            }}
-                            onSubmit={onClickSubmit}
-                        />
-                    ) : (
-                        user.name + (isCurrent ? ' (current)' : '')
-                    )}
-                </TableCell>
-                <TableCell>
-                    {isEdited ? (
-                        <TextField
-                            variant="standard"
-                            value={editPass}
-                            placeholder={'use old password'}
-                            type="password"
-                            onChange={(e) => setEditing([editId, editName, e.target.value, editAdmin])}
-                        />
-                    ) : (
-                        '********'
-                    )}
-                </TableCell>
-                <TableCell>
-                    {isEdited ? (
-                        <Checkbox checked={editAdmin} onChange={(e) => setEditing([editId, editName, '', e.target.checked])} />
-                    ) : user.admin ? (
-                        'Yes'
-                    ) : (
-                        'No'
-                    )}
-                </TableCell>
-                <TableCell align="right">
-                    {isEdited ? (
-                        <>
-                            <IconButton onClick={onClickSubmit} title="保存">
-                                <DoneIcon />
-                            </IconButton>
-                            <IconButton onClick={() => setEditing(NoEdit)} title="取消">
-                                <CloseIcon />
-                            </IconButton>
-                        </>
-                    ) : (
-                        <>
-                            <IconButton onClick={() => setEditing([user.id, user.name, '', user.admin])} title="编辑">
-                                <EditIcon />
-                            </IconButton>
-                            <IconButton onClick={() => setRemoveUserConfirmation([user.id, user.name])} title="删除">
-                                <DeleteIcon />
-                            </IconButton>
-                        </>
-                    )}
+                <TableCell>{user.name + (isCurrent ? '（当前）' : '')}</TableCell>
+                <TableCell>{user.admin ? '管理员' : '普通用户'}</TableCell>
+                <TableCell align="right" sx={{whiteSpace: 'nowrap'}}>
+                    <IconButton onClick={() => setDialog({id: user.id, name: user.name, admin: user.admin})} title="编辑">
+                        <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => setRemoveUserConfirmation([user.id, user.name])} title="删除">
+                        <DeleteIcon />
+                    </IconButton>
                 </TableCell>
             </TableRow>
         );
@@ -142,19 +75,21 @@ export const UsersPage = () => {
                 color={'primary'}
                 variant={'outlined'}
                 size="small"
-                onClick={() => setAddUser(true)}
+                onClick={() => setDialog('new')}
                 fullWidth
                 style={{marginBottom: 10}}>
                 创建用户
             </Button>
-            {addUser && <AddUserDialog open={true} close={() => setAddUser(false)} />}
+            {dialog === 'new' ? <UserDialog open={true} close={() => setDialog(false)} /> : null}
+            {dialog && dialog !== 'new' ? (
+                <UserDialog key={dialog.id} user={dialog} open={true} close={() => setDialog(false)} />
+            ) : null}
             <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell>ID</TableCell>
                         <TableCell>名称</TableCell>
-                        <TableCell>密码</TableCell>
-                        <TableCell>管理员</TableCell>
+                        <TableCell>角色</TableCell>
                         <TableCell style={{width: 150}} />
                     </TableRow>
                 </TableHead>
@@ -165,7 +100,7 @@ export const UsersPage = () => {
                     title={`确定要删除用户“${removeUserConfirmation[1]}”吗？`}
                     fClose={() => setRemoveUserConfirmation(false)}
                     fOnSubmit={onClickDelete}>
-                    <b>此操作无法撤销。</b>删除用户会同时删除该用户的仪表盘、时间记录、标签和 设备。
+                    <b>此操作无法撤销。</b>删除用户会同时删除该用户的仪表盘、时间记录和设备。该用户创建的标签会保留。
                 </ConfirmDialog>
             ) : null}
         </Paper>

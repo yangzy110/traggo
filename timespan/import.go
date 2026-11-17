@@ -33,7 +33,7 @@ func (r *ResolverForTimeSpan) ImportTimeSpans(ctx context.Context, rows []*gqlmo
 	var usedColors []string
 	if len(plan.create) > 0 {
 		var definitions []model.TagDefinition
-		if err := tx.Where("user_id = ? OR shared = ?", user.ID, true).Find(&definitions).Error; err != nil {
+		if err := tx.Find(&definitions).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}
@@ -42,13 +42,13 @@ func (r *ResolverForTimeSpan) ImportTimeSpans(ctx context.Context, rows []*gqlmo
 		}
 	}
 	for _, name := range plan.create {
-		exists := !tx.Where("key = ? AND (user_id = ? OR shared = ?)", name, user.ID, true).Find(new(model.TagDefinition)).RecordNotFound()
+		exists := !tx.Where("key = ?", name).Find(new(model.TagDefinition)).RecordNotFound()
 		if exists {
 			continue
 		}
 		color := model.PickTagColor(usedColors)
 		usedColors = append(usedColors, color)
-		if err := tx.Create(&model.TagDefinition{Key: name, Color: color, UserID: user.ID, Shared: true}).Error; err != nil {
+		if err := tx.Create(&model.TagDefinition{Key: name, Color: color, UserID: user.ID}).Error; err != nil {
 			tx.Rollback()
 			return nil, err
 		}

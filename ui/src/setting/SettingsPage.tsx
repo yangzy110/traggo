@@ -1,8 +1,10 @@
 import * as React from 'react';
 import {FormControlLabel, FormHelperText, Paper, Switch, TextField} from '@mui/material';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
-import {useMutation} from '@apollo/client/react';
-import {SetSettings, SetSettingsVariables, DateLocale, Theme} from '../gql/types';
+import {useMutation, useQuery} from '@apollo/client/react';
+import * as gqlTag from '../gql/tags';
+import {sortTags} from '../tag/defaultTag';
+import {SetSettings, SetSettingsVariables, DateLocale, Theme, Tags} from '../gql/types';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
@@ -22,6 +24,8 @@ export const SettingsPage: React.FC = () => {
     const {done, ...settings} = useSettings();
     const {enqueueSnackbar} = useSnackbar();
     const followSystem = useFollowSystemTheme();
+    const tagsResult = useQuery<Tags>(gqlTag.Tags);
+    const usableTags = sortTags(((tagsResult.data && tagsResult.data.tags) || []).filter((tag) => !tag.archived));
     const [setSettings] = useMutation<SetSettings, SetSettingsVariables>(SetSettingsGQL, {
         refetchQueries: [{query: SettingsGQL}],
     });
@@ -59,6 +63,26 @@ export const SettingsPage: React.FC = () => {
                 {[DateLocale.Chinese, DateLocale.American].map((type) => (
                     <option key={type} value={type}>
                         {label(dateLocaleLabels, type)}
+                    </option>
+                ))}
+            </TextField>
+            <TextField
+                select
+                label="默认标签"
+                margin="normal"
+                fullWidth
+                helperText="新建记录时会自动选中这个标签。没有设置时使用第一个标签。"
+                slotProps={{select: {native: true}}}
+                value={usableTags.some((tag) => tag.key === settings.defaultTag) ? settings.defaultTag : ''}
+                onChange={(e) => {
+                    setSettings({variables: {settings: {...settings, defaultTag: e.target.value}}})
+                        .then(() => enqueueSnackbar('默认标签已更改', {variant: 'success'}))
+                        .catch(handleError('更改默认标签失败', enqueueSnackbar));
+                }}>
+                <option value="">第一个标签{usableTags.length > 0 ? `（${usableTags[0].key}）` : ''}</option>
+                {usableTags.map((tag) => (
+                    <option key={tag.key} value={tag.key}>
+                        {tag.key}
                     </option>
                 ))}
             </TextField>

@@ -15,7 +15,7 @@ func (r *ResolverForTimeSpan) CreateTimeSpan(ctx context.Context, start model.Ti
 		return nil, err
 	}
 
-	if err := tagsExist(r.DB, auth.GetUser(ctx).ID, timeSpan.Tags, nil); err != nil {
+	if err := tagsExist(r.DB, timeSpan.Tags, nil); err != nil {
 		return nil, err
 	}
 

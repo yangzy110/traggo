@@ -186,7 +186,7 @@ func Test_Update_withTag(t *testing.T) {
 	})
 }
 
-func Test_Update_fail_tagAddedMultipleTimes(t *testing.T) {
+func Test_Update_fail_moreThanOneTag(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
 	db.User(5)
@@ -206,7 +206,7 @@ func Test_Update_fail_tagAddedMultipleTimes(t *testing.T) {
 	timeSpan, err := resolver.UpdateTimeSpan(fake.User(5), 3, test.ModelTime("2019-06-10T18:30:00+02:00"),
 		test.ModelTimeP("2019-06-10T18:35:00+02:00"), []*gqlmodel.InputTimeSpanTag{{Key: "test"}, {Key: "test"}}, nil, "")
 	require.Nil(t, timeSpan)
-	require.EqualError(t, err, "tag 'test' is present multiple times")
+	require.EqualError(t, err, "a time span can only have one tag")
 	assertTimeSpanCount(t, db, 1)
 }
 

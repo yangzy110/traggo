@@ -1,13 +1,11 @@
 package model
 
-// TagDefinition describes a tag.
+// TagDefinition describes a tag. All tags are created by admins and can be used by all users, only admins can change them.
+// UserID is the admin who created the tag, it has no meaning for the access.
 type TagDefinition struct {
 	Key    string
 	UserID int `gorm:"type:int REFERENCES users(id) ON DELETE CASCADE"`
 	Color  string
-	// Shared tags are created by admins. They can be used by all users, but only be changed by admins.
-	// The other tags can only be used and changed by the user who created them.
-	Shared bool `gorm:"not null;default:false"`
 	// Archived tags cannot be used for new time spans, the existing time spans keep them (and their color).
 	Archived bool `gorm:"not null;default:false"`
 	Usages   int  `gorm:"-"`

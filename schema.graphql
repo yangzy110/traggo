@@ -10,14 +10,13 @@ schema {
 }
 
 type RootMutation {
-    # shared tags can only be created by admins, they can be used by everyone
-    createTag(key: String!, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
-    # a tag can be made shared by an admin, but a shared tag cannot be made private again
-    updateTag(key: String!, newKey: String, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
+    # tags can only be created, changed, archived and removed by admins, they can be used by everyone
+    createTag(key: String!, color: String!): TagDefinition @hasRole(role: ADMIN)
+    updateTag(key: String!, newKey: String, color: String!): TagDefinition @hasRole(role: ADMIN)
     # an archived tag cannot be used for new time spans, the existing time spans keep it
-    archiveTag(key: String!, archived: Boolean!): TagDefinition @hasRole(role: USER)
+    archiveTag(key: String!, archived: Boolean!): TagDefinition @hasRole(role: ADMIN)
     # only tags which are not used by any time span can be removed
-    removeTag(key: String!): TagDefinition @hasRole(role: USER)
+    removeTag(key: String!): TagDefinition @hasRole(role: ADMIN)
 
     createUser(name: String!, pass: String!, admin: Boolean!): User @hasRole(role: ADMIN)
     removeUser(id: Int!): User @hasRole(role: ADMIN)
@@ -81,6 +80,8 @@ input InputUserSettings {
     dateLocale: DateLocale!
     firstDayOfTheWeek: WeekDay!
     dateTimeInputStyle: DateTimeInputStyle!
+    # the tag which is preselected for new time spans, empty means the first tag
+    defaultTag: String!
 }
 
 type UserSettings {
@@ -88,6 +89,8 @@ type UserSettings {
     dateLocale: DateLocale!
     firstDayOfTheWeek: WeekDay!
     dateTimeInputStyle: DateTimeInputStyle!
+    # the tag which is preselected for new time spans, empty means the first tag
+    defaultTag: String!
 }
 
 enum WeekDay {
@@ -158,9 +161,7 @@ type TagDefinition {
     key: String!
     user: User!
     usages: Int!
-    # shared tags are available to all users
-    shared: Boolean!
-    # if the current user is allowed to change or remove the tag
+    # if the current user is allowed to change or remove the tag (only admins)
     editable: Boolean!
     # archived tags are not suggested and cannot be used for new time spans
     archived: Boolean!
@@ -196,7 +197,7 @@ type TeamMember {
 type TeamMemberTimeSpan {
     user: TeamMember!
     timeSpan: TimeSpan!
-    # the colors of the tags of the time span: the tag of the owner, or the shared tag
+    # the colors of the tags of the time span: the color of the tag
     tagColors: [TagColor!]!
 }
 

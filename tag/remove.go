@@ -9,22 +9,21 @@ import (
 	"github.com/traggo/server/model"
 )
 
-// RemoveTag removes a tag which is not used. Shared tags can only be removed by admins, they are removed for all users.
+// RemoveTag removes a tag which is not used, only admins can do that.
 func (r *ResolverForTag) RemoveTag(ctx context.Context, key string) (*gqlmodel.TagDefinition, error) {
 	user := auth.GetUser(ctx)
-	tag, found := find(r.DB, user.ID, key)
+	if err := checkAdmin(user.Admin); err != nil {
+		return nil, err
+	}
+	tag, found := find(r.DB, key)
 	if !found {
 		return nil, fmt.Errorf("tag with key '%s' does not exist", key)
-	}
-	if err := checkCanChange(tag, user.ID, user.Admin); err != nil {
-		return nil, err
 	}
 
 	usedInEntries, err := dashboardEntriesOf(r.DB, tag)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(usedInEntries) > 0 {
 		dashboard := &model.Dashboard{ID: usedInEntries[0].DashboardID}
 		r.DB.Find(dashboard)
@@ -33,31 +32,13 @@ func (r *ResolverForTag) RemoveTag(ctx context.Context, key string) (*gqlmodel.T
 
 	// a tag with history is archived, not removed: the time spans keep their tags
 	var used int
-	if err := r.DB.Model(new(model.TimeSpanTag)).
-		Where("time_span_id in ?", timeSpansOf(r.DB, tag)).
-		Where(&model.TimeSpanTag{Key: tag.Key}).
-		Count(&used).Error; err != nil {
+	if err := r.DB.Model(new(model.TimeSpanTag)).Where(&model.TimeSpanTag{Key: tag.Key}).Count(&used).Error; err != nil {
 		return nil, err
 	}
 	if used > 0 {
 		return nil, fmt.Errorf("tag '%s' is used by %d time spans, archive it instead of removing it", tag.Key, used)
 	}
 
-	tx := r.DB.Begin()
-	if err := tx.Where(model.TagDefinition{Key: tag.Key, UserID: tag.UserID}).
-		Delete(new(model.TagDefinition)).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.
-		Where("time_span_id in ?", timeSpansOf(tx, tag)).
-		Where(&model.TimeSpanTag{Key: tag.Key}).
-		Delete(new(model.TimeSpanTag)).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	remove := tx.Commit()
-	return toExternal(tag, user.ID, user.Admin), remove.Error
+	remove := r.DB.Where("key = ?", tag.Key).Delete(new(model.TagDefinition))
+	return toExternal(tag, user.Admin), remove.Error
 }

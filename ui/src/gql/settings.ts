@@ -10,6 +10,7 @@ export const Settings = gql`
             dateLocale
             firstDayOfTheWeek
             dateTimeInputStyle
+            defaultTag
         }
     }
 `;
@@ -19,6 +20,7 @@ export const SetSettings = gql`
         setUserSettings(settings: $settings) {
             theme
             dateTimeInputStyle
+            defaultTag
         }
     }
 `;
@@ -28,6 +30,7 @@ const defaultSettings = {
     dateLocale: DateLocale.Chinese,
     firstDayOfTheWeek: WeekDay.Monday,
     dateTimeInputStyle: DateTimeInputStyle.Fancy,
+    defaultTag: '',
 } as const;
 
 export const useSettings = (): {done: boolean} & Omit<SettingsQueryResponse['userSettings'], '__typename'> => {

@@ -17,6 +17,7 @@ func (r *ResolverForSettings) SetUserSettings(ctx context.Context, settings gqlm
 		UserID:             auth.GetUser(ctx).ID,
 		DateLocale:         toInternalDateLocale(settings.DateLocale),
 		DateTimeInputStyle: toInternalDateTimeInputStyle(settings.DateTimeInputStyle),
+		DefaultTag:         settings.DefaultTag,
 	}
 
 	save := r.DB.Save(internal)
@@ -36,6 +37,7 @@ func toExternal(internal model.UserSetting) *gqlmodel.UserSettings {
 		DateLocale:         toExternalDateLocale(internal.DateLocale),
 		FirstDayOfTheWeek:  toExternalWeekday(internal.FirstDayOfTheWeekTimeWeekday()),
 		DateTimeInputStyle: toExternalDateTimeInputStyle(internal.DateTimeInputStyle),
+		DefaultTag:         internal.DefaultTag,
 	}
 }
 

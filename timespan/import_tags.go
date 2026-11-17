@@ -34,10 +34,10 @@ func normalizeTags(labels []string) []string {
 	return result
 }
 
-// existingTags returns the keys of the tags the user can use: the own and the shared tags, without the archived ones.
-func (r *ResolverForTimeSpan) existingTags(userID int) (map[string]bool, error) {
+// existingTags returns the keys of the tags which can be used, without the archived ones.
+func (r *ResolverForTimeSpan) existingTags() (map[string]bool, error) {
 	var definitions []model.TagDefinition
-	if err := r.DB.Where("user_id = ? OR shared = ?", userID, true).Where("archived = ?", false).Find(&definitions).Error; err != nil {
+	if err := r.DB.Where("archived = ?", false).Find(&definitions).Error; err != nil {
 		return nil, err
 	}
 	result := map[string]bool{}

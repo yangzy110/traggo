@@ -41,6 +41,7 @@ func New(dialect, connection string) (*gorm.DB, error) {
 
 	log.Debug().Msg("Auto migrating schema's")
 	db.AutoMigrate(model.All()...)
+	mergeTags(db)
 
 	log.Debug().Msg("Database initialized")
 	return db, nil
@@ -52,6 +53,35 @@ func createDirectoryIfSqlite(dialect string, connection string) {
 			if err := mkdirAll(filepath.Dir(connection), 0777); err != nil {
 				panic(err)
 			}
+		}
+	}
+}
+
+// mergeTags makes the tags of older versions global: the private tags of the users are merged by their key, the time spans
+// and dashboards reference tags only by the key, so nothing else has to be changed. The tag of an admin is kept, a
+// shared tag first.
+func mergeTags(db *gorm.DB) {
+	order := "user_id"
+	if db.Dialect().HasColumn("tag_definitions", "shared") {
+		order = "shared DESC, user_id"
+	}
+	var tags []model.TagDefinition
+	if err := db.Order("key").Order(order).Find(&tags).Error; err != nil {
+		log.Warn().Err(err).Msg("could not read the tags")
+		return
+	}
+	keptBy := map[string]int{}
+	for _, tag := range tags {
+		owner, seen := keptBy[tag.Key]
+		if !seen {
+			keptBy[tag.Key] = tag.UserID
+			continue
+		}
+		if owner == tag.UserID {
+			continue
+		}
+		if err := db.Where("key = ? AND user_id = ?", tag.Key, tag.UserID).Delete(new(model.TagDefinition)).Error; err != nil {
+			log.Warn().Err(err).Str("tag", tag.Key).Msg("could not merge a duplicate tag")
 		}
 	}
 }

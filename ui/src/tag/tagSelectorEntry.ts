@@ -15,7 +15,7 @@ export interface SpecialTag {
 }
 
 export interface TagSelectorEntry {
-    tag: Omit<Tags_tags, 'usages' | 'shared' | 'editable'> & SpecialTag;
+    tag: Omit<Tags_tags, 'usages' | 'editable'> & SpecialTag;
     value: string;
 }
 
@@ -48,7 +48,6 @@ export const specialTag = (name: string, state: SpecialTagState): Tags_tags & Sp
         noValues: state === 'no_values',
         allValuesUsed: state === 'all_values_used',
         usages: 0,
-        shared: false,
         editable: false,
         archived: false,
     };

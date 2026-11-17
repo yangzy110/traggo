@@ -30,7 +30,7 @@ func (r *ResolverForTimeSpan) planImport(ctx context.Context, rows []*gqlmodel.I
 		return plan, nil
 	}
 
-	existingTags, err := r.existingTags(user.ID)
+	existingTags, err := r.existingTags()
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +78,8 @@ func (r *ResolverForTimeSpan) planImport(ctx context.Context, rows []*gqlmodel.I
 		switch {
 		case !current.start.Before(current.end):
 			result.Status, result.Message = gqlmodel.ImportStatusError, "the end must be after the start"
+		case len(names) > 1:
+			result.Status, result.Message = gqlmodel.ImportStatusError, "a time span can only have one tag"
 		case duplicate:
 			result.Status, result.Message = gqlmodel.ImportStatusDuplicate, "the time span exists already"
 		case conflict != nil:
@@ -167,6 +169,9 @@ func (p *importPlan) applyUpdates(known []span, existingTags map[string]bool, cr
 			}
 			found = true
 			tags := normalizeTags(update.Tags)
+			if len(tags) > 1 {
+				return fmt.Errorf("a time span can only have one tag")
+			}
 			for _, label := range tags {
 				if key, _ := splitTag(label); !existingTags[key] && !creatable[key] {
 					return fmt.Errorf("tag '%s' does not exist", key)

@@ -288,6 +288,7 @@ export const CalendarPage: React.FC = () => {
                     start={moment(editor.start)}
                     end={moment(editor.end)}
                     initialTags={[]}
+                    preselectDefaultTag
                     initialNote=""
                     onConfirm={(result) =>
                         mutations

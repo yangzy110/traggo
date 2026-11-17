@@ -29,7 +29,7 @@ func (r *ResolverForTimeSpan) UpdateTimeSpan(ctx context.Context, id int, start 
 	for _, tag := range oldTags {
 		alreadyUsed[tag.Key] = true
 	}
-	if err := tagsExist(r.DB, auth.GetUser(ctx).ID, timeSpan.Tags, alreadyUsed); err != nil {
+	if err := tagsExist(r.DB, timeSpan.Tags, alreadyUsed); err != nil {
 		return nil, err
 	}
 

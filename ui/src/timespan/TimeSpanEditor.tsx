@@ -9,6 +9,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import {TagPicker} from '../tag/TagPicker';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
+import {useDefaultTag} from '../tag/defaultTag';
 import {DateTimeSelector} from '../common/DateTimeSelector';
 import {formatDuration} from './team/teamutils';
 
@@ -41,6 +42,8 @@ interface TimeSpanEditorProps {
     // The calendar knows the time by the selection or the position of the event, the list has to ask for it.
     editableTime?: boolean;
     initialTags: TagSelectorEntry[];
+    // a new time span starts with the default tag of the user (as long as no tag was chosen)
+    preselectDefaultTag?: boolean;
     initialNote: string;
     // a time span which does exist already can be removed
     onDelete?: () => Promise<unknown> | void;
@@ -62,12 +65,25 @@ export const TimeSpanEditor: React.FC<TimeSpanEditorProps> = ({
     end: initialEnd,
     editableTime = false,
     initialTags,
+    preselectDefaultTag = false,
     initialNote,
     onDelete,
     onConfirm,
     onCancel,
 }) => {
-    const [tags, setTags] = React.useState<TagSelectorEntry[]>(initialTags);
+    const [tags, setTagsState] = React.useState<TagSelectorEntry[]>(initialTags);
+    const chosenByUser = React.useRef(false);
+    const setTags = (entries: TagSelectorEntry[]) => {
+        chosenByUser.current = true;
+        setTagsState(entries);
+    };
+    // the tags may be loaded after the editor was opened
+    const defaultTag = useDefaultTag();
+    React.useEffect(() => {
+        if (preselectDefaultTag && defaultTag && !chosenByUser.current) {
+            setTagsState([defaultTag]);
+        }
+    }, [preselectDefaultTag, defaultTag]);
     const [note, setNote] = React.useState(initialNote);
     const [start, setStart] = React.useState(initialStart);
     const [end, setEnd] = React.useState(initialEnd);

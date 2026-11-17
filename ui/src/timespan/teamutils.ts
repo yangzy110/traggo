@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
 import {tagLabel} from '../common/tagLabel';
 import {formatDurationZh} from '../utils/duration';
-import {asText, downloadCsv} from '../utils/csv';
+import {downloadCsv} from '../utils/csv';
 
 export const DAY_FORMAT = 'YYYY-MM-DD';
 export const MAX_LOG_DAYS = 31;
@@ -56,9 +56,9 @@ export const logCsvRows = (entries: LogEntry[]): string[][] => {
         .map((entry) => {
             const start = moment.parseZone(entry.start);
             return [
-                asText(start.format(DAY_FORMAT)),
-                asText(start.format(DATETIME_FORMAT)),
-                asText(moment.parseZone(entry.end!).format(DATETIME_FORMAT)),
+                start.format(DAY_FORMAT),
+                start.format(DATETIME_FORMAT),
+                moment.parseZone(entry.end!).format(DATETIME_FORMAT),
                 hoursOf(spanSeconds(entry.start, entry.end!)),
                 entry.member,
                 entry.note,

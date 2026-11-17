@@ -34,6 +34,25 @@ const toMoment = (date: Date): moment.Moment => {
     return moment(date).tz('utc');
 };
 
+// FullCalendar compares its options on every render and redraws (and scrolls back to the start time) if one of them is a new
+// object. Everything which does not depend on the state is therefore defined once.
+const PLUGINS = [dayGridPlugin, timeGridPlugin, interactionPlugin];
+const LOCALES = [zhCnLocale];
+const SNAP = {minutes: 15};
+const DEFAULT_DURATION = {minute: 15};
+const LABEL_INTERVAL = {minute: 60};
+const SLOT_DURATION = {minute: 15};
+const SCROLL_TIME = {hour: 6, minute: 30};
+const slotLabelFormat: CalendarOptions['slotLabelFormat'] = (s) => toMoment(s.date.marker).format('LT');
+const dayHeaderContent: CalendarOptions['dayHeaderContent'] = (arg) =>
+    moment(arg.date).format(arg.view.type === 'dayGridMonth' ? 'ddd' : 'DD ddd');
+const eventContent: CalendarOptions['eventContent'] = (arg) =>
+    arg.view.type === 'dayGridMonth' ? <MonthEventContent event={arg.event} /> : <EventContent event={arg.event} />;
+// in the month only the overview is shown, the details are edited in the week
+const dateClick: CalendarOptions['dateClick'] = (info) =>
+    info.view.type === 'dayGridMonth' && info.view.calendar.changeView('timeGridWeek', info.date);
+const UNSELECT_CANCEL = `.${EDITOR_CLASS}`;
+
 // The editor is shown below the end of a selection (to create a time span) or below an event (to change a time span).
 type Editor =
     | {mode: 'create'; anchor: PopperProps['anchorEl']; start: Date; end: Date; editableTime?: boolean; unselect: () => void}
@@ -57,6 +76,7 @@ export const CalendarPage: React.FC = () => {
     const calendarRef = React.useRef<FullCalendar>(null);
     const api = () => (calendarRef.current ? calendarRef.current.getApi() : undefined);
     const [editor, setEditor] = React.useState<Editor | null>(null);
+    const firstDay = moment.localeData().firstDayOfWeek();
     const mutations = useTimeSpanMutations(() => setReload((n) => n + 1));
 
     React.useEffect(() => {
@@ -92,41 +112,52 @@ export const CalendarPage: React.FC = () => {
     };
 
     const ready = !loading && !tagsResult.error && !tagsResult.loading;
-    const tagColors: Record<string, string> = {};
-    ((tagsResult.data && tagsResult.data.tags) || []).forEach((tag) => (tagColors[tag.key] = tag.color));
-    const values: EventInput[] =
-        ready && tagsResult.data
-            ? timeSpans.map((ts) => {
-                  const tags = (ts.tags || []).map((t) => tagLabel(t));
-                  const colorKey = [...tags].sort((a, b) => a.localeCompare(b)).join(' ');
-                  // the color of the first tag, like the tag itself
-                  const first = (ts.tags || [])[0];
-                  const color = (first && tagColors[first.key]) || calculateColor(colorKey, ColorMode.Soft, theme.palette.mode);
-                  return {
-                      start: moment(ts.start).toDate(),
-                      end: moment(ts.end).toDate(),
-                      // translucent, so that overlapping blocks stay readable; the solid color is the stripe at the left
-                      backgroundColor: alpha(color, theme.palette.mode === 'dark' ? 0.28 : 0.16),
-                      id: String(ts.id),
-                      title: tags.join(' '),
-                      extendedProps: {ts, colors: tagColors},
-                      textColor: theme.palette.text.primary,
-                      borderColor: color,
-                  };
-              })
-            : [];
+    const tagDefinitions = tagsResult.data && tagsResult.data.tags;
+    const mode = theme.palette.mode;
+    const textColor = theme.palette.text.primary;
+    // the same array as long as nothing changed: opening the editor must not redraw the calendar
+    const values: EventInput[] = React.useMemo(() => {
+        if (!ready || !tagDefinitions) {
+            return [];
+        }
+        const tagColors: Record<string, string> = {};
+        tagDefinitions.forEach((tag) => (tagColors[tag.key] = tag.color));
+        return timeSpans.map((ts) => {
+            const tags = (ts.tags || []).map((t) => tagLabel(t));
+            const colorKey = [...tags].sort((a, b) => a.localeCompare(b)).join(' ');
+            // the color of the first tag, like the tag itself
+            const first = (ts.tags || [])[0];
+            const color = (first && tagColors[first.key]) || calculateColor(colorKey, ColorMode.Soft, mode);
+            return {
+                start: moment(ts.start).toDate(),
+                end: moment(ts.end).toDate(),
+                // translucent, so that overlapping blocks stay readable; the solid color is the stripe at the left
+                backgroundColor: alpha(color, mode === 'dark' ? 0.28 : 0.16),
+                id: String(ts.id),
+                title: tags.join(' '),
+                extendedProps: {ts, colors: tagColors},
+                textColor,
+                borderColor: color,
+            };
+        });
+    }, [ready, tagDefinitions, timeSpans, mode, textColor]);
+
+    // the handlers of the calendar are created once, they read the current state from here
+    const latest = React.useRef({mutations, tagDefinitions});
+    latest.current = {mutations, tagDefinitions};
 
     // dragging or resizing an event changes the time, the tags and the work content are kept
-    const onChangeTime = (data: {event: EventApi; oldEvent: EventApi}) => {
+    const onChangeTime = React.useCallback((data: {event: EventApi; oldEvent: EventApi}) => {
         const ts: TimeSpanItem = data.event.extendedProps.ts;
-        mutations.update(ts.id, moment(data.oldEvent.start!).format(), {
+        const {mutations: m, tagDefinitions: definitions} = latest.current;
+        m.update(ts.id, moment(data.oldEvent.start!).format(), {
             start: data.event.start!,
             end: data.event.end!,
-            tags: toTagSelectorEntry(tagsResult.data!.tags!, stripTypename(ts.tags || [])),
+            tags: toTagSelectorEntry(definitions || [], stripTypename(ts.tags || [])),
             note: ts.note,
         });
-    };
-    const onSelect: CalendarOptions['select'] = (data) => {
+    }, []);
+    const onSelect: CalendarOptions['select'] = React.useCallback((data) => {
         // the editor is shown where the selection was ended
         const x = data.jsEvent ? data.jsEvent.clientX : window.innerWidth / 2;
         const y = data.jsEvent ? data.jsEvent.clientY : window.innerHeight / 2;
@@ -137,11 +168,17 @@ export const CalendarPage: React.FC = () => {
             end: data.end,
             unselect: () => data.view.calendar.unselect(),
         });
-    };
-    const onClick: CalendarOptions['eventClick'] = (data) => {
+    }, []);
+    const onClick: CalendarOptions['eventClick'] = React.useCallback((data) => {
         data.jsEvent.preventDefault();
         setEditor({mode: 'edit', anchor: data.el, ts: data.event.extendedProps.ts});
-    };
+    }, []);
+    const onDatesSet: CalendarOptions['datesSet'] = React.useCallback((x) => {
+        setView(x.view.type);
+        setTitle(x.view.title);
+        const next = {start: moment(x.view.currentStart).format(), end: moment(x.view.currentEnd).format()};
+        setRange((old) => (moment(old.start).isSame(next.start) && moment(old.end).isSame(next.end) ? old : next));
+    }, []);
 
     const closeEditor = () => {
         if (editor && editor.mode === 'create') {
@@ -187,31 +224,18 @@ export const CalendarPage: React.FC = () => {
                 <FullCalendarStyling>
                     <FullCalendar
                         ref={calendarRef}
-                        locales={[zhCnLocale]}
+                        locales={LOCALES}
                         locale="zh-cn"
                         initialView="timeGridWeek"
                         rerenderDelay={30}
-                        datesSet={(x) => {
-                            setView(x.view.type);
-                            setTitle(x.view.title);
-                            const next = {
-                                start: moment(x.view.currentStart).format(),
-                                end: moment(x.view.currentEnd).format(),
-                            };
-                            setRange((old) =>
-                                moment(old.start).isSame(next.start) && moment(old.end).isSame(next.end) ? old : next
-                            );
-                        }}
-                        // in the month only the overview is shown, the details are edited in the week
-                        dateClick={(info) =>
-                            info.view.type === 'dayGridMonth' && info.view.calendar.changeView('timeGridWeek', info.date)
-                        }
+                        datesSet={onDatesSet}
+                        dateClick={dateClick}
                         dayMaxEvents={4}
                         eventDisplay="block"
                         editable={view !== 'dayGridMonth'}
                         // both edges can be dragged: the top edge changes the start, the bottom edge the end
                         eventResizableFromStart={true}
-                        snapDuration={{minutes: 15}}
+                        snapDuration={SNAP}
                         // work blocks must not overlap
                         eventOverlap={false}
                         selectOverlap={false}
@@ -219,30 +243,24 @@ export const CalendarPage: React.FC = () => {
                         allDaySlot={false}
                         selectable={view !== 'dayGridMonth'}
                         selectMirror={true}
-                        unselectCancel={`.${EDITOR_CLASS}`}
+                        unselectCancel={UNSELECT_CANCEL}
                         handleWindowResize={true}
                         height="100%"
                         selectMinDistance={20}
-                        defaultTimedEventDuration={{minute: 15}}
-                        eventContent={(arg) =>
-                            arg.view.type === 'dayGridMonth' ? (
-                                <MonthEventContent event={arg.event} />
-                            ) : (
-                                <EventContent event={arg.event} />
-                            )
-                        }
-                        slotLabelInterval={{minute: 60}}
-                        slotDuration={{minute: 15}}
-                        scrollTime={{hour: 6, minute: 30}}
+                        defaultTimedEventDuration={DEFAULT_DURATION}
+                        eventContent={eventContent}
+                        slotLabelInterval={LABEL_INTERVAL}
+                        slotDuration={SLOT_DURATION}
+                        scrollTime={SCROLL_TIME}
                         select={onSelect}
-                        firstDay={moment.localeData().firstDayOfWeek()}
+                        firstDay={firstDay}
                         eventResize={onChangeTime}
                         eventClick={onClick}
                         eventDrop={onChangeTime}
-                        slotLabelFormat={(s) => toMoment(s.date.marker).format('LT')}
-                        dayHeaderContent={(arg) => moment(arg.date).format(arg.view.type === 'dayGridMonth' ? 'ddd' : 'DD ddd')}
+                        slotLabelFormat={slotLabelFormat}
+                        dayHeaderContent={dayHeaderContent}
                         nowIndicator={true}
-                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                        plugins={PLUGINS}
                         headerToolbar={false}
                     />
                 </FullCalendarStyling>

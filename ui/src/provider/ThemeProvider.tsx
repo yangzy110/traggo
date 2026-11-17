@@ -3,7 +3,7 @@ import {alpha, createTheme, ThemeProvider as MuiThemeProvider, type Theme, type 
 import CssBaseline from '@mui/material/CssBaseline';
 import {useSettings} from '../gql/settings';
 import {Theme as SettingTheme} from '../gql/types';
-import {useFollowTimeTheme, useNightTime} from './followTimeTheme';
+import {useFollowSystemTheme, useSystemDark} from './followSystemTheme';
 
 // Inter has no chinese characters, the system fonts are used for them.
 const fontFamily = [
@@ -181,10 +181,10 @@ const isDark = (theme: SettingTheme) => theme === SettingTheme.MaterialDark || t
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const {theme} = useSettings();
-    const followTime = useFollowTimeTheme();
-    const night = useNightTime();
+    const followSystem = useFollowSystemTheme();
+    const systemDark = useSystemDark();
     return (
-        <MuiThemeProvider theme={(followTime ? night : isDark(theme)) ? dark : light}>
+        <MuiThemeProvider theme={(followSystem ? systemDark : isDark(theme)) ? dark : light}>
             <CssBaseline />
             {children}
         </MuiThemeProvider>

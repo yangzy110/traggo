@@ -76,9 +76,6 @@ export const ImportBody: React.FC<ImportBodyProps> = ({
             {problems > 0 ? <Chip size="small" color="warning" label={`有问题 ${problems}（不会被导入）`} /> : null}
             {state.handled.length > 0 ? <Chip size="small" variant="outlined" label={`已处理 ${state.handled.length}`} /> : null}
         </Box>
-        <Typography variant="caption" color="text.secondary" sx={{display: 'block', marginBottom: 1}}>
-            每一行只会出现在一个标签页里，按“时间 → 内容 → 标签”的顺序处理。改完后点“提交修改并重新检查”。
-        </Typography>
         <Tabs value={tab} onChange={(_, value) => onTab(value)} sx={{marginBottom: 2}}>
             {TAB_ORDER.map((name) => (
                 <Tab

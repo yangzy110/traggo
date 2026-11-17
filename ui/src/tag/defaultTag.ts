@@ -1,3 +1,4 @@
+import {useMemo} from 'react';
 import {useQuery} from '@apollo/client/react';
 import * as gqlTag from '../gql/tags';
 import {useSettings} from '../gql/settings';
@@ -14,5 +15,5 @@ export const useDefaultTag = (): TagSelectorEntry | null => {
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
     const usable = sortTags(((tagsResult.data && tagsResult.data.tags) || []).filter((tag) => !tag.archived));
     const tag = usable.find((t) => t.key === defaultTag) || usable[0];
-    return tag ? {tag, value: ''} : null;
+    return useMemo(() => (tag ? {tag, value: ''} : null), [tag]);
 };

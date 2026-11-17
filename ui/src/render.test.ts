@@ -265,6 +265,9 @@ describe('tag picker', () => {
         await click(button('新建记录')!);
         await waitFor(() => document.querySelectorAll('.traggo-time-span-editor .MuiChip-root').length > 0, 'the tag chips');
         expect(document.querySelector('.traggo-time-span-editor input[placeholder]')).toBeNull();
+        expect(document.querySelector('.traggo-time-span-editor .MuiChip-root[aria-pressed="true"]')).not.toBeNull();
+        await click(document.querySelector('.traggo-time-span-editor .MuiChip-root[aria-pressed="true"]')!);
+        expect(document.querySelector('.traggo-time-span-editor .MuiChip-root[aria-pressed="true"]')).toBeNull();
         await click(document.querySelector('.traggo-time-span-editor .MuiChip-root')!);
         expect(document.querySelector('.traggo-time-span-editor .MuiChip-root[aria-pressed="true"]')).not.toBeNull();
         await settle();

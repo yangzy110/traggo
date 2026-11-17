@@ -115,7 +115,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                 </>
             ) : null}
             <List subheader={<ListSubheader>账号</ListSubheader>} dense={true}>
-                {drawerLink('/user/tags', '标签', <LabelIcon />)}
+                {admin ? drawerLink('/user/tags', '标签', <LabelIcon />) : null}
                 {drawerLink('/user/settings', '设置', <SettingsIcon />)}
                 {admin ? drawerLink('/admin/users', '用户管理', <UsersIcon />) : null}
                 <ListItemButton onClick={() => logout()}>
@@ -148,7 +148,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     ];
     // the pages of the account are in the menu of the user
     const userMenuItems = [
-        {label: '标签', to: '/user/tags', icon: <LabelIcon fontSize="small" />},
+        ...(admin ? [{label: '标签', to: '/user/tags', icon: <LabelIcon fontSize="small" />}] : []),
         {label: '设置', to: '/user/settings', icon: <SettingsIcon fontSize="small" />},
         ...(admin ? [{label: '用户管理', to: '/admin/users', icon: <UsersIcon fontSize="small" />}] : []),
     ];

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {tagLabel} from '../common/tagLabel';
 import moment from 'moment-timezone';
 import {useQuery} from '@apollo/client/react';
 import {Link as RouterLink} from 'react-router-dom';
@@ -281,7 +282,7 @@ export const StatsPage: React.FC = () => {
                             <>
                                 <StackedBar
                                     parts={stats.tags.map((tag) => ({
-                                        label: tag.key + ':' + tag.value,
+                                        label: tagLabel(tag),
                                         seconds: tag.seconds,
                                         color: calculateColor(tag.key, ColorMode.Soft, theme.palette.mode),
                                     }))}
@@ -299,7 +300,7 @@ export const StatsPage: React.FC = () => {
                                     </TableHead>
                                     <TableBody>
                                         {stats.tags.map((tag) => {
-                                            const id = tag.key + ':' + tag.value;
+                                            const id = tagLabel(tag);
                                             const share = tagTotal > 0 ? tag.seconds / tagTotal : 0;
                                             const open = openTag === id;
                                             return (

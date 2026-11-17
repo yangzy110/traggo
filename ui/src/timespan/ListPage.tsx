@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {tagLabel} from '../common/tagLabel';
 import moment from 'moment';
 import {useQuery} from '@apollo/client/react';
 import Box from '@mui/material/Box';
@@ -8,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import * as gqlTag from '../gql/tags';
+import {useCurrentUserName} from '../gql/useCurrentUserName';
 import {Tags, TimeSpans, TimeSpansVariables, TimeSpans_timeSpans_timeSpans} from '../gql/types';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {TagChip} from '../common/TagChip';
@@ -32,6 +34,7 @@ export const ListPage: React.FC = () => {
         variables: {cursor: {pageSize: 30}},
     });
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
+    const username = useCurrentUserName();
     const mutations = useTimeSpanMutations();
     const [editor, setEditor] = React.useState<Editor | null>(null);
     const [hasMore, setHasMore] = React.useState(true);
@@ -106,14 +109,14 @@ export const ListPage: React.FC = () => {
     // exports the time spans which are loaded (the older days are loaded while scrolling)
     const exportCsv = () => {
         const entries = (loadedSpans || []).map((ts) => ({
-            member: '',
+            member: username,
             start: ts.start,
             end: ts.end,
             tags: ts.tags,
             note: ts.note,
         }));
         entries.sort((a, b) => moment(a.start).diff(moment(b.start)));
-        exportLog(`traggo-my-log_${moment().format(DAY_FORMAT)}.csv`, entries, false);
+        exportLog(`traggo-my-log_${moment().format(DAY_FORMAT)}.csv`, entries);
     };
 
     const close = () => setEditor(null);
@@ -244,11 +247,7 @@ const TimeSpanRow: React.FC<{
             <Box sx={{flex: 1, minWidth: 0}}>
                 <div>
                     {(timeSpan.tags || []).map((tag) => (
-                        <TagChip
-                            key={tag.key + ':' + tag.value}
-                            label={tag.key + ':' + tag.value}
-                            color={colors[tag.key] || DEFAULT_TAG_COLOR}
-                        />
+                        <TagChip key={tagLabel(tag)} label={tagLabel(tag)} color={colors[tag.key] || DEFAULT_TAG_COLOR} />
                     ))}
                 </div>
                 {timeSpan.note ? (

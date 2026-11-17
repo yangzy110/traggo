@@ -24,11 +24,7 @@ export const themeLabels: Record<string, string> = {
 
 export const dateLocaleLabels: Record<string, string> = {
     Chinese: '中文',
-    American: '美式（12 小时制）',
-    American24h: '美式（24 小时制）',
-    German: '德式',
-    Australian: '澳大利亚式',
-    British: '英式',
+    American: 'English',
 };
 
 export const weekDayLabels: Record<string, string> = {

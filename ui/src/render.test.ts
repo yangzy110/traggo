@@ -42,8 +42,8 @@ const createSchema = () => {
             // the dashboards of every response have the ids 100 and 101
             Dashboard: () => ({id: [100, 101][dashboardCount++ % 2]}),
             TagDefinition: () => ({color: '#336699', key: 'key' + ++counter, shared: tagsShared, editable: tagsEditable}),
-            // the tag of the picker has to exist and has to be used
-            RootQuery: () => ({tags: [{key: 'project'}], usedTagValues: [{key: 'project', value: 'web'}]}),
+            // the tag of the picker
+            RootQuery: () => ({tags: [{key: 'project'}]}),
             StatsSelection: () => ({rangeId: null}),
             // enums are chosen randomly otherwise
             EntryType: () => entryType,

@@ -1,4 +1,5 @@
 import {Stats_stats, StatsInterval} from '../../gql/types';
+import {tagLabel} from '../../common/tagLabel';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import * as React from 'react';
 import {Colors} from './colors';
@@ -26,7 +27,7 @@ export const DashboardLineChart: React.FC<DashboardPieChartProps> = ({entries, i
                 start: entry.start,
                 end: entry.end,
                 data: entry.entries!.reduce((all: Record<string, number>, current) => {
-                    return {...all, [current.key + ':' + current.value]: current.timeSpendInSeconds};
+                    return {...all, [tagLabel(current)]: current.timeSpendInSeconds};
                 }, {}),
             };
         })

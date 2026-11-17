@@ -1,4 +1,5 @@
 import {Stats_stats_entries} from '../../gql/types';
+import {tagLabel} from '../../common/tagLabel';
 import {Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, type TooltipContentProps} from 'recharts';
 import * as React from 'react';
 import {Colors} from './colors';
@@ -20,7 +21,7 @@ export const DashboardPieChart: React.FC<DashboardPieChartProps> = ({entries}) =
                     dataKey="timeSpendInSeconds"
                     nameKey={(entry) => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        return (entry.key + ':' + entry.value) as any;
+                        return tagLabel(entry) as any;
                     }}
                     data={entries}
                     labelLine={false}

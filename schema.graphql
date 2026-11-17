@@ -15,8 +15,6 @@ type RootMutation {
     # a tag can be made shared by an admin, but a shared tag cannot be made private again
     updateTag(key: String!, newKey: String, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
     removeTag(key: String!): TagDefinition @hasRole(role: USER)
-    addTagValue(key: String!, value: String!): TagDefinition @hasRole(role: USER)
-    removeTagValue(key: String!, value: String!): TagDefinition @hasRole(role: USER)
 
     createUser(name: String!, pass: String!, admin: Boolean!): User @hasRole(role: ADMIN)
     removeUser(id: Int!): User @hasRole(role: ADMIN)
@@ -51,18 +49,9 @@ type RootMutation {
     setUserSettings(settings: InputUserSettings!): UserSettings! @hasRole(role: USER)
 }
 
-type UsedTagValue {
-    key: String!
-    value: String!
-}
-
 type RootQuery {
     suggestTag(query: String!): [TagDefinition!] @hasRole(role: USER)
     suggestTagValue(key: String!, query: String!): [String!] @hasRole(role: USER)
-    # The values which were used by the user in time spans and the values which are defined for the tags.
-    usedTagValues: [UsedTagValue!] @hasRole(role: USER)
-    # Only the values which are defined for the tags.
-    definedTagValues: [UsedTagValue!] @hasRole(role: USER)
     tags: [TagDefinition!] @hasRole(role: USER)
     users: [User!] @hasRole(role: ADMIN)
     currentUser: User

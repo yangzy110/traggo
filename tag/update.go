@@ -81,10 +81,6 @@ func (r *ResolverForTag) UpdateTag(ctx context.Context, key string, newKey *stri
 	}
 
 	if renamed {
-		if err := tx.Model(new(model.TagValue)).Where("user_id = ? AND key = ?", tag.UserID, tag.Key).Update("key", finalKey).Error; err != nil {
-			tx.Rollback()
-			return nil, err
-		}
 		if err := tx.
 			Model(new(model.TimeSpanTag)).
 			Where("time_span_id in ?", timeSpansOf(tx, tag)).

@@ -1,4 +1,5 @@
 import moment from 'moment-timezone';
+import {tagLabel} from '../common/tagLabel';
 import {formatDurationZh} from '../utils/duration';
 import {asText, downloadCsv} from '../utils/csv';
 
@@ -41,25 +42,34 @@ export const validateRange = (from: string, to: string, maxDays: number): string
     return null;
 };
 
-const DATETIME_FORMAT = 'YYYY-MM-DD HH:mm';
+const DATETIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
-export const logCsvRows = (entries: LogEntry[], withMember: boolean): string[][] => {
-    const header = [...(withMember ? ['成员'] : []), '开始', '结束', '时长(小时)', '标签', '备注'];
+// The columns of the export. The names are fixed (also in the Chinese ui), the file is meant to be processed further.
+export const CSV_HEADER = ['DATE', 'STARTING TIME', 'ENDING TIME', 'DURATION(hour)', 'MEMBER', 'CONTENT', 'CATEGORY'];
+
+// 1, 1.5, 0.25: at most two decimals without trailing zeros
+const hoursOf = (seconds: number) => String(Math.round((seconds / 3600) * 100) / 100);
+
+export const logCsvRows = (entries: LogEntry[]): string[][] => {
     const rows = entries
         .filter((entry) => !!entry.end)
-        .map((entry) => [
-            ...(withMember ? [entry.member] : []),
-            asText(moment.parseZone(entry.start).format(DATETIME_FORMAT)),
-            asText(moment.parseZone(entry.end!).format(DATETIME_FORMAT)),
-            (spanSeconds(entry.start, entry.end!) / 3600).toFixed(2),
-            (entry.tags || []).map((tag) => tag.key + ':' + tag.value).join('; '),
-            entry.note,
-        ]);
-    return [header, ...rows];
+        .map((entry) => {
+            const start = moment.parseZone(entry.start);
+            return [
+                asText(start.format(DAY_FORMAT)),
+                asText(start.format(DATETIME_FORMAT)),
+                asText(moment.parseZone(entry.end!).format(DATETIME_FORMAT)),
+                hoursOf(spanSeconds(entry.start, entry.end!)),
+                entry.member,
+                entry.note,
+                (entry.tags || []).map((tag) => tagLabel(tag)).join('; '),
+            ];
+        });
+    return [CSV_HEADER, ...rows];
 };
 
-export const exportLog = (filename: string, entries: LogEntry[], withMember: boolean) => {
-    downloadCsv(filename, logCsvRows(entries, withMember));
+export const exportLog = (filename: string, entries: LogEntry[]) => {
+    downloadCsv(filename, logCsvRows(entries));
 };
 
 const safeFilePart = (value: string) => value.replace(/[^\w一-龥-]+/g, '_');

@@ -1,4 +1,5 @@
 import {Stats_stats, StatsInterval} from '../../gql/types';
+import {tagLabel} from '../../common/tagLabel';
 import * as React from 'react';
 import moment from 'moment';
 import {Table, TableBody, TableCell, TableRow} from '@mui/material';
@@ -26,7 +27,7 @@ export const DashboardTable: React.FC<DashboardTableProps> = ({entries, interval
                 start: entry.start,
                 end: entry.end,
                 data: entry.entries!.reduce((all: Record<string, number>, current) => {
-                    return {...all, [current.key + ':' + current.value]: current.timeSpendInSeconds};
+                    return {...all, [tagLabel(current)]: current.timeSpendInSeconds};
                 }, {}),
             };
             if (total) {

@@ -155,7 +155,7 @@ export const TeamMemberPage: React.FC = () => {
 
     const exportCsv = () => {
         const entries: LogEntry[] = items.map(({user, timeSpan}) => ({...timeSpan, member: user.name}));
-        exportLog(memberFileName(name, from, to), entries, false);
+        exportLog(memberFileName(name, from, to), entries);
     };
     const total = days.reduce((sum, d) => sum + d.seconds, 0);
 

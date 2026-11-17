@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {tagLabel} from '../../common/tagLabel';
 import AddIcon from '@mui/icons-material/Add';
 import {Box, Button, Fab, IconButton, Paper, ToggleButton, ToggleButtonGroup, Typography, useTheme} from '@mui/material';
 import PrevIcon from '@mui/icons-material/ChevronLeft';
@@ -9,6 +10,7 @@ import {ExportCsvButton} from '../../common/ExportCsvButton';
 import moment from 'moment';
 import {useApolloClient, useQuery} from '@apollo/client/react';
 import {Tags} from '../../gql/types';
+import {useCurrentUserName} from '../../gql/useCurrentUserName';
 import * as gqlTag from '../../gql/tags';
 import FullCalendar from '@fullcalendar/react';
 import {calculateColor, ColorMode} from '../colorutils';
@@ -42,6 +44,7 @@ export const CalendarPage: React.FC = () => {
     const theme = useTheme();
     const {enqueueSnackbar} = useSnackbar();
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
+    const username = useCurrentUserName();
     const [range, setRange] = React.useState(() => ({
         start: moment().startOf('week').format(),
         end: moment().endOf('week').format(),
@@ -72,7 +75,7 @@ export const CalendarPage: React.FC = () => {
     const exportCsv = async () => {
         const {start, end} = range;
         const entries: LogEntry[] = timeSpans.map((ts) => ({
-            member: '',
+            member: username,
             start: ts.start,
             end: ts.end,
             tags: ts.tags,
@@ -85,7 +88,7 @@ export const CalendarPage: React.FC = () => {
         entries.sort((a, b) => moment(a.start).diff(moment(b.start)));
         const from = moment(start).format(DAY_FORMAT);
         const to = moment(end).subtract(1, 'millisecond').format(DAY_FORMAT);
-        exportLog(`traggo-my-log_${from}_${to}.csv`, entries, false);
+        exportLog(`traggo-my-log_${from}_${to}.csv`, entries);
     };
 
     const ready = !loading && !tagsResult.error && !tagsResult.loading;
@@ -94,7 +97,7 @@ export const CalendarPage: React.FC = () => {
     const values: EventInput[] =
         ready && tagsResult.data
             ? timeSpans.map((ts) => {
-                  const tags = (ts.tags || []).map((t) => t.key + ':' + t.value);
+                  const tags = (ts.tags || []).map((t) => tagLabel(t));
                   const colorKey = [...tags].sort((a, b) => a.localeCompare(b)).join(' ');
                   // the color of the first tag, like the tag itself
                   const first = (ts.tags || [])[0];
@@ -326,7 +329,7 @@ const TagPills: React.FC<{event: EventApi; maxLines?: number}> = ({event, maxLin
                 const color = colors[tag.key] || '#9e9e9e';
                 return (
                     <span
-                        key={tag.key + ':' + tag.value}
+                        key={tagLabel(tag)}
                         className="pill"
                         style={{
                             ...tagStyle(theme, color),

@@ -31,7 +31,8 @@ export const SettingsPage: React.FC = () => {
                 margin="normal"
                 fullWidth
                 slotProps={{select: {native: true}}}
-                value={settings.dateLocale}
+                // only Chinese and English are offered, the other formats which were chosen in the past are shown as English
+                value={settings.dateLocale === DateLocale.Chinese ? DateLocale.Chinese : DateLocale.American}
                 onChange={(e) => {
                     setSettings({
                         variables: {
@@ -53,7 +54,7 @@ export const SettingsPage: React.FC = () => {
                         })
                         .catch(handleError('更改日期格式失败', enqueueSnackbar));
                 }}>
-                {Object.values(DateLocale).map((type) => (
+                {[DateLocale.Chinese, DateLocale.American].map((type) => (
                     <option key={type} value={type}>
                         {label(dateLocaleLabels, type)}
                     </option>

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {tagLabel} from '../common/tagLabel';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import {TagChip} from '../common/TagChip';
@@ -38,11 +39,7 @@ export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
             <div>
                 <div>
                     {(timeSpan.tags || []).map((tag) => (
-                        <TagChip
-                            key={tag.key + ':' + tag.value}
-                            label={tag.key + ':' + tag.value}
-                            color={colors[tag.key] || DEFAULT_TAG_COLOR}
-                        />
+                        <TagChip key={tagLabel(tag)} label={tagLabel(tag)} color={colors[tag.key] || DEFAULT_TAG_COLOR} />
                     ))}
                 </div>
                 {timeSpan.note ? (

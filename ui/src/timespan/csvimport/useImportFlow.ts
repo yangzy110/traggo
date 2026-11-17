@@ -2,9 +2,9 @@ import * as React from 'react';
 
 import {useApolloClient, useQuery} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
-import * as gqlTimeSpan from '../gql/timeSpan';
-import * as gqlTag from '../gql/tags';
-import * as gqlUser from '../gql/user';
+import * as gqlTimeSpan from '../../gql/timeSpan';
+import * as gqlTag from '../../gql/tags';
+import * as gqlUser from '../../gql/user';
 import {
     CheckImport,
     CheckImportVariables,
@@ -13,13 +13,13 @@ import {
     ImportTimeSpansVariables,
     InputImportRow,
     Tags,
-} from '../gql/types';
-import {handleError} from '../utils/errors';
-import {downloadCsv} from '../utils/csv';
-import {translateServerError} from '../utils/serverErrors';
+} from '../../gql/types';
+import {handleError} from '../../utils/errors';
+import {downloadCsv} from '../../utils/csv';
+import {translateServerError} from '../../utils/serverErrors';
 import {MAX_IMPORT_ROWS, parseImportFile, timeIssue, toIso, WorkRow} from './importcsv';
 import {ContentAction, ImportState, reasonOf, resolveContent, RowResult, Tab as TabName, tabOf} from './importstate';
-import {CSV_HEADER} from './teamutils';
+import {CSV_HEADER} from '../team/teamutils';
 import {TAB_ORDER} from './ImportBody';
 
 const EMPTY: ImportState = {rows: [], updates: [], handled: []};

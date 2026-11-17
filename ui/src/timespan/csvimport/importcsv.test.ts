@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {parseCsv, toCsv} from '../utils/csv';
+import {parseCsv, toCsv} from '../../utils/csv';
 import {parseImportFile} from './importcsv';
 
 describe('parseCsv', () => {

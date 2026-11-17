@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
-import {tagLabel} from '../common/tagLabel';
-import {formatDurationZh} from '../utils/duration';
-import {downloadCsv} from '../utils/csv';
+import {tagLabel} from '../../common/tagLabel';
+import {formatDurationZh} from '../../utils/duration';
+import {downloadCsv} from '../../utils/csv';
 
 export const DAY_FORMAT = 'YYYY-MM-DD';
 export const MAX_LOG_DAYS = 31;

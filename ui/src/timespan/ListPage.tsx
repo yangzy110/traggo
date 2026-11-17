@@ -17,10 +17,10 @@ import {nowInSteps, TimeSpanEditor} from './TimeSpanEditor';
 import {TimesheetLayout} from './TimesheetLayout';
 import {useTimeSpanMutations} from './useTimeSpanMutations';
 import {groupByDay} from './timelist';
-import {formatDuration} from './teamutils';
+import {formatDuration} from './team/teamutils';
 import {EmptyState} from '../common/EmptyState';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import {ImportCsvButton} from './ImportCsvButton';
+import {ImportCsvButton} from './csvimport/ImportCsvButton';
 import {ExportRangeButton} from './ExportRangeButton';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';

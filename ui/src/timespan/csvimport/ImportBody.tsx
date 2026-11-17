@@ -7,7 +7,10 @@ import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import {WorkRow} from './importcsv';
 import {ContentAction, ImportState, resolveAllContent, RowResult, Tab as TabName} from './importstate';
-import {ContentPanel, ReadyPanel, TagPanel, TimePanel} from './ImportPanels';
+import {ContentPanel} from './ContentPanel';
+import {ReadyPanel} from './ReadyPanel';
+import {TagPanel} from './TagPanel';
+import {TimePanel} from './TimePanel';
 
 const TAB_LABEL: Record<TabName, string> = {time: '时间问题', content: '内容问题', tags: '标签问题', ready: '可导入'};
 export const TAB_ORDER: TabName[] = ['time', 'content', 'tags', 'ready'];

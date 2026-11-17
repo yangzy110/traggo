@@ -1,5 +1,5 @@
 import moment from 'moment';
-import {parseCsv} from '../utils/csv';
+import {parseCsv} from '../../utils/csv';
 
 export const MAX_IMPORT_ROWS = 1500;
 

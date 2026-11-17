@@ -28,15 +28,14 @@ import * as gqlUser from '../gql/user';
 import * as gqlVersion from '../gql/version';
 import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
-import {Link, matchPath, useLocation, useNavigate} from 'react-router-dom';
+import {Link, useLocation, useNavigate} from 'react-router-dom';
 import MenuItem from '@mui/material/MenuItem';
 import {useMutation, useQuery} from '@apollo/client/react';
 import {Logout, ServerVersion, CurrentUser, Dashboards} from '../gql/types';
 import * as gqlDashboard from '../gql/dashboard';
-import type {SxProps, Theme} from '@mui/material/styles';
+import {styles} from './pageStyles';
+import {pageTitle} from './pageTitle';
 import {lastTimesheetView} from '../timespan/TimesheetLayout';
-
-const drawerWidth = 240;
 
 // The menu of the dashboards is hidden for now, the pages are still reachable by their url.
 const SHOW_DASHBOARDS = false;
@@ -47,110 +46,6 @@ interface NavGroup {
     paths: string[];
     items: Array<{label: string; to: string}>;
 }
-
-const styles = {
-    root: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-    },
-    brand: (theme) => ({
-        marginRight: theme.spacing(3),
-        color: 'inherit',
-        textDecoration: 'none',
-    }),
-    navButton: (theme) => ({
-        marginRight: theme.spacing(0.5),
-        padding: theme.spacing(0.75, 1.75),
-        fontSize: '0.95rem',
-        fontWeight: 500,
-        borderRadius: '8px',
-        position: 'relative',
-        opacity: 0.8,
-        '&:hover': {opacity: 1, backgroundColor: 'action.hover'},
-    }),
-    navButtonActive: {
-        opacity: 1,
-        fontWeight: 600,
-        // the page is marked by a line below of the button
-        '&::after': {
-            content: '""',
-            position: 'absolute',
-            left: 14,
-            right: 14,
-            bottom: -14,
-            height: 2,
-            borderRadius: 1,
-            backgroundColor: 'primary.main',
-        },
-    },
-    menuButton: (theme) => ({
-        marginRight: '20px',
-        [theme.breakpoints.up('md')]: {
-            display: 'none',
-        },
-    }),
-    toolbar: (theme) => ({
-        ...theme.mixins.toolbar,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-    }),
-    drawer: {
-        display: {xs: 'block', md: 'none'},
-        '& .MuiDrawer-paper': {width: drawerWidth},
-    },
-    content: (theme) => ({
-        flexGrow: 1,
-        paddingTop: theme.spacing(2),
-        paddingBottom: theme.spacing(2),
-        paddingLeft: theme.spacing(1),
-        paddingRight: theme.spacing(1),
-        [theme.breakpoints.up('md')]: {
-            paddingTop: theme.spacing(3),
-            paddingLeft: theme.spacing(3),
-            paddingRight: theme.spacing(3),
-        },
-    }),
-    desktopOnly: {
-        display: {xs: 'none', md: 'flex'},
-        alignItems: 'center',
-    },
-    mobileOnly: {
-        display: {xs: 'block', md: 'none'},
-    },
-    grow: {
-        flexGrow: 1,
-    },
-    sectionDesktop: {
-        display: 'flex',
-    },
-} satisfies Record<string, SxProps<Theme>>;
-
-const pageTitles: Array<[path: string, title: string]> = [
-    ['/team', '团队日志'],
-    ['/team/:userId', '团队日志 / 成员'],
-    ['/stats', '统计'],
-    ['/timesheet/list', '我的日志 / 列表'],
-    ['/timesheet/calendar', '我的日志 / 日历'],
-    ['/user/settings', '设置'],
-    ['/user/tags', '标签'],
-    ['/admin/users', '用户管理'],
-    ['/dashboards', '管理仪表盘'],
-];
-
-const pageTitle = (pathname: string, dashboards: Array<{id: number; name: string}>): string => {
-    const known = pageTitles.find(([path]) => matchPath(path, pathname));
-    if (known) {
-        return known[1];
-    }
-    const dashboardMatch = matchPath('/dashboard/:id/*', pathname);
-    if (dashboardMatch) {
-        const dashboard = dashboards.find((db) => '' + db.id === dashboardMatch.params.id);
-        return '仪表盘 / ' + (dashboard ? dashboard.name : '...');
-    }
-    return '';
-};
 
 export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const location = useLocation();

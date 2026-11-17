@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import {TagPicker} from '../tag/TagPicker';
 import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {DateTimeSelector} from '../common/DateTimeSelector';
-import {formatDuration} from './teamutils';
+import {formatDuration} from './team/teamutils';
 
 // The times are chosen in steps of a quarter of an hour.
 export const MINUTES_STEP = 15;

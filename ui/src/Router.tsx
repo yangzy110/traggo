@@ -20,9 +20,9 @@ import {DashboardPage} from './dashboard/DashboardPage';
 import {DashboardsPage} from './dashboard/DashboardsPage';
 import {TagPage} from './tag/TagPage';
 import {SettingsPage} from './setting/SettingsPage';
-import {TeamPage} from './timespan/TeamPage';
-import {TeamMemberPage} from './timespan/TeamMemberPage';
-import {StatsPage} from './timespan/StatsPage';
+import {TeamPage} from './timespan/team/TeamPage';
+import {TeamMemberPage} from './timespan/team/TeamMemberPage';
+import {StatsPage} from './timespan/stats/StatsPage';
 import {CalendarPage} from './timespan/calendar/CalendarPage';
 
 export const Router = () => {

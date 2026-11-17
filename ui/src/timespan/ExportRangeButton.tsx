@@ -12,7 +12,7 @@ import {useApolloClient} from '@apollo/client/react';
 import {useSnackbar} from 'notistack';
 import {ExportCsvButton} from '../common/ExportCsvButton';
 import {useCurrentUserName} from '../gql/useCurrentUserName';
-import {DAY_FORMAT, exportLog, LogEntry, MAX_STATS_DAYS, validateRange} from './teamutils';
+import {DAY_FORMAT, exportLog, LogEntry, MAX_STATS_DAYS, validateRange} from './team/teamutils';
 import {fetchAllTimeSpans} from './fetchTimeSpans';
 
 const defaultFrom = () => moment().subtract(6, 'day').format(DAY_FORMAT);

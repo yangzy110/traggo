@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {tagLabel} from '../common/tagLabel';
+import {tagLabel} from '../../common/tagLabel';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import {TagChip} from '../common/TagChip';
+import {TagChip} from '../../common/TagChip';
 import {clock, formatDuration, spanSeconds} from './teamutils';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';

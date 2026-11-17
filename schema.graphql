@@ -33,6 +33,8 @@ type RootMutation {
     replaceTimeSpanTags(from: InputTimeSpanTag!, to: InputTimeSpanTag!, opt: InputReplaceOptions!): Boolean @hasRole(role: USER)
     copyTimeSpan(id: Int!, start: Time!, end: Time): TimeSpan @hasRole(role: USER)
     stopTimeSpan(id: Int!, end: Time!): TimeSpan @hasRole(role: USER)
+    # Imports the rows which are ok (see checkImport), all or nothing.
+    importTimeSpans(rows: [InputImportRow!]!, createTags: [String!], updates: [InputImportUpdate!]): ImportResult! @hasRole(role: USER)
 
     createDashboard(name: String!): Dashboard! @hasRole(role: USER)
     updateDashboard(id: Int!, name: String!): Dashboard! @hasRole(role: USER)
@@ -58,6 +60,8 @@ type RootQuery {
     currentDevice: Device
     devices: [Device!] @hasRole(role: USER)
     timeSpans(fromInclusive: Time, toInclusive: Time, cursor: InputCursor): PagedTimeSpans! @hasRole(role: USER)
+    # Tells for every row of an import if it can be imported, nothing is written.
+    checkImport(rows: [InputImportRow!]!, createTags: [String!], updates: [InputImportUpdate!]): ImportResult! @hasRole(role: USER)
     timers: [TimeSpan!] @hasRole(role: USER)
     teamTimeSpans(fromInclusive: Time!, toInclusive: Time!, userId: Int): [TeamMemberTimeSpan!]! @hasRole(role: USER)
     teamMembers: [TeamMember!]! @hasRole(role: USER)
@@ -217,6 +221,75 @@ type TeamStats {
     days: [TeamStatsDay!]!
     # Contains every member, also those without any tracked time.
     members: [TeamMemberStats!]!
+}
+
+input InputImportRow {
+    # The line in the file, it is returned with the result.
+    line: Int!
+    start: Time!
+    end: Time!
+    note: String!
+    # The names of the tags.
+    tags: [String!]!
+}
+
+# Replaces the work content and the tags of a time span which exists already (the time is not changed).
+input InputImportUpdate {
+    id: Int!
+    note: String!
+    tags: [String!]!
+}
+
+enum ImportStatus {
+    # The row can be imported.
+    Ok
+    # A time span with the same time, work content and tags exists already (or is in the file twice).
+    Duplicate
+    # The time overlaps with another time span which is different.
+    Conflict
+    # The row uses tags which do not exist.
+    MissingTags
+    Error
+}
+
+enum ImportConflictSource {
+    # A time span which exists already.
+    Existing
+    # An earlier row of the import.
+    File
+}
+
+type ImportConflict {
+    source: ImportConflictSource!
+    # The id of the existing time span (source Existing).
+    id: Int
+    # The line of the earlier row (source File).
+    line: Int
+    start: Time!
+    end: Time!
+    note: String!
+    tags: [String!]!
+    # Start and end are the same, then the work content and the tags can be merged or replaced.
+    sameTime: Boolean!
+}
+
+type ImportRowResult {
+    line: Int!
+    status: ImportStatus!
+    message: String!
+    # The tags of the row which do not exist (and are not created).
+    missingTags: [String!]!
+    conflict: ImportConflict
+}
+
+type ImportResult {
+    rows: [ImportRowResult!]!
+    # The amount of rows which are (or were) imported.
+    imported: Int!
+    # The amount of existing time spans which are (or were) updated.
+    updated: Int!
+    # All tags of the rows which do not exist and are not created.
+    missingTags: [String!]!
 }
 
 type PagedTimeSpans {

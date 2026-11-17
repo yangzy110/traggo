@@ -150,3 +150,55 @@ export const TeamStats = gql`
         }
     }
 `;
+
+export const CheckImport = gql`
+    query CheckImport($rows: [InputImportRow!]!, $createTags: [String!], $updates: [InputImportUpdate!]) {
+        checkImport(rows: $rows, createTags: $createTags, updates: $updates) {
+            imported
+            updated
+            missingTags
+            rows {
+                line
+                status
+                message
+                missingTags
+                conflict {
+                    source
+                    id
+                    line
+                    start
+                    end
+                    note
+                    tags
+                    sameTime
+                }
+            }
+        }
+    }
+`;
+
+export const ImportTimeSpans = gql`
+    mutation ImportTimeSpans($rows: [InputImportRow!]!, $createTags: [String!], $updates: [InputImportUpdate!]) {
+        importTimeSpans(rows: $rows, createTags: $createTags, updates: $updates) {
+            imported
+            updated
+            missingTags
+            rows {
+                line
+                status
+                message
+                missingTags
+                conflict {
+                    source
+                    id
+                    line
+                    start
+                    end
+                    note
+                    tags
+                    sameTime
+                }
+            }
+        }
+    }
+`;

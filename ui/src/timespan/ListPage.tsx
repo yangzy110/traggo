@@ -21,6 +21,7 @@ import {groupByDay} from './timelist';
 import {DAY_FORMAT, exportLog, formatDuration} from './teamutils';
 import {EmptyState} from '../common/EmptyState';
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import {ImportCsvButton} from './ImportCsvButton';
 import {ExportCsvButton} from '../common/ExportCsvButton';
 
 const DEFAULT_TAG_COLOR = '#9e9e9e';
@@ -127,6 +128,7 @@ export const ListPage: React.FC = () => {
             view="list"
             actions={
                 <>
+                    <ImportCsvButton onImported={() => timeSpansResult.refetch()} />
                     <ExportCsvButton onClick={exportCsv} disabled={!loadedSpans || loadedSpans.length === 0} />
                     <Button
                         variant="contained"

@@ -6,6 +6,7 @@ import PrevIcon from '@mui/icons-material/ChevronLeft';
 import NextIcon from '@mui/icons-material/ChevronRight';
 import {alpha} from '@mui/material/styles';
 import {tagStyle} from '../../common/tagStyle';
+import {ImportCsvButton} from '../ImportCsvButton';
 import {ExportCsvButton} from '../../common/ExportCsvButton';
 import moment from 'moment';
 import {useApolloClient, useQuery} from '@apollo/client/react';
@@ -217,6 +218,7 @@ export const CalendarPage: React.FC = () => {
                         <ToggleButton value="timeGridWeek">周</ToggleButton>
                         <ToggleButton value="dayGridMonth">月</ToggleButton>
                     </ToggleButtonGroup>
+                    <ImportCsvButton onImported={() => setReload((n) => n + 1)} />
                     <ExportCsvButton onClick={exportCsv} disabled={timeSpans.length === 0} />
                 </>
             }>

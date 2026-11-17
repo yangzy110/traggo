@@ -40,7 +40,8 @@ func (t *DeviceType) Scan(value interface{}) error {
 func (t DeviceType) Seconds() int {
 	switch t {
 	case TypeLongExpiry:
-		return 60 * 60 * 24 * 30
+		// a session of the web ui expires after seven days without activity
+		return 60 * 60 * 24 * 7
 	case TypeShortExpiry:
 		return 60 * 60
 	case TypeNoExpiry:

@@ -191,7 +191,6 @@ describe('pages', () => {
         ['/dashboards', '创建仪表盘'],
         ['/dashboard/100/some-name', '编辑仪表盘'],
         ['/user/settings', '日期格式'],
-        ['/user/devices', '创建设备'],
         ['/user/tags', '创建标签'],
         ['/admin/users', '创建用户'],
         // the user is logged in, the login page redirects to the calendar
@@ -337,9 +336,7 @@ describe('navigation', () => {
         await click(document.querySelector('button[aria-label="账号菜单"]')!);
         await waitFor(() => document.querySelectorAll('[role="menuitem"]').length > 0, 'the menu items');
         const items = [...document.querySelectorAll('[role="menuitem"]')];
-        expect(items.map((item) => item.textContent)).toEqual(
-            expect.arrayContaining(['标签', '设备', '设置', '用户管理', '退出登录'])
-        );
+        expect(items.map((item) => item.textContent)).toEqual(expect.arrayContaining(['标签', '设置', '用户管理', '退出登录']));
 
         const tags = items.find((item) => item.textContent === '标签')!;
         expect(tags.getAttribute('href')).toBe('#/user/tags');

@@ -13,7 +13,6 @@ import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from '@mui/icons-material/Menu';
 import SettingsIcon from '@mui/icons-material/Settings';
-import DevicesIcon from '@mui/icons-material/DevicesOther';
 import TeamIcon from '@mui/icons-material/People';
 import StatsIcon from '@mui/icons-material/ShowChart';
 import LabelIcon from '@mui/icons-material/Label';
@@ -135,7 +134,6 @@ const pageTitles: Array<[path: string, title: string]> = [
     ['/timesheet/list', '我的日志 / 列表'],
     ['/timesheet/calendar', '我的日志 / 日历'],
     ['/user/settings', '设置'],
-    ['/user/devices', '设备'],
     ['/user/tags', '标签'],
     ['/admin/users', '用户管理'],
     ['/dashboards', '管理仪表盘'],
@@ -182,9 +180,9 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     const drawer = (
         <div>
             <Box sx={styles.toolbar}>
-                <HrefLink href="https://github.com/traggo" underline="none" target="_blank">
+                <HrefLink component={Link} to="/" underline="none">
                     <Typography variant="h5" align="center" color="textPrimary">
-                        traggo
+                        NIRVANA
                     </Typography>
                 </HrefLink>
                 <HrefLink href="https://github.com/traggo/server/releases" underline="none" target="_blank">
@@ -223,7 +221,6 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
             ) : null}
             <List subheader={<ListSubheader>账号</ListSubheader>} dense={true}>
                 {drawerLink('/user/tags', '标签', <LabelIcon />)}
-                {drawerLink('/user/devices', '设备', <DevicesIcon />)}
                 {drawerLink('/user/settings', '设置', <SettingsIcon />)}
                 {admin ? drawerLink('/admin/users', '用户管理', <UsersIcon />) : null}
                 <ListItemButton onClick={() => logout()}>
@@ -257,7 +254,6 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
     // the pages of the account are in the menu of the user
     const userMenuItems = [
         {label: '标签', to: '/user/tags', icon: <LabelIcon fontSize="small" />},
-        {label: '设备', to: '/user/devices', icon: <DevicesIcon fontSize="small" />},
         {label: '设置', to: '/user/settings', icon: <SettingsIcon fontSize="small" />},
         ...(admin ? [{label: '用户管理', to: '/admin/users', icon: <UsersIcon fontSize="small" />}] : []),
     ];
@@ -278,7 +274,7 @@ export const Page: React.FC<React.PropsWithChildren> = ({children}) => {
                     </IconButton>
                     <Box component={Link} to="/" sx={styles.brand}>
                         <Typography variant="h6" color="inherit" noWrap>
-                            traggo
+                            NIRVANA
                         </Typography>
                     </Box>
                     <Box sx={styles.desktopOnly}>

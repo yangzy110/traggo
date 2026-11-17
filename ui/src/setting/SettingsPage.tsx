@@ -2,12 +2,12 @@ import * as React from 'react';
 import {Paper, TextField} from '@mui/material';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
 import {useMutation} from '@apollo/client/react';
-import {SetSettings, SetSettingsVariables, DateLocale, Theme, WeekDay, DateTimeInputStyle} from '../gql/types';
+import {SetSettings, SetSettingsVariables, DateLocale, Theme} from '../gql/types';
 import {useSnackbar} from 'notistack';
 import {handleError} from '../utils/errors';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 import {gutters} from '../common/styles';
-import {dateLocaleLabels, inputStyleLabels, label, themeLabels, weekDayLabels} from '../common/labels';
+import {dateLocaleLabels, label, themeLabels} from '../common/labels';
 
 const rootSx: SxProps<MuiTheme> = (theme) => ({
     ...gutters(theme),
@@ -85,72 +85,6 @@ export const SettingsPage: React.FC = () => {
                 {[Theme.MaterialLight, Theme.MaterialDark].map((type) => (
                     <option key={type} value={type}>
                         {label(themeLabels, type)}
-                    </option>
-                ))}
-            </TextField>
-            <TextField
-                select
-                label="每周第一天"
-                margin="normal"
-                fullWidth
-                slotProps={{select: {native: true}}}
-                value={settings.firstDayOfTheWeek}
-                onChange={(e) => {
-                    setSettings({
-                        variables: {
-                            settings: {
-                                ...settings,
-                                firstDayOfTheWeek: e.target.value as WeekDay,
-                            },
-                        },
-                    })
-                        .then(() =>
-                            enqueueSnackbar('每周第一天已更改', {
-                                variant: 'success',
-                            })
-                        )
-                        .catch(handleError('更改每周第一天失败', enqueueSnackbar));
-                }}>
-                {[
-                    WeekDay.Sunday,
-                    WeekDay.Monday,
-                    WeekDay.Tuesday,
-                    WeekDay.Wednesday,
-                    WeekDay.Thursday,
-                    WeekDay.Friday,
-                    WeekDay.Saturday,
-                ].map((type) => (
-                    <option key={type} value={type}>
-                        {label(weekDayLabels, type)}
-                    </option>
-                ))}
-            </TextField>
-            <TextField
-                select
-                label="日期时间输入方式"
-                margin="normal"
-                fullWidth
-                slotProps={{select: {native: true}}}
-                value={settings.dateTimeInputStyle}
-                onChange={(e) => {
-                    setSettings({
-                        variables: {
-                            settings: {
-                                ...settings,
-                                dateTimeInputStyle: e.target.value as DateTimeInputStyle,
-                            },
-                        },
-                    })
-                        .then(() =>
-                            enqueueSnackbar('日期时间输入方式已更改', {
-                                variant: 'success',
-                            })
-                        )
-                        .catch(handleError('更改日期时间输入方式失败', enqueueSnackbar));
-                }}>
-                {[DateTimeInputStyle.Fancy, DateTimeInputStyle.Native].map((type) => (
-                    <option key={type} value={type}>
-                        {label(inputStyleLabels, type)}
                     </option>
                 ))}
             </TextField>

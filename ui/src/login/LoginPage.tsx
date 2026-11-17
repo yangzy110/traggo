@@ -18,7 +18,7 @@ export const LoginPage = () => {
             <Box>
                 <DefaultPaper>
                     <Typography variant="h3" component="h1" gutterBottom={true} sx={{fontWeight: 800}}>
-                        traggo
+                        NIRVANA
                     </Typography>
                     <LoginForm />
                 </DefaultPaper>

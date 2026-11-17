@@ -36,5 +36,11 @@ export const useSettings = (): {done: boolean} & Omit<SettingsQueryResponse['use
     if (data.loading || data.error || !data.data) {
         return {...defaultSettings, done: false};
     }
-    return {done: true, ...stripTypename(data.data.userSettings)};
+    // the first day of the week and the input style of dates are not chosen by the user
+    return {
+        ...stripTypename(data.data.userSettings),
+        firstDayOfTheWeek: defaultSettings.firstDayOfTheWeek,
+        dateTimeInputStyle: defaultSettings.dateTimeInputStyle,
+        done: true,
+    };
 };

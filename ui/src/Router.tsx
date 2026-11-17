@@ -15,7 +15,6 @@ import {Page} from './common/Page';
 import {Navigate, Outlet, Route, Routes} from 'react-router-dom';
 import {ListPage} from './timespan/ListPage';
 import {lastTimesheetView} from './timespan/TimesheetLayout';
-import {DevicesPage} from './devices/DevicesPage';
 import {UsersPage} from './user/UsersPage';
 import {DashboardPage} from './dashboard/DashboardPage';
 import {DashboardsPage} from './dashboard/DashboardsPage';
@@ -55,7 +54,6 @@ export const Router = () => {
                     <Route path="/team/:userId" element={<TeamMemberPage />} />
                     <Route path="/stats" element={<StatsPage />} />
                     <Route path="/user/settings" element={<SettingsPage />} />
-                    <Route path="/user/devices" element={<DevicesPage />} />
                     <Route path="/user/tags" element={<TagPage />} />
                     {admin ? <Route path="/admin/users" element={<UsersPage />} /> : null}
                     <Route path="/" element={<Navigate to={`/timesheet/${lastTimesheetView()}`} replace />} />

@@ -27,19 +27,4 @@ export const dateLocaleLabels: Record<string, string> = {
     American: 'English',
 };
 
-export const weekDayLabels: Record<string, string> = {
-    Sunday: '星期日',
-    Monday: '星期一',
-    Tuesday: '星期二',
-    Wednesday: '星期三',
-    Thursday: '星期四',
-    Friday: '星期五',
-    Saturday: '星期六',
-};
-
-export const inputStyleLabels: Record<string, string> = {
-    Fancy: '选择器',
-    Native: '浏览器原生',
-};
-
 export const label = (labels: Record<string, string>, value: string): string => labels[value] || value;

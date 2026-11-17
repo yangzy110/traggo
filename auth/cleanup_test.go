@@ -63,7 +63,7 @@ func TestCleanUp_removeExpiredDevices(t *testing.T) {
 		UserID:    2,
 		Name:      "android 3",
 		Type:      model.TypeLongExpiry,
-		ActiveAt:  test.Time("2018-05-31T18:30:00Z"),
+		ActiveAt:  test.Time("2018-06-23T18:30:00Z"),
 		CreatedAt: test.Time("2009-06-30T18:30:00Z"),
 	})
 	db.Create(&model.Device{
@@ -72,7 +72,7 @@ func TestCleanUp_removeExpiredDevices(t *testing.T) {
 		UserID:    2,
 		Name:      "android 4",
 		Type:      model.TypeLongExpiry,
-		ActiveAt:  test.Time("2018-05-31T18:29:59Z"),
+		ActiveAt:  test.Time("2018-06-23T18:29:59Z"),
 		CreatedAt: test.Time("2009-06-30T18:30:00Z"),
 	})
 	db.Create(&model.Device{
@@ -107,7 +107,7 @@ func TestCleanUp_removeExpiredDevices(t *testing.T) {
 			UserID:    2,
 			Name:      "android 3",
 			Type:      model.TypeLongExpiry,
-			ActiveAt:  test.Time("2018-05-31T18:30:00Z"),
+			ActiveAt:  test.Time("2018-06-23T18:30:00Z"),
 			CreatedAt: test.Time("2009-06-30T18:30:00Z"),
 		},
 		{

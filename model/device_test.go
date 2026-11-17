@@ -11,7 +11,7 @@ func Test(t *testing.T) {
 	require.Error(t, dType.Valid(), "unknown type")
 
 	require.Equal(t, TypeShortExpiry.Seconds(), 3600)
-	require.Equal(t, TypeLongExpiry.Seconds(), 2592000)
+	require.Equal(t, TypeLongExpiry.Seconds(), 604800)
 	require.Equal(t, TypeNoExpiry.Seconds(), 31536000)
 	value, err := TypeNoExpiry.Value()
 	require.NoError(t, err)

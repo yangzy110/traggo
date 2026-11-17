@@ -1,6 +1,6 @@
-// Formats a duration in Chinese with at most `unitCount` units, e.g. 1小时30分钟.
+// Formats a duration in Chinese with at most `unitCount` units, e.g. 1小时30分钟. Working time is counted in hours, never in days
+// (a day of work is not 24 hours), so 26 hours are shown as 26小时.
 const UNITS: Array<[name: string, seconds: number]> = [
-    ['天', 86400],
     ['小时', 3600],
     ['分钟', 60],
     ['秒', 1],
@@ -26,3 +26,6 @@ export const formatDurationZh = (totalSeconds: number, unitCount = 2): string =>
     }
     return parts.join('');
 };
+
+// The hours as a decimal number, f.ex. 12.5 小时. Used where people want to know "how many hours" at a glance.
+export const formatHours = (totalSeconds: number): string => `${Math.round((Math.max(0, totalSeconds) / 3600) * 10) / 10} 小时`;

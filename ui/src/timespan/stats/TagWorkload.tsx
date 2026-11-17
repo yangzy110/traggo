@@ -24,7 +24,16 @@ import {ShareBar, StackedBar} from './StatsWidgets';
 
 export const TagWorkload: React.FC<{tags: TeamStatistics['teamStats']['tags']}> = ({tags}) => {
     const theme = useTheme();
-    const [openTag, setOpenTag] = React.useState('');
+    // several tags can be open at the same time
+    const [openTags, setOpenTags] = React.useState<ReadonlySet<string>>(new Set());
+    const toggle = (id: string) =>
+        setOpenTags((current) => {
+            const next = new Set(current);
+            if (!next.delete(id)) {
+                next.add(id);
+            }
+            return next;
+        });
     const tagTotal = tags.reduce((sum, tag) => sum + tag.seconds, 0);
 
     return (
@@ -55,13 +64,13 @@ export const TagWorkload: React.FC<{tags: TeamStatistics['teamStats']['tags']}> 
                             {tags.map((tag) => {
                                 const id = tagLabel(tag);
                                 const share = tagTotal > 0 ? tag.seconds / tagTotal : 0;
-                                const open = openTag === id;
+                                const open = openTags.has(id);
                                 return (
                                     <React.Fragment key={id}>
                                         <TableRow
                                             hover={true}
                                             sx={{cursor: 'pointer'}}
-                                            onClick={() => setOpenTag(open ? '' : id)}>
+                                            onClick={() => toggle(id)}>
                                             <TableCell>
                                                 <Box sx={styles.member}>
                                                     {open ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}

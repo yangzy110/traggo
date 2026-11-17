@@ -68,6 +68,8 @@ type RootQuery {
     teamTimeSpans(fromInclusive: Time!, toInclusive: Time!, userId: Int): [TeamMemberTimeSpan!]! @hasRole(role: USER)
     teamMembers: [TeamMember!]! @hasRole(role: USER)
     teamStats(fromInclusive: Time!, toInclusive: Time!): TeamStats! @hasRole(role: USER)
+    # The same as teamStats, but only for the time spans of the current user (the members contain only the user).
+    myStats(fromInclusive: Time!, toInclusive: Time!): TeamStats! @hasRole(role: USER)
     stats(ranges: [Range!], tags: [String!], excludeTags: [InputTimeSpanTag!], requireTags: [InputTimeSpanTag!]): [RangedStatisticsEntries!] @hasRole(role: USER)
     stats2(now: Time!, stats: InputStatsSelection!): [RangedStatisticsEntries!] @hasRole(role: USER)
     version: Version!

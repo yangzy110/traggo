@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/traggo/server/auth"
 	"github.com/traggo/server/generated/gqlmodel"
 	"github.com/traggo/server/model"
 )
@@ -33,6 +34,18 @@ func (r *ResolverForTimeSpan) TeamMembers(ctx context.Context) ([]*gqlmodel.Team
 // fromInclusive to toInclusive (the date the times are given in is used). Time spans which cross midnight are split,
 // only the part which lies inside of the days is counted. Running timers are excluded.
 func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model.Time, toInclusive model.Time) (*gqlmodel.TeamStats, error) {
+	return r.stats(fromInclusive, toInclusive, nil)
+}
+
+// MyStats is TeamStats for the time spans of the current user only: the hours per day and per tag. The members contain
+// only the current user.
+func (r *ResolverForTimeSpan) MyStats(ctx context.Context, fromInclusive model.Time, toInclusive model.Time) (*gqlmodel.TeamStats, error) {
+	userID := auth.GetUser(ctx).ID
+	return r.stats(fromInclusive, toInclusive, &userID)
+}
+
+// stats sums up the time of all users, or only of the user with the id onlyUser.
+func (r *ResolverForTimeSpan) stats(fromInclusive model.Time, toInclusive model.Time, onlyUser *int) (*gqlmodel.TeamStats, error) {
 	from := midnight(fromInclusive.OmitTimeZone())
 	last := midnight(toInclusive.OmitTimeZone())
 	if from.After(last) {
@@ -43,12 +56,18 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 		return nil, errors.New("the requested range must not be longer than 366 days")
 	}
 
+	usersQuery, spansQuery, tagsQuery := r.DB, r.DB, r.DB
+	if onlyUser != nil {
+		usersQuery = usersQuery.Where("id = ?", *onlyUser)
+		spansQuery = spansQuery.Where("user_id = ?", *onlyUser)
+		tagsQuery = tagsQuery.Where("time_spans.user_id = ?", *onlyUser)
+	}
 	var users []model.User
-	if err := r.DB.Find(&users).Error; err != nil {
+	if err := usersQuery.Find(&users).Error; err != nil {
 		return nil, err
 	}
 	var timeSpans []model.TimeSpan
-	err := r.DB.Select("id, user_id, start_user_time, end_user_time").
+	err := spansQuery.Select("id, user_id, start_user_time, end_user_time").
 		Not("end_user_time is NULL").
 		Where("start_user_time < ? AND end_user_time > ?", end, from).
 		Find(&timeSpans).Error
@@ -57,7 +76,7 @@ func (r *ResolverForTimeSpan) TeamStats(ctx context.Context, fromInclusive model
 	}
 
 	var spanTags []model.TimeSpanTag
-	err = r.DB.Joins("JOIN time_spans ON time_spans.id = time_span_tags.time_span_id").
+	err = tagsQuery.Joins("JOIN time_spans ON time_spans.id = time_span_tags.time_span_id").
 		Not("time_spans.end_user_time is NULL").
 		Where("time_spans.start_user_time < ? AND time_spans.end_user_time > ?", end, from).
 		Find(&spanTags).Error

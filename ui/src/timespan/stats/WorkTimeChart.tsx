@@ -8,12 +8,15 @@ import {statsStyles as styles} from './statsStyles';
 
 const hours = (seconds: number) => Math.round((seconds / 3600) * 100) / 100;
 
-export const WorkTimeChart: React.FC<{days: Array<{day: string; seconds: number}>}> = ({days}) => {
+export const WorkTimeChart: React.FC<{days: Array<{day: string; seconds: number}>; title?: string}> = ({
+    days,
+    title = '团队工作时间(小时/天)',
+}) => {
     const theme = useTheme();
     return (
         <Paper sx={styles.section}>
             <Typography variant="h6" gutterBottom={true}>
-                团队工作时间(小时/天)
+                {title}
             </Typography>
             <Box sx={styles.chart}>
                 <ResponsiveContainer>

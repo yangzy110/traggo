@@ -151,6 +151,23 @@ export const TeamStats = gql`
     }
 `;
 
+export const MyStats = gql`
+    query MyStatistics($start: Time!, $end: Time!) {
+        myStats(fromInclusive: $start, toInclusive: $end) {
+            totalSeconds
+            tags {
+                key
+                value
+                seconds
+            }
+            days {
+                day
+                seconds
+            }
+        }
+    }
+`;
+
 export const CheckImport = gql`
     query CheckImport($rows: [InputImportRow!]!, $createTags: [String!], $updates: [InputImportUpdate!]) {
         checkImport(rows: $rows, createTags: $createTags, updates: $updates) {

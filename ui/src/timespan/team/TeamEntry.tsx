@@ -18,7 +18,8 @@ interface TeamEntryProps {
     tagColors: Array<{key: string; color: string}>;
 }
 
-// One row of the log: an accent in the color of the first tag, the time, and the tags and the work content in one line.
+// One entry of a timeline: the times on the left, a line with a dot in the color of the first tag, then the tags and the
+// work content in one row and the duration on the right. The entries are separated by space and not by colored blocks.
 export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
     const colors: Record<string, string> = {};
     tagColors.forEach((tag) => (colors[tag.key] = tag.color));
@@ -27,23 +28,55 @@ export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
     return (
         <Box
             sx={(theme) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing(1.5),
-                padding: theme.spacing(0.75, 1.5),
-                marginTop: theme.spacing(0.75),
-                borderRadius: '10px',
-                borderLeft: `4px solid ${accent}`,
-                backgroundColor: `color-mix(in srgb, ${accent} 6%, transparent)`,
+                position: 'relative',
+                display: 'grid',
+                gridTemplateColumns: '56px 1fr auto',
+                columnGap: theme.spacing(3),
+                alignItems: 'start',
+                padding: theme.spacing(1.25, 1, 1.25, 0),
+                borderRadius: '8px',
                 transition: 'background-color 0.15s',
-                '&:hover': {backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)`},
+                '&:hover': {backgroundColor: theme.palette.action.hover},
+                // the line of the timeline, it ends at the dot of the last entry
+                '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 56 + 12 - 1,
+                    top: 0,
+                    bottom: 0,
+                    width: 2,
+                    backgroundColor: theme.palette.divider,
+                },
+                '&:last-child::before': {bottom: 'auto', height: 22},
+                // the dot
+                '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 56 + 12 - 5,
+                    top: 17,
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    backgroundColor: accent,
+                    boxShadow: `0 0 0 3px ${theme.palette.background.paper}`,
+                },
             })}>
-            <Typography
-                variant="body2"
-                sx={{minWidth: 104, fontWeight: 600, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap'}}>
-                {clock(timeSpan.start)} - {timeSpan.end ? clock(timeSpan.end) : '…'}
-            </Typography>
-            <Box sx={{display: 'flex', alignItems: 'center', flexWrap: 'wrap', flexGrow: 1, minWidth: 0}}>
+            <Box sx={{fontVariantNumeric: 'tabular-nums', lineHeight: 1.35}}>
+                <Typography variant="body2" sx={{fontWeight: 700}}>
+                    {clock(timeSpan.start)}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                    {timeSpan.end ? clock(timeSpan.end) : '…'}
+                </Typography>
+            </Box>
+            <Box
+                sx={(theme) => ({
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    minWidth: 0,
+                    paddingLeft: theme.spacing(1.5),
+                })}>
                 {tags.map((tag) => (
                     <TagChip key={tagLabel(tag)} label={tagLabel(tag)} color={colors[tag.key] || DEFAULT_TAG_COLOR} />
                 ))}
@@ -59,13 +92,7 @@ export const TeamEntry: React.FC<TeamEntryProps> = ({timeSpan, tagColors}) => {
                 <Typography
                     variant="caption"
                     color="textSecondary"
-                    sx={(theme) => ({
-                        flexShrink: 0,
-                        padding: theme.spacing(0.25, 1),
-                        borderRadius: '999px',
-                        backgroundColor: theme.palette.action.hover,
-                        fontVariantNumeric: 'tabular-nums',
-                    })}>
+                    sx={{whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', paddingTop: '2px'}}>
                     {formatDuration(spanSeconds(timeSpan.start, timeSpan.end))}
                 </Typography>
             ) : null}

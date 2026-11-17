@@ -17,6 +17,7 @@ export const Tags = gql`
             usages
             shared
             editable
+            archived
         }
     }
 `;
@@ -49,6 +50,15 @@ export const RemoveTag = gql`
         removeTag(key: $key) {
             color
             key
+        }
+    }
+`;
+
+export const ArchiveTag = gql`
+    mutation ArchiveTag($key: String!, $archived: Boolean!) {
+        archiveTag(key: $key, archived: $archived) {
+            key
+            archived
         }
     }
 `;

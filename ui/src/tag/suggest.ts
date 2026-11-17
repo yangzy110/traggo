@@ -45,6 +45,7 @@ const suggestTag = (
     }
 
     let availableTags = (tagResult.data.tags || [])
+        .filter((tag) => !tag.archived)
         .filter((tag) => allowDuplicateKeys || usedTags.indexOf(tag.key) === -1)
         .filter((tag) => tag.key.indexOf(tagKey) === 0);
 

@@ -120,31 +120,15 @@ export const TimeSpanEditor: React.FC<TimeSpanEditorProps> = ({
                     }}
                     sx={(theme) => {
                         const dark = theme.palette.mode === 'dark';
-                        const main = theme.palette.primary.main;
                         return {
                             width: 440,
                             maxWidth: 'calc(100vw - 16px)',
                             padding: 2,
-                            paddingTop: 2.5,
-                            position: 'relative',
-                            overflow: 'hidden',
-                            // tinted, so that the editor stands out from the white calendar
-                            backgroundColor: `color-mix(in srgb, ${main} ${dark ? 14 : 8}%, ${theme.palette.background.paper})`,
-                            border: `1.5px solid color-mix(in srgb, ${main} ${dark ? 55 : 45}%, transparent)`,
-                            borderRadius: '16px',
-                            boxShadow: `0 12px 32px rgba(${dark ? '0,0,0,0.55' : '15,23,42,0.18'}), 0 0 0 4px color-mix(in srgb, ${main} 10%, transparent)`,
-                            // an accent line on top
-                            '&::before': {
-                                content: '""',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                height: 5,
-                                background: `linear-gradient(90deg, ${theme.palette.primary.light}, ${main})`,
-                            },
-                            // the inputs stay light so that they are easy to see on the tint
-                            '& .MuiOutlinedInput-root': {backgroundColor: theme.palette.background.paper},
+                            backgroundColor: theme.palette.background.paper,
+                            border: `1px solid ${theme.palette.divider}`,
+                            borderRadius: '14px',
+                            // a soft shadow with a faint glow of the primary color around it
+                            boxShadow: `0 8px 24px rgba(${dark ? '0,0,0,0.45' : '15,23,42,0.10'}), 0 0 0 3px color-mix(in srgb, ${theme.palette.primary.main} 8%, transparent)`,
                         };
                     }}>
                     {editableTime ? (

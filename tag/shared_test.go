@@ -146,7 +146,7 @@ func TestShared_adminsChangeSharedTagsForAllUsers(t *testing.T) {
 	require.Equal(t, model.TagDefinition{Key: "work", Color: "#abc", UserID: adminA, Shared: true}, stored)
 }
 
-func TestShared_removeRemovesTheTagFromTheTimeSpansOfAllUsers(t *testing.T) {
+func TestShared_removeIsRefusedWhileTimeSpansOfOtherUsersUseTheTag(t *testing.T) {
 	db, resolver := users(t)
 	defer db.Close()
 	db.Create(&model.TagDefinition{Key: "project", Color: "#fff", UserID: adminA, Shared: true})
@@ -154,12 +154,12 @@ func TestShared_removeRemovesTheTagFromTheTimeSpansOfAllUsers(t *testing.T) {
 	aliceSpan := db.User(alice).TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z").Tag("project", "web")
 	bobSpan := db.User(bob).TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z").Tag("project", "web")
 
+	// bob uses his own tag, only the time span of alice belongs to the shared tag
 	_, err := resolver.RemoveTag(fake.UserWithPerm(adminB, true), "project")
-	require.NoError(t, err)
-
-	aliceSpan.AssertHasTag("project", "web", false)
+	require.EqualError(t, err, "tag 'project' is used by 1 time spans, archive it instead of removing it")
+	aliceSpan.AssertHasTag("project", "web", true)
 	bobSpan.AssertHasTag("project", "web", true)
-	assertTagCount(t, db, 1) // the tag of bob
+	assertTagCount(t, db, 2)
 }
 
 func TestShared_adminCanShareOwnTagAndMakeItPrivateAgain(t *testing.T) {

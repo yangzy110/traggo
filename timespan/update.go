@@ -22,7 +22,14 @@ func (r *ResolverForTimeSpan) UpdateTimeSpan(ctx context.Context, id int, start 
 		return nil, fmt.Errorf("time span with id %d does not exist", id)
 	}
 
-	if err := tagsExist(r.DB, auth.GetUser(ctx).ID, timeSpan.Tags); err != nil {
+	// an archived tag can stay on a time span which has it already
+	var oldTags []model.TimeSpanTag
+	r.DB.Where("time_span_id = ?", id).Find(&oldTags)
+	alreadyUsed := map[string]bool{}
+	for _, tag := range oldTags {
+		alreadyUsed[tag.Key] = true
+	}
+	if err := tagsExist(r.DB, auth.GetUser(ctx).ID, timeSpan.Tags, alreadyUsed); err != nil {
 		return nil, err
 	}
 

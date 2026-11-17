@@ -12,6 +12,8 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ArchiveIcon from '@mui/icons-material/Inventory2Outlined';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Public';
 import PrivateIcon from '@mui/icons-material/PublicOff';
@@ -24,7 +26,16 @@ import IconButton from '@mui/material/IconButton';
 import {useSnackbar} from 'notistack';
 import {TextField} from '@mui/material';
 import Button from '@mui/material/Button';
-import {Tags, RemoveTag, RemoveTagVariables, UpdateTag, UpdateTagVariables, CurrentUser} from '../gql/types';
+import {
+    Tags,
+    RemoveTag,
+    RemoveTagVariables,
+    ArchiveTag,
+    ArchiveTagVariables,
+    UpdateTag,
+    UpdateTagVariables,
+    CurrentUser,
+} from '../gql/types';
 import {AddTagDialog} from './AddTagDialog';
 import {TagColorGrid} from '../common/TagColorGrid';
 import {TagChip} from '../common/TagChip';
@@ -52,12 +63,17 @@ export const TagPage = () => {
     const refetch = {refetchQueries: [{query: gqlTag.Tags}, {query: gqlDashboard.Dashboards}]};
     const {enqueueSnackbar} = useSnackbar();
     const [removeTag] = useMutation<RemoveTag, RemoveTagVariables>(gqlTag.RemoveTag, refetch);
+    const [archiveTag] = useMutation<ArchiveTag, ArchiveTagVariables>(gqlTag.ArchiveTag, refetch);
     const [[editKey, editKeyNew, editColor], setEditing] = React.useState<[string, string, string]>(['', '', '']);
     const [addActive, setAddActive] = React.useState(false);
     const [updateTag] = useMutation<UpdateTag, UpdateTagVariables>(gqlTag.UpdateTag, refetch);
     if (loading || !data || !data.tags) {
         return <CenteredSpinner />;
     }
+    const onArchive = (key: string, archived: boolean) =>
+        archiveTag({variables: {key, archived}})
+            .then(() => enqueueSnackbar(archived ? '标签已停用' : '标签已恢复', {variant: 'success'}))
+            .catch(handleError(archived ? '停用标签失败' : '恢复标签失败', enqueueSnackbar));
     const onClickDelete = () => {
         return removeTag({variables: {key: removeTagConfirm}})
             .then(() => enqueueSnackbar('标签已删除', {variant: 'success'}))
@@ -82,7 +98,9 @@ export const TagPage = () => {
             .then(() => enqueueSnackbar('标签已改为私有', {variant: 'success'}))
             .catch(handleError('改为私有失败', enqueueSnackbar));
     };
-    const removeTagIsShared = !!data.tags.find((t) => t.key === removeTagConfirm && t.shared);
+    const removeTagDefinition = data.tags.find((t) => t.key === removeTagConfirm);
+    const removeTagIsShared = !!removeTagDefinition && removeTagDefinition.shared;
+    const removeTagUsages = removeTagDefinition ? removeTagDefinition.usages : 0;
 
     const tags = data.tags.map((tag) => {
         const onClickSubmit = () => {
@@ -117,6 +135,9 @@ export const TagPage = () => {
                     ) : (
                         <>
                             {tag.key}
+                            {tag.archived ? (
+                                <Chip size="small" variant="outlined" label="已停用" sx={{ml: 1, height: 22, opacity: 0.8}} />
+                            ) : null}
                             {tag.shared ? (
                                 <Chip size="small" variant="outlined" color="primary" label="公用" sx={{ml: 1, height: 22}} />
                             ) : null}
@@ -155,6 +176,11 @@ export const TagPage = () => {
                             ) : null}
                             <IconButton onClick={() => setEditing([tag.key, tag.key, tag.color])} title="编辑">
                                 <EditIcon />
+                            </IconButton>
+                            <IconButton
+                                onClick={() => onArchive(tag.key, !tag.archived)}
+                                title={tag.archived ? '恢复使用' : '停用（历史记录保留）'}>
+                                {tag.archived ? <UnarchiveIcon /> : <ArchiveIcon />}
                             </IconButton>
                             <IconButton onClick={() => setRemoveTagConfirm(tag.key)} title="删除">
                                 <DeleteIcon />
@@ -199,15 +225,24 @@ export const TagPage = () => {
                 <TableBody>
                     {addActive ? <AddTagDialog initialName={''} open={true} close={() => setAddActive(false)} /> : null}
                     {tags}
-                    {removeTagConfirm ? (
+                    {removeTagConfirm && removeTagUsages > 0 ? (
+                        <ConfirmDialog
+                            title={`标签 ${removeTagConfirm} 不能删除`}
+                            fClose={() => setRemoveTagConfirm('')}
+                            fOnSubmit={() => onArchive(removeTagConfirm, true)}>
+                            这个标签关联着 <b>{removeTagUsages}</b> 条记录
+                            {removeTagIsShared ? '（只统计你自己的记录，其他用户也可能在使用）' : ''}
+                            ，为了保留历史记录，已使用的标签不能删除。是否改为<b>停用</b>
+                            ？停用后不能再用于新的记录，已有记录不受影响，之后可以恢复。
+                        </ConfirmDialog>
+                    ) : null}
+                    {removeTagConfirm && removeTagUsages === 0 ? (
                         <ConfirmDialog
                             title={`删除标签 ${removeTagConfirm}`}
                             fClose={() => setRemoveTagConfirm('')}
                             fOnSubmit={onClickDelete}>
-                            <b>此操作无法撤销。</b>{' '}
-                            {removeTagIsShared
-                                ? '删除公用标签会从所有用户的记录中移除该标签。'
-                                : '删除标签会从记录中移除该标签。'}
+                            <b>此操作无法撤销。</b> 这个标签没有关联任何记录
+                            {removeTagIsShared ? '（只统计你自己的记录，如果其他用户在使用，删除会被拒绝）' : ''}。
                         </ConfirmDialog>
                     ) : null}
                     {shareTagConfirm ? (

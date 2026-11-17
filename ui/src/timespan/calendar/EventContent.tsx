@@ -29,7 +29,6 @@ const TagPills: React.FC<{event: EventApi; maxLines?: number}> = ({event, maxLin
                         className="pill"
                         style={{
                             ...tagStyle(theme, color),
-                            backgroundColor: `color-mix(in srgb, ${color} 30%, ${theme.palette.background.paper})`,
                             borderWidth: 1,
                             borderStyle: 'solid',
                         }}>

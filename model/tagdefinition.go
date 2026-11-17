@@ -8,5 +8,7 @@ type TagDefinition struct {
 	// Shared tags are created by admins. They can be used by all users, but only be changed by admins.
 	// The other tags can only be used and changed by the user who created them.
 	Shared bool `gorm:"not null;default:false"`
-	Usages int  `gorm:"-"`
+	// Archived tags cannot be used for new time spans, the existing time spans keep them (and their color).
+	Archived bool `gorm:"not null;default:false"`
+	Usages   int  `gorm:"-"`
 }

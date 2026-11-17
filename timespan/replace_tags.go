@@ -15,10 +15,10 @@ func (r *ResolverForTimeSpan) ReplaceTimeSpanTags(ctx context.Context, fromExter
 	from := tagToInternal(fromExternal)
 	to := tagToInternal(toExternal)
 
-	if err := tagsExist(r.DB, userID, []model.TimeSpanTag{from}); err != nil {
+	if err := tagsExist(r.DB, userID, []model.TimeSpanTag{from}, map[string]bool{from.Key: true}); err != nil {
 		return nil, err
 	}
-	if err := tagsExist(r.DB, userID, []model.TimeSpanTag{to}); err != nil {
+	if err := tagsExist(r.DB, userID, []model.TimeSpanTag{to}, nil); err != nil {
 		return nil, err
 	}
 

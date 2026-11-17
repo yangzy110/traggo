@@ -43,9 +43,6 @@ export const TagWorkload: React.FC<{tags: TeamStatistics['teamStats']['tags']}> 
                             color: calculateColor(tag.key, ColorMode.Soft, theme.palette.mode),
                         }))}
                     />
-                    <Typography variant="caption" color="textSecondary">
-                        占比是该标签在所有标签总时长中的比例（一条记录有多个标签时每个标签都会计入）。点击一行可以查看每个人在该标签下的占比。
-                    </Typography>
                     <Table size="small">
                         <TableHead>
                             <TableRow>

@@ -3,6 +3,7 @@ import {alpha, createTheme, ThemeProvider as MuiThemeProvider, type Theme, type 
 import CssBaseline from '@mui/material/CssBaseline';
 import {useSettings} from '../gql/settings';
 import {Theme as SettingTheme} from '../gql/types';
+import {useFollowTimeTheme, useNightTime} from './followTimeTheme';
 
 // Inter has no chinese characters, the system fonts are used for them.
 const fontFamily = [
@@ -153,11 +154,11 @@ const light = createTheme(
     options(common(false), plainAppBar(), {
         palette: {
             mode: 'light',
-            background: {default: '#f6f6f8', paper: '#ffffff'},
-            text: {primary: '#16181d', secondary: '#5d6472'},
-            divider: '#e6e7eb',
-            primary: {main: '#4f46e5', light: '#818cf8', dark: '#4338ca', contrastText: '#ffffff'},
-            secondary: {main: '#e5484d'},
+            background: {default: '#f3f6fb', paper: '#ffffff'},
+            text: {primary: '#14202e', secondary: '#586579'},
+            divider: '#e1e8f1',
+            primary: {main: '#2563eb', light: '#60a5fa', dark: '#1d4ed8', contrastText: '#ffffff'},
+            secondary: {main: '#0ea5e9', light: '#38bdf8', dark: '#0284c7', contrastText: '#ffffff'},
         },
     })
 );
@@ -166,11 +167,11 @@ const dark = createTheme(
     options(common(true), plainAppBar(), {
         palette: {
             mode: 'dark',
-            background: {default: '#0f1013', paper: '#17181c'},
-            text: {primary: '#ececf1', secondary: '#9a9fab'},
-            divider: '#272a31',
-            primary: {main: '#8b93f8', light: '#a5b4fc', dark: '#6366f1', contrastText: '#0b0c10'},
-            secondary: {main: '#f87171'},
+            background: {default: '#0b1220', paper: '#111a2b'},
+            text: {primary: '#e6edf7', secondary: '#93a1b8'},
+            divider: '#1f2d44',
+            primary: {main: '#60a5fa', light: '#93c5fd', dark: '#3b82f6', contrastText: '#08111f'},
+            secondary: {main: '#38bdf8', light: '#7dd3fc', dark: '#0ea5e9', contrastText: '#08111f'},
         },
     })
 );
@@ -180,8 +181,10 @@ const isDark = (theme: SettingTheme) => theme === SettingTheme.MaterialDark || t
 
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({children}) => {
     const {theme} = useSettings();
+    const followTime = useFollowTimeTheme();
+    const night = useNightTime();
     return (
-        <MuiThemeProvider theme={isDark(theme) ? dark : light}>
+        <MuiThemeProvider theme={(followTime ? night : isDark(theme)) ? dark : light}>
             <CssBaseline />
             {children}
         </MuiThemeProvider>

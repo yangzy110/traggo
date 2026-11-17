@@ -20,7 +20,10 @@ interface TagPickerProps {
 // tag page). Time spans which were created in the past can have a value (key:value), it is kept as long as the tag is selected.
 export const TagPicker: React.FC<TagPickerProps> = ({label, selectedEntries, onSelectedEntriesChanged}) => {
     const tagsResult = useQuery<Tags>(gqlTag.Tags);
-    const definitions = [...((tagsResult.data && tagsResult.data.tags) || [])].sort((a, b) => a.key.localeCompare(b.key));
+    // archived tags cannot be added any more, they are only shown while the time span has them
+    const definitions = [...((tagsResult.data && tagsResult.data.tags) || [])]
+        .filter((d) => !d.archived || selectedEntries.some((e) => e.tag.key === d.key))
+        .sort((a, b) => a.key.localeCompare(b.key));
 
     const toggle = (key: string) => {
         const definition = definitions.find((d) => d.key === key);
@@ -62,7 +65,9 @@ export const TagPicker: React.FC<TagPickerProps> = ({label, selectedEntries, onS
                                 ...(selected
                                     ? {borderWidth: 1.5}
                                     : {backgroundColor: 'transparent', color: theme.palette.text.secondary}),
-                                '&:hover': {backgroundColor: tagStyle(theme, color).backgroundColor},
+                                '&:hover': {
+                                    backgroundColor: selected ? color : `color-mix(in srgb, ${color} 18%, transparent)`,
+                                },
                             })}
                         />
                     );

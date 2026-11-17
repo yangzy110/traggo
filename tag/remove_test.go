@@ -36,7 +36,7 @@ func TestRemove_referencedInDashboardEntry(t *testing.T) {
 	require.EqualError(t, err, "tag 'coolio' is used in dashboard 'yeah' entry 'entry', remove this reference before deleting the tag")
 }
 
-func TestGQL_RemoveTag_succeeds_removesTimespans(t *testing.T) {
+func TestGQL_RemoveTag_fails_tagIsUsed_keepsTheHistory(t *testing.T) {
 	db := test.InMemoryDB(t)
 	defer db.Close()
 	left := db.User(3)
@@ -45,20 +45,73 @@ func TestGQL_RemoveTag_succeeds_removesTimespans(t *testing.T) {
 	right.NewTagDefinition("tag")
 	leftTs := left.TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z")
 	leftTs.Tag("tag", "def")
+	left.TimeSpan("2009-06-30T19:30:00Z", "2009-06-30T19:40:00Z").Tag("tag", "other")
 	rightTs := right.TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z")
 	rightTs.Tag("tag", "def")
 
 	resolver := ResolverForTag{DB: db.DB}
 	_, err := resolver.RemoveTag(fake.User(left.User.ID), "tag")
-	require.Nil(t, err)
+	require.EqualError(t, err, "tag 'tag' is used by 2 time spans, archive it instead of removing it")
 
-	assertTagCount(t, db, 1)
+	assertTagCount(t, db, 2)
+	left.AssertHasTagDefinition("tag", true)
+	leftTs.AssertExists(true).AssertHasTag("tag", "def", true)
+	rightTs.AssertExists(true).AssertHasTag("tag", "def", true)
+}
+
+func TestGQL_RemoveTag_succeeds_otherUsersUseTheirOwnTag(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+	left := db.User(3)
+	right := db.User(4)
+	left.NewTagDefinition("tag")
+	right.NewTagDefinition("tag")
+	rightTs := right.TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z")
+	rightTs.Tag("tag", "def")
+
+	resolver := ResolverForTag{DB: db.DB}
+	_, err := resolver.RemoveTag(fake.User(left.User.ID), "tag")
+	require.NoError(t, err)
 
 	left.AssertHasTagDefinition("tag", false)
 	right.AssertHasTagDefinition("tag", true)
-
-	leftTs.AssertExists(true).AssertHasTag("tag", "def", false)
 	rightTs.AssertExists(true).AssertHasTag("tag", "def", true)
+}
+
+func TestGQL_ArchiveTag_archivesAndRestores(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+	user := db.User(3)
+	user.NewTagDefinition("tag")
+	ts := user.TimeSpan("2009-06-30T18:30:00Z", "2009-06-30T18:40:00Z")
+	ts.Tag("tag", "def")
+
+	resolver := ResolverForTag{DB: db.DB}
+	archived, err := resolver.ArchiveTag(fake.User(3), "tag", true)
+	require.NoError(t, err)
+	require.True(t, archived.Archived)
+	ts.AssertHasTag("tag", "def", true) // the history keeps the tag
+
+	suggestions, err := resolver.SuggestTag(fake.User(3), "")
+	require.NoError(t, err)
+	require.Empty(t, suggestions)
+
+	restored, err := resolver.ArchiveTag(fake.User(3), "tag", false)
+	require.NoError(t, err)
+	require.False(t, restored.Archived)
+	suggestions, err = resolver.SuggestTag(fake.User(3), "")
+	require.NoError(t, err)
+	require.Len(t, suggestions, 1)
+}
+
+func TestGQL_ArchiveTag_fails_notExistingTag(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+	db.User(3)
+
+	resolver := ResolverForTag{DB: db.DB}
+	_, err := resolver.ArchiveTag(fake.User(3), "nope", true)
+	require.EqualError(t, err, "tag with key 'nope' does not exist")
 }
 
 func TestGQL_RemoveTag_fails_notExistingTag(t *testing.T) {

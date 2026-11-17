@@ -13,6 +13,8 @@ const messages: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
     [/^ranges may not be empty/, () => '日期范围不能为空'],
     [/^the requested range must not be longer than (\d+) days/, (m) => `时间范围不能超过 ${m[1]} 天`],
     [/^tag '(.*)' does not exist/, (m) => `标签“${m[1]}”不存在`],
+    [/^tag '(.*)' is used by (\d+) time spans/, (m) => `标签“${m[1]}”关联着 ${m[2]} 条记录，不能删除，请改为停用`],
+    [/^tag '(.*)' is archived/, (m) => `标签“${m[1]}”已停用，不能再使用`],
     [/^tag '(.*)' is present multiple times/, (m) => `标签“${m[1]}”重复`],
     [/^tag '(.*)' is present in both exclude tags and include tags/, (m) => `标签“${m[1]}”同时出现在排除和包含中`],
     [

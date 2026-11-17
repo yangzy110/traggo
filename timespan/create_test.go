@@ -136,3 +136,17 @@ func Test_Create_fail_tagAddedMultipleTimes(t *testing.T) {
 	require.EqualError(t, err, "tag 'test' is present multiple times")
 	assertTimeSpanCount(t, db, 0)
 }
+
+func Test_Create_fail_archivedTag(t *testing.T) {
+	db := test.InMemoryDB(t)
+	defer db.Close()
+	db.User(5)
+	db.Create(&model.TagDefinition{Key: "old", Color: "#fff", UserID: 5, Archived: true})
+
+	resolver := ResolverForTimeSpan{DB: db.DB}
+	timeSpan, err := resolver.CreateTimeSpan(fake.User(5), test.ModelTime("2019-06-10T18:30:00+02:00"),
+		test.ModelTimeP("2019-06-10T18:35:00+02:00"), []*gqlmodel.InputTimeSpanTag{{Key: "old"}}, "")
+	require.Nil(t, timeSpan)
+	require.EqualError(t, err, "tag 'old' is archived")
+	assertTimeSpanCount(t, db, 0)
+}

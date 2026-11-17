@@ -50,6 +50,7 @@ export const specialTag = (name: string, state: SpecialTagState): Tags_tags & Sp
         usages: 0,
         shared: false,
         editable: false,
+        archived: false,
     };
 };
 
@@ -64,6 +65,10 @@ const tryAdd = (tagsResult: QueryResult<Tags>, entry: string, onlyKeys: boolean)
 
     if (foundTag === undefined) {
         return {error: `'${key}' does not exist`, value: entry};
+    }
+
+    if (foundTag.archived) {
+        return {error: `'${key}' 已停用，不能再使用`, value: entry};
     }
 
     if (onlyKeys && value) {

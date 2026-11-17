@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Paper, TextField} from '@mui/material';
+import {FormControlLabel, FormHelperText, Paper, Switch, TextField} from '@mui/material';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
 import {useMutation} from '@apollo/client/react';
 import {SetSettings, SetSettingsVariables, DateLocale, Theme} from '../gql/types';
@@ -8,6 +8,7 @@ import {handleError} from '../utils/errors';
 import type {SxProps, Theme as MuiTheme} from '@mui/material/styles';
 import {gutters} from '../common/styles';
 import {dateLocaleLabels, label, themeLabels} from '../common/labels';
+import {setFollowTimeTheme, useFollowTimeTheme} from '../provider/followTimeTheme';
 
 const rootSx: SxProps<MuiTheme> = (theme) => ({
     ...gutters(theme),
@@ -20,6 +21,7 @@ const rootSx: SxProps<MuiTheme> = (theme) => ({
 export const SettingsPage: React.FC = () => {
     const {done, ...settings} = useSettings();
     const {enqueueSnackbar} = useSnackbar();
+    const followTime = useFollowTimeTheme();
     const [setSettings] = useMutation<SetSettings, SetSettingsVariables>(SetSettingsGQL, {
         refetchQueries: [{query: SettingsGQL}],
     });
@@ -60,11 +62,20 @@ export const SettingsPage: React.FC = () => {
                     </option>
                 ))}
             </TextField>
+            <FormControlLabel
+                control={<Switch checked={followTime} onChange={(e) => setFollowTimeTheme(e.target.checked)} />}
+                label="随时间自动切换深色/浅色"
+                sx={{display: 'flex', marginTop: 1}}
+            />
+            <FormHelperText sx={{marginTop: 0, marginBottom: 1}}>
+                打开时，主题会按这台电脑的时间切换：18:00 到次日 6:00 使用深色，其余时间使用浅色。关闭后使用下面选择的主题。
+            </FormHelperText>
             <TextField
                 select
                 label="主题"
                 margin="normal"
                 fullWidth
+                disabled={followTime}
                 slotProps={{select: {native: true}}}
                 value={
                     settings.theme === Theme.GruvboxDark

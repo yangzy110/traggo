@@ -47,6 +47,7 @@ func toExternal(tag model.TagDefinition, userID int, admin bool) *gqlmodel.TagDe
 		Color:    tag.Color,
 		Usages:   tag.Usages,
 		Shared:   tag.Shared,
+		Archived: tag.Archived,
 		Editable: canChange(tag, userID, admin),
 	}
 }

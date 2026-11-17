@@ -14,6 +14,9 @@ type RootMutation {
     createTag(key: String!, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
     # a tag can be made shared by an admin, but a shared tag cannot be made private again
     updateTag(key: String!, newKey: String, color: String!, shared: Boolean): TagDefinition @hasRole(role: USER)
+    # an archived tag cannot be used for new time spans, the existing time spans keep it
+    archiveTag(key: String!, archived: Boolean!): TagDefinition @hasRole(role: USER)
+    # only tags which are not used by any time span can be removed
     removeTag(key: String!): TagDefinition @hasRole(role: USER)
 
     createUser(name: String!, pass: String!, admin: Boolean!): User @hasRole(role: ADMIN)
@@ -159,6 +162,8 @@ type TagDefinition {
     shared: Boolean!
     # if the current user is allowed to change or remove the tag
     editable: Boolean!
+    # archived tags are not suggested and cannot be used for new time spans
+    archived: Boolean!
 }
 
 type TagColor {

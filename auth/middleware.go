@@ -35,20 +35,28 @@ func Middleware(db *gorm.DB) mux.MiddlewareFunc {
 
 func sessionCallbacks(request *http.Request, writer http.ResponseWriter) *http.Request {
 	createSession := func(token string, maxAge int) {
-		http.SetCookie(writer, &http.Cookie{
-			Name:   traggoSession,
-			Value:  token,
-			MaxAge: maxAge,
-		})
+		http.SetCookie(writer, secureCookie(request, token, maxAge))
 	}
 	destroySession := func() {
-		http.SetCookie(writer, &http.Cookie{
-			Name:   traggoSession,
-			Value:  "",
-			MaxAge: -1,
-		})
+		http.SetCookie(writer, secureCookie(request, "", -1))
 	}
 	return request.WithContext(WithDestroySession(WithCreateSession(request.Context(), createSession), destroySession))
+}
+
+// secureCookie builds the session cookie with HttpOnly (not readable by scripts), SameSite=Lax
+// (not sent on cross-site requests) and Secure (only over HTTPS, detected directly or via a
+// reverse proxy that sets X-Forwarded-Proto).
+func secureCookie(request *http.Request, value string, maxAge int) *http.Cookie {
+	secure := request.TLS != nil || strings.EqualFold(request.Header.Get("X-Forwarded-Proto"), "https")
+	return &http.Cookie{
+		Name:     traggoSession,
+		Value:    value,
+		MaxAge:   maxAge,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	}
 }
 
 func reqisterUser(request *http.Request, writer http.ResponseWriter, db *gorm.DB) *http.Request {
@@ -59,7 +67,7 @@ func reqisterUser(request *http.Request, writer http.ResponseWriter, db *gorm.DB
 
 	device := &model.Device{}
 	if db.Where("token = ?", token).Find(device).RecordNotFound() {
-		log.Debug().Str("token", token).Msg("No device with token found")
+		log.Debug().Msg("No device with token found")
 		return request
 	}
 
@@ -95,8 +103,7 @@ func reqisterUser(request *http.Request, writer http.ResponseWriter, db *gorm.DB
 		db.Save(device)
 
 		if cookie, err := request.Cookie(traggoSession); err == nil && cookie != nil {
-			cookie.MaxAge = device.Type.Seconds()
-			http.SetCookie(writer, cookie)
+			http.SetCookie(writer, secureCookie(request, cookie.Value, device.Type.Seconds()))
 		}
 	}
 
@@ -113,11 +120,6 @@ func getToken(request *http.Request) (string, error) {
 	if cookie, err := request.Cookie("traggo"); err == nil && cookie != nil && cookie.Value != "" {
 		log.Debug().Msg("Using cookie for authentication")
 		return cookie.Value, nil
-	}
-
-	if token := request.FormValue("token"); token != "" {
-		log.Debug().Msg("Using query parameter for authentication")
-		return token, nil
 	}
 
 	return "", errors.New("no token found")

@@ -34,7 +34,7 @@ func TestMiddleware_query_notExistingToken_noAuthentication(t *testing.T) {
 	assert.Nil(t, GetDevice(ctx))
 }
 
-func TestMiddleware_query_validToken_authenticates(t *testing.T) {
+func TestMiddleware_query_validToken_isIgnored(t *testing.T) {
 	now := test.Time("2018-06-30T18:30:00Z")
 	timeDispose := fakeTime(now)
 	defer timeDispose()
@@ -49,10 +49,9 @@ func TestMiddleware_query_validToken_authenticates(t *testing.T) {
 	Middleware(db.DB)(spy).ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/test?token=abc", nil))
 
 	ctx := spy.req.Context()
-	assert.Equal(t, &user, GetUser(ctx))
-
-	device.ActiveAt = now
-	assert.Equal(t, &device, GetDevice(ctx))
+	assert.Nil(t, GetUser(ctx))
+	assert.Nil(t, GetDevice(ctx))
+	_, _, _ = user, device, now
 }
 
 func TestMiddleware_header_notExistingToken_noAuthentication(t *testing.T) {
@@ -113,7 +112,7 @@ func TestMiddleware_cookie_notExistingToken_noAuthentication(t *testing.T) {
 	defer db.Close()
 	spy := &requestSpy{}
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
 	request.AddCookie(&http.Cookie{
 		Name:  "traggo",
 		Value: "abc",
@@ -137,7 +136,7 @@ func TestMiddleware_cookie_validToken_authenticates(t *testing.T) {
 	device := builder.NewDevice(2, "abc", "test")
 	spy := &requestSpy{}
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
 	request.AddCookie(&http.Cookie{
 		Name:  "traggo",
 		Value: "abc",
@@ -164,7 +163,7 @@ func TestMiddleware_createSession_setsCookie(t *testing.T) {
 	GetCreateSession(ctx)("new token", 60)
 
 	cookieHeader := recorder.Header().Get("Set-Cookie")
-	assert.Equal(t, `traggo="new token"; Max-Age=60`, cookieHeader)
+	assert.Equal(t, `traggo="new token"; Path=/; Max-Age=60; HttpOnly; SameSite=Lax`, cookieHeader)
 }
 
 func TestMiddleware_noCallbackExecuted_noCookieSet(t *testing.T) {
@@ -193,7 +192,7 @@ func TestMiddleware_destroySession_destroysCookie(t *testing.T) {
 	GetDestroySession(ctx)()
 
 	cookieHeader := recorder.Header().Get("Set-Cookie")
-	assert.Equal(t, "traggo=; Max-Age=0", cookieHeader)
+	assert.Equal(t, "traggo=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax", cookieHeader)
 }
 
 func TestMiddleware_impersonate_no_admin(t *testing.T) {
@@ -208,7 +207,8 @@ func TestMiddleware_impersonate_no_admin(t *testing.T) {
 	spy := &requestSpy{}
 	recorder := httptest.NewRecorder()
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
+	request.Header.Set("Authorization", "traggo abc")
 	request.Header.Set("X-Traggo-Impersonate", "empty")
 	Middleware(db.DB)(spy).ServeHTTP(recorder, request)
 
@@ -235,7 +235,8 @@ func TestMiddleware_impersonate_invalid_personate_header(t *testing.T) {
 	spy := &requestSpy{}
 	recorder := httptest.NewRecorder()
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
+	request.Header.Set("Authorization", "traggo abc")
 	request.Header.Set("X-Traggo-Impersonate", "invalid")
 	Middleware(db.DB)(spy).ServeHTTP(recorder, request)
 
@@ -262,7 +263,8 @@ func TestMiddleware_impersonate_non_existing_user(t *testing.T) {
 	spy := &requestSpy{}
 	recorder := httptest.NewRecorder()
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
+	request.Header.Set("Authorization", "traggo abc")
 	request.Header.Set("X-Traggo-Impersonate", "42")
 	Middleware(db.DB)(spy).ServeHTTP(recorder, request)
 
@@ -293,7 +295,8 @@ func TestMiddleware_impersonate_happy(t *testing.T) {
 	spy := &requestSpy{}
 	recorder := httptest.NewRecorder()
 
-	request := httptest.NewRequest("GET", "/test?token=abc", nil)
+	request := httptest.NewRequest("GET", "/test", nil)
+	request.Header.Set("Authorization", "traggo abc")
 	request.Header.Set("X-Traggo-Impersonate", "2")
 	Middleware(db.DB)(spy).ServeHTTP(recorder, request)
 
